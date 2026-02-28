@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NotSanTrainer 2025 – SAA/BPR Trainingsapp</title>
+    <meta name="description" content="Trainingsapp für Notfallsanitäter – SAA und BPR 2025 – 6-Länder-Arbeitsgruppe">
+    <meta name="theme-color" content="#06080f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23ef4444'/%3E%3Cg transform='translate(50,50)'%3E%3Crect x='-5' y='-30' width='10' height='60' rx='3' fill='white' /%3E%3Crect x='-5' y='-30' width='10' height='60' rx='3' fill='white' transform='rotate(60)' /%3E%3Crect x='-5' y='-30' width='10' height='60' rx='3' fill='white' transform='rotate(120)' /%3E%3Ccircle r='12' fill='%23ef4444' stroke='white' stroke-width='2.5'/%3E%3Cpolyline points='-8,0 -4,0 -2,-6 2,6 4,0 8,0' fill='none' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3C/g%3E%3C/svg%3E">
+
+    <!-- Loading Screen Styles -->
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #06080f; }
+        #loading-screen {
+            position: fixed; inset: 0; z-index: 9999;
+            background: #06080f;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            font-family: 'Outfit', system-ui, sans-serif;
+            transition: opacity 0.4s ease;
+        }
+        #loading-screen.fade-out { opacity: 0; pointer-events: none; }
+        #loading-screen svg { width: 64px; height: 64px; }
+        #loading-title { margin-top: 20px; font-size: 20px; font-weight: 700; color: #f1f5f9; }
+        #loading-title span { color: #ef4444; }
+        #loading-sub { margin-top: 12px; color: #94a3b8; font-size: 13px; }
+        #loading-bar {
+            margin-top: 16px; width: 120px; height: 3px;
+            background: #1a2236; border-radius: 2px; overflow: hidden;
+        }
+        #loading-bar-inner {
+            width: 30%; height: 100%;
+            background: linear-gradient(90deg, #ef4444, #f97316);
+            border-radius: 2px;
+            animation: loading-shimmer 1.2s ease-in-out infinite;
+        }
+        @keyframes loading-shimmer {
+            0% { width: 10%; margin-left: 0; }
+            50% { width: 50%; margin-left: 25%; }
+            100% { width: 10%; margin-left: 90%; }
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <svg viewBox="0 0 120 120">
+            <defs>
+                <linearGradient id="lg1" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ef4444"/>
+                    <stop offset="100%" stop-color="#f97316"/>
+                </linearGradient>
+                <linearGradient id="lg2" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#fff"/>
+                    <stop offset="100%" stop-color="#fef2f2"/>
+                </linearGradient>
+            </defs>
+            <rect x="6" y="6" width="108" height="108" rx="28" fill="url(#lg1)"/>
+            <g transform="translate(60,60)">
+                <rect x="-6.5" y="-36" width="13" height="72" rx="4" fill="url(#lg2)" opacity="0.9"/>
+                <rect x="-6.5" y="-36" width="13" height="72" rx="4" fill="url(#lg2)" opacity="0.9" transform="rotate(60)"/>
+                <rect x="-6.5" y="-36" width="13" height="72" rx="4" fill="url(#lg2)" opacity="0.9" transform="rotate(120)"/>
+                <circle r="15" fill="url(#lg1)" stroke="url(#lg2)" stroke-width="3"/>
+                <polyline points="-10,0 -5,0 -2.5,-8 2.5,8 5,0 10,0" fill="none" stroke="url(#lg2)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </g>
+        </svg>
+        <div id="loading-title">NotSan<span>Trainer</span></div>
+        <div id="loading-sub">App wird geladen...</div>
+        <div id="loading-bar"><div id="loading-bar-inner"></div></div>
+    </div>
+
+    <!-- App Root -->
+    <div id="root"></div>
+
+    <!-- React (Production) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <!-- Babel Standalone for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Data (pure JS, no transpilation needed) -->
+    <script src="data.js"></script>
+    <script src="entities.js"></script>
+
+    <!-- App Components (JSX, transpiled by Babel) -->
+    <script type="text/babel" src="app.jsx" data-type="module"></script>
+
+    <!-- Hide loading screen after app mounts -->
+    <script>
+        const checkReady = setInterval(() => {
+            if (document.querySelector('#root > div')) {
+                const ls = document.getElementById('loading-screen');
+                if (ls) {
+                    ls.classList.add('fade-out');
+                    setTimeout(() => ls.remove(), 400);
+                }
+                clearInterval(checkReady);
+            }
+        }, 100);
+        // Fallback: remove after 15s
+        setTimeout(() => {
+            const ls = document.getElementById('loading-screen');
+            if (ls) { ls.classList.add('fade-out'); setTimeout(() => ls.remove(), 400); }
+        }, 15000);
+    </script>
+</body>
+</html>
