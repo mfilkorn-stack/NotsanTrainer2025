@@ -4233,7 +4233,7 @@ return (
 function FeedbackForm() {
 const [expanded, setExpanded] = useState(false);
 // ⚠️ HIER DEINE GOOGLE FORMS URL EINTRAGEN:
-const FORM_URL = "https://docs.google.com/forms/d/e/DEINE_FORM_ID/viewform?embedded=true";
+const FORM_URL = "<iframe src="https://docs.google.com/forms/d/e/1FAIpQLSfg4iu733QdhUMSu4jmjQ1uKJlRfSGkkraGu0dA_h2hxdIYIA/viewform?embedded=true" width="640" height="512" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>";
 return (
 <Card style={{marginBottom:24,background:`linear-gradient(135deg,${COLORS.card},#131b35)`,border:`1px solid ${COLORS.border}`,overflow:"hidden"}}>
 <div onClick={()=>setExpanded(!expanded)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer"}}>
