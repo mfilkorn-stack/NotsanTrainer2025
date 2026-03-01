@@ -1,5 +1,44 @@
 var { useState, useEffect, useCallback, useMemo } = React;
 
+function LinkedText({text, navigate, style}) {
+if(!text || !navigate) return <span style={style}>{text}</span>;
+const linkStyle = {color:"#60a5fa",cursor:"pointer",textDecoration:"underline",textDecorationStyle:"dotted",textUnderlineOffset:3,textDecorationColor:"#60a5fa50"};
+// Simple word-boundary matching for entities
+let result = [];
+let remaining = text;
+while(remaining.length > 0) {
+let bestMatch = null;
+let bestIdx = remaining.length;
+for(const ek of ENTITY_KEYS) {
+const idx = remaining.toLowerCase().indexOf(ek);
+if(idx !== -1 && idx < bestIdx) {
+bestIdx = idx;
+bestMatch = ek;
+}
+}
+if(!bestMatch) { result.push(remaining); break; }
+if(bestIdx > 0) result.push(remaining.substring(0, bestIdx));
+const matchedText = remaining.substring(bestIdx, bestIdx + bestMatch.length);
+result.push({matched: matchedText, entity: ENTITY_MAP[bestMatch]});
+remaining = remaining.substring(bestIdx + bestMatch.length);
+}
+if(result.length <= 1 && typeof result[0] === 'string') return <span style={style}>{text}</span>;
+return <span style={style}>{result.map((part,i)=>{
+if(typeof part === 'string') return <span key={i}>{part}</span>;
+return <span key={i} style={linkStyle} onClick={(e)=>{e.stopPropagation();navigate("reference",part.entity.tab+":"+part.entity.id);}} title={"\u2192 "+part.entity.label}>{part.matched}</span>;
+})}</span>;
+}
+function LinkedBadge({text, navigate, color}) {
+const key = text.toLowerCase();
+const entity = ENTITY_MAP[key];
+const badgeStyle = {display:"inline-block",padding:"3px 10px",borderRadius:20,fontSize:11,fontWeight:600,background:(color||"#3b82f6")+"18",color:color||"#3b82f6",letterSpacing:.3};
+if(entity && navigate) {
+return <span style={{...badgeStyle,cursor:"pointer",textDecoration:"underline",textDecorationStyle:"dotted",textUnderlineOffset:2,textDecorationColor:(color||"#3b82f6")+"60"}} onClick={(e)=>{e.stopPropagation();navigate("reference",`${entity.tab}:${entity.id}`);}} title={`→ ${entity.label}`}>{text}</span>;
+}
+return <span style={badgeStyle}>{text}</span>;
+}
+
+
 // ═══════════════════════════════════════════════════════
 // SVG ICON SYSTEM
 // ═══════════════════════════════════════════════════════
