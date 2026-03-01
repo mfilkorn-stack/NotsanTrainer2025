@@ -4220,10 +4220,137 @@ return (
 </div>
 )}
 </Card>
-<div style={{display:"flex",justifyContent:"center"}}>
+<FeedbackForm />
+<div style={{display:"flex",justifyContent:"center",marginTop:24}}>
 <Button onClick={reset} variant="ghost" size="sm"> Statistiken zurücksetzen</Button>
 </div>
 </div>
+);
+}
+// ═══════════════════════════════════════════════════════
+// FEEDBACK FORM
+// ═══════════════════════════════════════════════════════
+function FeedbackForm() {
+const [rating, setRating] = useState(0);
+const [hoverRating, setHoverRating] = useState(0);
+const [category, setCategory] = useState("");
+const [text, setText] = useState("");
+const [submitted, setSubmitted] = useState(false);
+const [copied, setCopied] = useState(false);
+const categories = [
+{id:"inhalt",label:"Inhalt / Fachliches",icon:"book"},
+{id:"design",label:"Design / Bedienung",icon:"eye"},
+{id:"funktion",label:"Funktionalität",icon:"pill"},
+{id:"bug",label:"Bug / Fehler",icon:"alertTriangle"},
+{id:"feature",label:"Feature-Wunsch",icon:"star"},
+{id:"sonstiges",label:"Sonstiges",icon:"megaphone"},
+];
+const starLabels = ["","Schlecht","Ausbaufähig","Okay","Gut","Hervorragend"];
+const buildFeedbackText = () => {
+const catLabel = categories.find(c=>c.id===category)?.label || "Keine Kategorie";
+return `NotSanTrainer 2025 – Feedback\n${"═".repeat(35)}\n\nBewertung: ${"★".repeat(rating)}${"☆".repeat(5-rating)} (${rating}/5 – ${starLabels[rating]})\nKategorie: ${catLabel}\n\nFeedback:\n${text}\n\n${"─".repeat(35)}\nGesendet am: ${new Date().toLocaleString("de-DE")}`;
+};
+const handleSubmit = () => {
+if(!rating || !text.trim()) return;
+const body = buildFeedbackText();
+const subject = `NotSanTrainer Feedback: ${categories.find(c=>c.id===category)?.label || "Allgemein"} (${"★".repeat(rating)})`;
+const mailto = `mailto:DEINE-EMAIL@beispiel.de?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+window.open(mailto, "_blank");
+setSubmitted(true);
+};
+const handleCopy = () => {
+const body = buildFeedbackText();
+navigator.clipboard.writeText(body).then(()=>{setCopied(true);setTimeout(()=>setCopied(false),2500);}).catch(()=>{});
+};
+const handleReset = () => {
+setRating(0);setCategory("");setText("");setSubmitted(false);setCopied(false);
+};
+const isValid = rating > 0 && text.trim().length > 0;
+return (
+<Card style={{marginBottom:24,background:`linear-gradient(135deg,${COLORS.card},#131b35)`,border:`1px solid ${COLORS.border}`}}>
+<div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
+<div style={{width:40,height:40,borderRadius:12,background:COLORS.purple+"15",display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${COLORS.purple}20`}}>
+<Icon name="megaphone" size={20} color={COLORS.purple}/>
+</div>
+<div>
+<h3 style={{fontSize:17,fontWeight:700}}>Feedback geben</h3>
+<p style={{fontSize:12,color:COLORS.textDim,marginTop:2}}>Hilf uns, die App zu verbessern!</p>
+</div>
+</div>
+{submitted ? (
+<div className="fade-in" style={{textAlign:"center",padding:"24px 0"}}>
+<div style={{width:56,height:56,borderRadius:"50%",background:COLORS.green+"15",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",border:`2px solid ${COLORS.green}30`}}>
+<Icon name="check" size={28} color={COLORS.green}/>
+</div>
+<h4 style={{fontSize:18,fontWeight:700,marginBottom:6}}>Vielen Dank!</h4>
+<p style={{color:COLORS.textMuted,fontSize:13,marginBottom:20,lineHeight:1.6}}>Dein Feedback hilft uns, die App weiterzuentwickeln.</p>
+<Button onClick={handleReset} variant="ghost" size="sm">Weiteres Feedback geben</Button>
+</div>
+) : (
+<div>
+{/* Star Rating */}
+<div style={{marginBottom:20}}>
+<label style={{fontSize:12,fontWeight:600,color:COLORS.textMuted,textTransform:"uppercase",letterSpacing:.5,display:"block",marginBottom:10}}>Bewertung</label>
+<div style={{display:"flex",alignItems:"center",gap:4}}>
+{[1,2,3,4,5].map(star => (
+<button key={star} onClick={()=>setRating(star)} onMouseEnter={()=>setHoverRating(star)} onMouseLeave={()=>setHoverRating(0)}
+style={{background:"none",border:"none",cursor:"pointer",padding:4,transition:"transform 0.15s",transform:(hoverRating||rating)>=star?"scale(1.15)":"scale(1)"}}>
+<svg width="28" height="28" viewBox="0 0 24 24" fill={(hoverRating||rating)>=star?"#eab308":"none"} stroke={(hoverRating||rating)>=star?"#eab308":COLORS.borderLight} strokeWidth="1.5">
+<path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+</svg>
+</button>
+))}
+{(hoverRating||rating)>0 && (
+<span style={{marginLeft:8,fontSize:13,color:COLORS.yellow,fontWeight:600}}>{starLabels[hoverRating||rating]}</span>
+)}
+</div>
+</div>
+{/* Category */}
+<div style={{marginBottom:20}}>
+<label style={{fontSize:12,fontWeight:600,color:COLORS.textMuted,textTransform:"uppercase",letterSpacing:.5,display:"block",marginBottom:10}}>Kategorie</label>
+<div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+{categories.map(c=>(
+<button key={c.id} onClick={()=>setCategory(c.id)}
+style={{display:"flex",alignItems:"center",gap:6,padding:"8px 14px",borderRadius:10,border:`1.5px solid ${category===c.id?COLORS.purple:COLORS.border}`,background:category===c.id?COLORS.purple+"15":"transparent",color:category===c.id?COLORS.purple:COLORS.textMuted,fontSize:13,fontWeight:category===c.id?600:400,cursor:"pointer",fontFamily:"'Outfit',sans-serif",transition:"all 0.2s"}}>
+<Icon name={c.icon} size={14} color={category===c.id?COLORS.purple:COLORS.textDim}/>
+{c.label}
+</button>
+))}
+</div>
+</div>
+{/* Text Input */}
+<div style={{marginBottom:20}}>
+<label style={{fontSize:12,fontWeight:600,color:COLORS.textMuted,textTransform:"uppercase",letterSpacing:.5,display:"block",marginBottom:10}}>Dein Feedback</label>
+<textarea value={text} onChange={e=>setText(e.target.value)} placeholder="Was gefällt dir? Was können wir verbessern? Hast du einen Bug gefunden?"
+style={{width:"100%",minHeight:120,padding:14,borderRadius:12,border:`1.5px solid ${COLORS.border}`,background:COLORS.bg,color:COLORS.text,fontSize:14,fontFamily:"'Outfit',sans-serif",lineHeight:1.6,resize:"vertical",outline:"none",transition:"border-color 0.2s"}}
+onFocus={e=>e.target.style.borderColor=COLORS.purple}
+onBlur={e=>e.target.style.borderColor=COLORS.border}
+/>
+<div style={{display:"flex",justifyContent:"flex-end",marginTop:4}}>
+<span style={{fontSize:11,color:text.length>0?COLORS.textDim:COLORS.border}}>{text.length} Zeichen</span>
+</div>
+</div>
+{/* Actions */}
+<div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+<button onClick={handleSubmit} disabled={!isValid}
+style={{flex:1,minWidth:180,display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"12px 20px",borderRadius:12,border:"none",background:isValid?`linear-gradient(135deg,${COLORS.purple},#7c3aed)`:`${COLORS.border}`,color:isValid?"#fff":COLORS.textDim,fontSize:14,fontWeight:600,cursor:isValid?"pointer":"not-allowed",fontFamily:"'Outfit',sans-serif",transition:"all 0.25s",boxShadow:isValid?`0 4px 16px ${COLORS.purple}30`:"none",opacity:isValid?1:.5}}>
+<Icon name="megaphone" size={16} color={isValid?"#fff":COLORS.textDim}/>
+Per E-Mail senden
+</button>
+<button onClick={handleCopy} disabled={!isValid}
+style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"12px 20px",borderRadius:12,border:`1.5px solid ${isValid?COLORS.border:COLORS.border}`,background:"transparent",color:copied?COLORS.green:isValid?COLORS.textMuted:COLORS.textDim,fontSize:14,fontWeight:600,cursor:isValid?"pointer":"not-allowed",fontFamily:"'Outfit',sans-serif",transition:"all 0.25s",opacity:isValid?1:.5}}>
+<Icon name={copied?"check":"clipboard"} size={16} color={copied?COLORS.green:isValid?COLORS.textMuted:COLORS.textDim}/>
+{copied?"Kopiert!":"Kopieren"}
+</button>
+</div>
+{!isValid && (rating > 0 || text.length > 0) && (
+<p style={{fontSize:12,color:COLORS.textDim,marginTop:10,fontStyle:"italic"}}>
+{!rating ? "Bitte gib eine Sternebewertung ab." : "Bitte schreibe einen kurzen Feedback-Text."}
+</p>
+)}
+</div>
+)}
+</Card>
 );
 }
 
