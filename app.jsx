@@ -222,6 +222,8 @@ body{background:${COLORS.bg};color:${COLORS.text};font-family:'Outfit',system-ui
 .fade-in{animation:fadeIn .5s cubic-bezier(.16,1,.3,1) both;}
 .slide-in{animation:slideIn .35s ease-out both;}
 .glass{background:rgba(15,21,37,0.7);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}
+@media(min-width:769px){.bottom-nav{display:none!important;}.desktop-nav{display:flex!important;}}
+@media(max-width:768px){.desktop-nav{display:none!important;}.bottom-nav{display:flex!important;}.header-logo-text{font-size:15px!important;}}
 `;
 // ═══════════════════════════════════════════════════════
 // UTILITY COMPONENTS
@@ -275,7 +277,7 @@ return (
 <div style={{minHeight:"100vh",background:COLORS.bg}}>
 <style>{css}</style>
 <Header navigate={navigate} current={view}/>
-<main style={{maxWidth:1100,margin:"0 auto",padding:"20px 16px 60px"}}>
+<main style={{maxWidth:1100,margin:"0 auto",padding:"20px 16px 100px"}}>
 {view==="dashboard" && <Dashboard stats={stats} navigate={navigate}/>}
 {view==="quiz" && <Quiz subView={subView} navigate={navigate} stats={stats} setStats={setStats}/>}
 {view==="cases" && <CaseSimulation navigate={navigate} stats={stats} setStats={setStats}/>}
@@ -299,26 +301,42 @@ const items=[
 {id:"stats",label:"Statistik",iconName:"chart"},
 ];
 return(
+<React.Fragment>
 <header style={{background:"linear-gradient(180deg,rgba(15,21,37,0.95) 0%,rgba(6,8,15,0.98) 100%)",borderBottom:`1px solid ${COLORS.border}`,position:"sticky",top:0,zIndex:100,backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)"}}>
 <div style={{maxWidth:1100,margin:"0 auto",padding:"14px 16px"}}>
 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
 <div style={{display:"flex",alignItems:"center",gap:12,cursor:"pointer"}} onClick={()=>navigate("dashboard")}>
 <Logo size={38}/>
 <div>
-<div style={{fontSize:17,fontWeight:700,letterSpacing:-.5,lineHeight:1.1}}>NotSan<span style={{color:COLORS.accent}}>Trainer</span></div>
+<div className="header-logo-text" style={{fontSize:17,fontWeight:700,letterSpacing:-.5,lineHeight:1.1}}>NotSan<span style={{color:COLORS.accent}}>Trainer</span></div>
 <div style={{fontSize:10,color:COLORS.textDim,letterSpacing:1,fontWeight:500,textTransform:"uppercase"}}>SAA / BPR 2025</div>
 </div>
 </div>
-<nav style={{display:"flex",gap:2,flexWrap:"wrap"}}>
+<nav className="desktop-nav" style={{display:"flex",gap:2,flexWrap:"wrap"}}>
 {items.map(i=>(
 <button key={i.id} onClick={()=>navigate(i.id)} style={{background:current===i.id?COLORS.accent+"15":"transparent",color:current===i.id?COLORS.accent:COLORS.textMuted,border:"none",borderRadius:10,padding:"7px 12px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5,transition:"all .25s",borderBottom:current===i.id?`2px solid ${COLORS.accent}`:"2px solid transparent",letterSpacing:0.2}}>
-<Icon name={i.iconName} size={15} color={current===i.id?COLORS.accent:COLORS.textDim}/><span className="nav-label">{i.label}</span>
+<Icon name={i.iconName} size={15} color={current===i.id?COLORS.accent:COLORS.textDim}/><span>{i.label}</span>
 </button>
 ))}
 </nav>
 </div>
 </div>
 </header>
+{/* ── BOTTOM NAV (mobile only) ── */}
+<nav className="bottom-nav" style={{display:"none",position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(6,8,15,0.92)",backdropFilter:"blur(24px)",WebkitBackdropFilter:"blur(24px)",borderTop:`1px solid ${COLORS.border}`,padding:"6px 4px calc(6px + env(safe-area-inset-bottom, 0px)) 4px",justifyContent:"space-around",alignItems:"center"}}>
+{items.map(i=>{
+const active = current===i.id;
+return(
+<button key={i.id} onClick={()=>navigate(i.id)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,background:"none",border:"none",cursor:"pointer",padding:"4px 6px",borderRadius:10,minWidth:0,flex:1,transition:"all .2s",position:"relative"}}>
+{active && <div style={{position:"absolute",top:-6,left:"50%",transform:"translateX(-50%)",width:20,height:3,borderRadius:2,background:COLORS.accent,boxShadow:`0 0 8px ${COLORS.accent}80`}}/>}
+<div style={{width:36,height:36,borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",background:active?COLORS.accent+"18":"transparent",transition:"all .25s",transform:active?"scale(1.05)":"scale(1)"}}>
+<Icon name={i.iconName} size={20} color={active?COLORS.accent:COLORS.textDim}/>
+</div>
+<span style={{fontSize:10,fontWeight:active?700:500,color:active?COLORS.accent:COLORS.textDim,letterSpacing:.2,transition:"all .2s",lineHeight:1}}>{i.label}</span>
+</button>
+);})}
+</nav>
+</React.Fragment>
 );
 }
 // ═══════════════════════════════════════════════════════
@@ -602,7 +620,7 @@ render:()=><LinkedText text={ec.findings.neurologie} navigate={navigate} style={
 {key:"palpation",iconName:"hand",label:"Palpation / Pulsstatus",color:"#f97316",
 render:()=><LinkedText text={ec.findings.palpation} navigate={navigate} style={{fontSize:13,lineHeight:1.8,color:COLORS.text}}/>},
 ];
-if(ec.spezial) {
+if(ec.spezial && phase !== "explore") {
 exploreCategories.push({key:"spezial",iconName:"star",label:ec.spezial.name,color:"#eab308",
 render:()=><pre style={{fontSize:13,lineHeight:1.8,color:COLORS.text,fontFamily:"'DM Sans',sans-serif",whiteSpace:"pre-wrap"}}>{ec.spezial.result}</pre>});
 }
@@ -1087,6 +1105,30 @@ else {setTreeStep(s=>s+1);setTreeAnswered(null);}
 );
 }
 // ─── EXERCISE: FILL GAPS ───
+// Tolerant gap matching: strips parentheses, brackets, extra spaces, units etc.
+function gapMatch(userRaw, expectedRaw) {
+if(!userRaw || !expectedRaw) return false;
+const normalize = (s) => s.toLowerCase().trim()
+.replace(/[()[\]{}„""''«»]/g, "")
+.replace(/\s+/g, " ")
+.trim();
+const userVal = normalize(userRaw);
+if(!userVal) return false;
+const expected = normalize(expectedRaw);
+// Direct match after normalization
+if(userVal === expected) return true;
+// Extract core numbers for numeric comparison
+const userNums = userVal.replace(/[^0-9.,]/g, "").replace(",", ".");
+const expNums = expected.replace(/[^0-9.,]/g, "").replace(",", ".");
+if(userNums && expNums && userNums === expNums) return true;
+// Split expected by / or , for alternatives
+const expectedParts = expected.split(/[\/,]/).map(p => p.trim()).filter(Boolean);
+if(expectedParts.some(ep => userVal.includes(ep) || ep.includes(userVal))) return true;
+// Check if user typed the essential part (numbers + key word)
+if(userVal.length >= 2 && expected.includes(userVal)) return true;
+if(expected.length >= 2 && userVal.includes(expected)) return true;
+return false;
+}
 if(exerciseType==="gaps") {
 const algo = selectedAlgo;
 const allGaps = algo.gaps;
@@ -1114,12 +1156,7 @@ const inputCount = parts.length - 1;
 const checkGap = () => {
 let correct = true;
 for(let i=0;i<inputCount;i++){
-const userVal = (gapInputs[`${gapIdx}-${i}`]||"").trim().toLowerCase();
-const expected = answers[i]?.toLowerCase().trim()||"";
-// Allow some flexibility: check if user answer contains the key part
-const expectedParts = expected.split(/[\/,]/);
-const match = expectedParts.some(ep=>userVal.includes(ep.trim())) || expected.includes(userVal);
-if(!userVal || !match) correct = false;
+if(!gapMatch(gapInputs[`${gapIdx}-${i}`], answers[i])) correct = false;
 }
 if(correct) setGapScore(s=>s+1);
 setGapChecked(true);
@@ -1140,19 +1177,13 @@ return (
 {pi < inputCount && (
 gapChecked ? (
 <span style={{display:"inline-block",padding:"2px 10px",borderRadius:6,fontWeight:700,fontSize:14,
-background:(gapInputs[`${gapIdx}-${pi}`]||"").trim().toLowerCase()===answers[pi]?.toLowerCase().trim()||
-answers[pi]?.toLowerCase().split(/[\/,]/).some(ep=>(gapInputs[`${gapIdx}-${pi}`]||"").trim().toLowerCase().includes(ep.trim()))
-?"#0d2818":"#2d1215",
-color:(gapInputs[`${gapIdx}-${pi}`]||"").trim().toLowerCase()===answers[pi]?.toLowerCase().trim()||
-answers[pi]?.toLowerCase().split(/[\/,]/).some(ep=>(gapInputs[`${gapIdx}-${pi}`]||"").trim().toLowerCase().includes(ep.trim()))
-?COLORS.green:"#ef4444",
-border:`1px solid ${(gapInputs[`${gapIdx}-${pi}`]||"").trim().toLowerCase()===answers[pi]?.toLowerCase().trim()||
-answers[pi]?.toLowerCase().split(/[\/,]/).some(ep=>(gapInputs[`${gapIdx}-${pi}`]||"").trim().toLowerCase().includes(ep.trim()))
-?COLORS.green+"60":"#ef444460"}`
+background:gapMatch(gapInputs[`${gapIdx}-${pi}`], answers[pi])?"#0d2818":"#2d1215",
+color:gapMatch(gapInputs[`${gapIdx}-${pi}`], answers[pi])?COLORS.green:"#ef4444",
+border:`1px solid ${gapMatch(gapInputs[`${gapIdx}-${pi}`], answers[pi])?COLORS.green+"60":"#ef444460"}`
 }}>
 {(gapInputs[`${gapIdx}-${pi}`]||"—")}
-{!((gapInputs[`${gapIdx}-${pi}`]||"").trim().toLowerCase()===answers[pi]?.toLowerCase().trim()||
-answers[pi]?.toLowerCase().split(/[\/,]/).some(ep=>(gapInputs[`${gapIdx}-${pi}`]||"").trim().toLowerCase().includes(ep.trim())))
+{!gapMatch(gapInputs[`${gapIdx}-${pi}`], answers[pi])
+&& <span style={{color:COLORS.green,marginLeft:6}}>({answers[pi]})</span>}
 && <span style={{color:COLORS.green,marginLeft:6}}>({answers[pi]})</span>}
 </span>
 ) : (
@@ -3942,7 +3973,7 @@ render:()=><LinkedText text={ec.findings.neurologie} navigate={navigate} style={
 {key:"palpation",iconName:"hand",label:"Palpation / Pulsstatus",color:"#f97316",
 render:()=><LinkedText text={ec.findings.palpation} navigate={navigate} style={{fontSize:13,lineHeight:1.8,color:COLORS.text}}/>},
 ];
-if(ec.spezial) {
+if(ec.spezial && casePhase !== "explore") {
 exploreCategories.push({key:"spezial",iconName:"star",label:ec.spezial.name,color:"#eab308",
 render:()=><pre style={{fontSize:13,lineHeight:1.8,color:COLORS.text,fontFamily:"'DM Sans',sans-serif",whiteSpace:"pre-wrap"}}>{ec.spezial.result}</pre>});
 }
