@@ -331,7 +331,7 @@ const modules = [
 {iconName:"brain",title:"Multiple-Choice Quiz",desc:`${QUIZ_QUESTIONS.length} Fragen · ${MEDICATIONS.length} Medikamente · ${INVASIVE.length} Invasive Maßn. · ${LEITSYMPTOME.length} Leitsymptome · ${BPR.length} Krankheitsbilder · ${EKG_DATA.length} EKG · ${SINNHAFT_DATA.length} Übergabe · ${QUIZ_QUESTIONS.filter(q=>q.cat==="Werkzeuge").length} Werkzeuge`,color:COLORS.green,glow:COLORS.greenGlow,view:"quiz"},
 {iconName:"folder",title:"Fallsimulationen",desc:`${CASES.length} Trainingsfälle · ${EXAM_CASES.length} Prüfungsfälle · Algorithmus-Trainer`,color:COLORS.orange,glow:"rgba(249,115,22,0.12)",view:"cases"},
 {iconName:"graduationCap",title:"Gesamtprüfung",desc:"25 Fragen + 1 Prüfungsfall · 40 min",color:COLORS.accent,glow:COLORS.accentGlow,view:"exam"},
-{iconName:"chart",title:"Statistik & Schwachstellen",desc:"Lernfortschritt & Analyse",color:COLORS.yellow,glow:COLORS.yellowGlow,view:"stats"},
+{iconName:"chart",title:"Statistiken & Feedback",desc:"Lernfortschritt & Analyse",color:COLORS.yellow,glow:COLORS.yellowGlow,view:"stats"},
 ];
 return (
 <div className="fade-in">
@@ -4169,7 +4169,7 @@ const reset = ()=>{if(confirm("Alle Statistiken zurücksetzen?"))setStats({quizC
 return (
 <div className="fade-in">
 <Button onClick={()=>navigate("dashboard")} variant="ghost" size="sm" style={{marginBottom:16}}><Icon name="arrowLeft" size={14}/> Zurück</Button>
-<h2 style={{fontSize:22,fontWeight:700,marginBottom:20}}> Statistik & Schwachstellen-Analyse</h2>
+<h2 style={{fontSize:22,fontWeight:700,marginBottom:20}}> Statistiken & Feedback</h2>
 <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:12,marginBottom:24}}>
 {[{label:"Erfolgsquote",value:`${pct}%`,color:pct>=70?COLORS.green:COLORS.accent,iconName:"target"},
 {label:"Fragen beantwortet",value:stats.quizTotal,color:COLORS.blue,iconName:"brain"},
