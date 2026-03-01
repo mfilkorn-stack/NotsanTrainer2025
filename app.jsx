@@ -217,6 +217,15 @@ body{background:${COLORS.bg};color:${COLORS.text};font-family:'Outfit',system-ui
 @keyframes slideIn{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
 @keyframes glow{0%,100%{box-shadow:0 0 5px ${COLORS.accent}40}50%{box-shadow:0 0 20px ${COLORS.accent}60}}
 @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes shake{0%,100%{transform:translateX(0)}15%,45%,75%{transform:translateX(-6px)}30%,60%,90%{transform:translateX(6px)}}
+@keyframes correctPop{0%{transform:scale(1)}40%{transform:scale(1.03)}100%{transform:scale(1)}}
+@keyframes wrongFlash{0%{opacity:1}50%{opacity:.7}100%{opacity:1}}
+@keyframes confettiFall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(120px) rotate(720deg);opacity:0}}
+@keyframes scoreReveal{0%{transform:scale(0);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+@keyframes checkDraw{0%{stroke-dashoffset:24}100%{stroke-dashoffset:0}}
+.shake-anim{animation:shake .5s ease-in-out;}
+.correct-pop{animation:correctPop .4s ease-out;}
+.wrong-flash{animation:wrongFlash .4s ease-out;}
 @keyframes floatPulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.05);opacity:1}}
 @keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 .fade-in{animation:fadeIn .5s cubic-bezier(.16,1,.3,1) both;}
@@ -225,6 +234,62 @@ body{background:${COLORS.bg};color:${COLORS.text};font-family:'Outfit',system-ui
 @media(min-width:769px){.bottom-nav{display:none!important;}.desktop-nav{display:flex!important;}}
 @media(max-width:768px){.desktop-nav{display:none!important;}.bottom-nav{display:flex!important;}.header-logo-text{font-size:15px!important;}}
 `;
+// ═══════════════════════════════════════════════════════
+// HAPTIC FEEDBACK & MICRO-ANIMATIONS
+// ═══════════════════════════════════════════════════════
+const haptic = (type) => {
+if(!navigator.vibrate) return;
+if(type==="success") navigator.vibrate([10,30,10]);
+else if(type==="error") navigator.vibrate([50,30,50]);
+else if(type==="light") navigator.vibrate(5);
+};
+function ConfettiBurst({active,color=COLORS.green}) {
+if(!active) return null;
+const pieces = Array.from({length:18},(_,i)=>({
+id:i,
+left: 10 + Math.random()*80,
+delay: Math.random()*0.3,
+duration: 0.6 + Math.random()*0.5,
+size: 4 + Math.random()*5,
+color: [COLORS.green,"#34d399","#fbbf24","#60a5fa","#a78bfa","#f472b6"][i%6],
+rotation: Math.random()*360,
+x: (Math.random()-0.5)*120,
+}));
+return (
+<div style={{position:"absolute",top:0,left:0,right:0,bottom:0,pointerEvents:"none",overflow:"hidden",zIndex:10}}>
+{pieces.map(p=>(
+<div key={p.id} style={{
+position:"absolute",top:"40%",left:`${p.left}%`,
+width:p.size,height:p.size,borderRadius:p.size>6?2:"50%",
+background:p.color,opacity:0,
+animation:`confettiFall ${p.duration}s ease-out ${p.delay}s both`,
+transform:`rotate(${p.rotation}deg)`,
+marginLeft:p.x,
+}}/>
+))}
+</div>
+);
+}
+function ScoreCircle({pct,size=140,strokeWidth=10}) {
+const r = (size-strokeWidth)/2;
+const circ = 2*Math.PI*r;
+const offset = circ - (pct/100)*circ;
+const color = pct>=80?COLORS.green:pct>=60?COLORS.yellow:COLORS.accent;
+return (
+<div style={{position:"relative",width:size,height:size,margin:"0 auto",animation:"scoreReveal .7s cubic-bezier(.16,1,.3,1) both"}}>
+<svg width={size} height={size} style={{transform:"rotate(-90deg)"}}>
+<circle cx={size/2} cy={size/2} r={r} fill="none" stroke={COLORS.border} strokeWidth={strokeWidth}/>
+<circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={strokeWidth}
+strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
+style={{transition:"stroke-dashoffset 1.2s cubic-bezier(.16,1,.3,1) .3s"}}/>
+</svg>
+<div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+<div style={{fontSize:size*0.3,fontWeight:800,color,lineHeight:1}}>{pct}%</div>
+<div style={{fontSize:size*0.09,color:COLORS.textMuted,fontWeight:500,marginTop:2}}>{pct>=80?"Sehr gut":pct>=60?"Gut":"Üben"}</div>
+</div>
+</div>
+);
+}
 // ═══════════════════════════════════════════════════════
 // UTILITY COMPONENTS
 // ═══════════════════════════════════════════════════════
@@ -427,7 +492,8 @@ const answer = (idx) => {
 if(selected!==null) return;
 setSelected(idx);
 const correct = idx===questions[qi].correct;
-if(correct) setScore(s=>s+1);
+if(correct) {setScore(s=>s+1);haptic("success");}
+else haptic("error");
 setStats(s=>{
 const wrong = correct?s.wrongQuestions:([...s.wrongQuestions,questions[qi].id]);
 return{...s,quizCorrect:s.quizCorrect+(correct?1:0),quizTotal:s.quizTotal+1,wrongQuestions:[...new Set(wrong)]};
@@ -466,10 +532,9 @@ if(done) {
 const pct = Math.round(score/questions.length*100);
 return (
 <div className="fade-in" style={{textAlign:"center",paddingTop:40}}>
-<div style={{fontSize:64,marginBottom:16}}>{pct>=80?" ":pct>=60?" ":" "}</div>
-<h2 style={{fontSize:28,fontWeight:700}}>Quiz beendet!</h2>
-<p style={{fontSize:48,fontWeight:700,color:pct>=80?COLORS.green:pct>=60?COLORS.yellow:COLORS.accent,margin:"12px 0"}}>{pct}%</p>
-<p style={{color:COLORS.textMuted}}>{score} von {questions.length} richtig</p>
+<ScoreCircle pct={pct} size={160}/>
+<h2 style={{fontSize:28,fontWeight:700,marginTop:20}}>Quiz beendet!</h2>
+<p style={{color:COLORS.textMuted,marginTop:8}}>{score} von {questions.length} richtig</p>
 <div style={{display:"flex",justifyContent:"center",gap:12,marginTop:24}}>
 <Button onClick={()=>setCategory(null)} variant="secondary">Kategorien</Button>
 <Button onClick={()=>startQuiz(category)}>Nochmal</Button>
@@ -495,15 +560,17 @@ return (
 <div style={{display:"flex",flexDirection:"column",gap:10}}>
 {q.opts.map((o,i)=>{
 let bg=COLORS.bg;let border=COLORS.border;let color=COLORS.text;
+let anim="";
 if(selected!==null){
-if(i===q.correct){bg=COLORS.green+"20";border=COLORS.green;color=COLORS.green;}
-else if(i===selected&&i!==q.correct){bg=COLORS.accent+"20";border=COLORS.accent;color=COLORS.accent;}
+if(i===q.correct){bg=COLORS.green+"20";border=COLORS.green;color=COLORS.green;anim="correct-pop";}
+else if(i===selected&&i!==q.correct){bg=COLORS.accent+"20";border=COLORS.accent;color=COLORS.accent;anim="shake-anim";}
 } else if(selected===null) {bg=COLORS.bg;}
 return(
-<div key={i} onClick={()=>answer(i)} style={{padding:"12px 16px",background:bg,border:`2px solid ${border}`,borderRadius:12,cursor:selected===null?"pointer":"default",transition:"all .2s",color,fontWeight:selected!==null&&i===q.correct?700:400}}
+<div key={i} className={anim} onClick={()=>answer(i)} style={{padding:"12px 16px",background:bg,border:`2px solid ${border}`,borderRadius:12,cursor:selected===null?"pointer":"default",transition:"all .2s",color,fontWeight:selected!==null&&i===q.correct?700:400,position:"relative",overflow:"hidden"}}
 onMouseEnter={e=>{if(selected===null)e.currentTarget.style.borderColor=COLORS.blue}}
 onMouseLeave={e=>{if(selected===null)e.currentTarget.style.borderColor=COLORS.border}}>
 <span style={{fontWeight:700,marginRight:10,opacity:.5}}>{String.fromCharCode(65+i)}</span>{o}
+{selected===i&&i===q.correct&&<ConfettiBurst active={true}/>}
 </div>
 );
 })}
@@ -648,7 +715,7 @@ return (
 {exploreCategories.map(cat=>{
 const isRevealed = revealed[cat.key];
 return (
-<div key={cat.key} onClick={()=>setRevealed(r=>({...r,[cat.key]:true}))} style={{background:isRevealed?cat.color+"08":COLORS.card,border:`2px solid ${isRevealed?cat.color+"40":COLORS.border}`,borderRadius:14,padding:14,cursor:"pointer",transition:"all .3s"}}>
+<div key={cat.key} onClick={()=>{haptic("light");setRevealed(r=>({...r,[cat.key]:true}))}} style={{background:isRevealed?cat.color+"08":COLORS.card,border:`2px solid ${isRevealed?cat.color+"40":COLORS.border}`,borderRadius:14,padding:14,cursor:"pointer",transition:"all .3s"}}>
 <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:isRevealed?10:0}}>
 <span style={{fontSize:20}}><Icon name={cat.iconName} size={18} color={cat.color}/></span>
 <span style={{fontSize:14,fontWeight:700,color:isRevealed?cat.color:COLORS.text}}>{cat.label}</span>
@@ -681,7 +748,8 @@ if(diagSelected!==null) return;
 setDiagSelected(idx);
 const correct = idx===ec.correctDiagnose;
 setDiagCorrect(correct);
-if(correct) setDiagScore(1);
+if(correct) {setDiagScore(1);haptic("success");}
+else haptic("error");
 };
 return (
 <div className="fade-in">
@@ -698,15 +766,17 @@ return (
 <div style={{display:"flex",flexDirection:"column",gap:10}}>
 {ec.diagnoseOptionen.map((o,i)=>{
 let bg=COLORS.bg,border=COLORS.border,color=COLORS.text;
+let anim="";
 if(diagSelected!==null){
-if(i===ec.correctDiagnose){bg=COLORS.green+"20";border=COLORS.green;color=COLORS.green;}
-else if(i===diagSelected&&i!==ec.correctDiagnose){bg=COLORS.accent+"20";border=COLORS.accent;color=COLORS.accent;}
+if(i===ec.correctDiagnose){bg=COLORS.green+"20";border=COLORS.green;color=COLORS.green;anim="correct-pop";}
+else if(i===diagSelected&&i!==ec.correctDiagnose){bg=COLORS.accent+"20";border=COLORS.accent;color=COLORS.accent;anim="shake-anim";}
 }
 return(
-<div key={i} onClick={()=>submitDiag(i)} style={{padding:"14px 18px",background:bg,border:`2px solid ${border}`,borderRadius:12,cursor:diagSelected===null?"pointer":"default",transition:"all .2s",color,fontWeight:diagSelected!==null&&i===ec.correctDiagnose?700:400}}
+<div key={i} className={anim} onClick={()=>submitDiag(i)} style={{padding:"14px 18px",background:bg,border:`2px solid ${border}`,borderRadius:12,cursor:diagSelected===null?"pointer":"default",transition:"all .2s",color,fontWeight:diagSelected!==null&&i===ec.correctDiagnose?700:400,position:"relative",overflow:"hidden"}}
 onMouseEnter={e=>{if(diagSelected===null)e.currentTarget.style.borderColor=COLORS.purple}}
 onMouseLeave={e=>{if(diagSelected===null)e.currentTarget.style.borderColor=COLORS.border}}>
 <span style={{fontWeight:700,marginRight:10,opacity:.5}}>{String.fromCharCode(65+i)}</span>{o}
+{diagSelected===i&&i===ec.correctDiagnose&&<ConfettiBurst active={true}/>}
 </div>
 );
 })}
@@ -746,7 +816,8 @@ const ts = treatSteps[treatStep];
 const answerTreat = (idx)=>{
 if(treatSelected!==null) return;
 setTreatSelected(idx);
-if(idx===ts.correct) setTreatScore(s=>s+1);
+if(idx===ts.correct) {setTreatScore(s=>s+1);haptic("success");}
+else haptic("error");
 };
 const nextTreat = ()=>{
 if(treatStep+1>=treatSteps.length){
@@ -774,12 +845,13 @@ return (
 <div style={{display:"flex",flexDirection:"column",gap:10}}>
 {ts.opts.map((o,i)=>{
 let bg=COLORS.bg,border=COLORS.border,color=COLORS.text;
+let anim="";
 if(treatSelected!==null){
-if(i===ts.correct){bg=COLORS.green+"20";border=COLORS.green;color=COLORS.green;}
-else if(i===treatSelected){bg=COLORS.accent+"20";border=COLORS.accent;color=COLORS.accent;}
+if(i===ts.correct){bg=COLORS.green+"20";border=COLORS.green;color=COLORS.green;anim="correct-pop";}
+else if(i===treatSelected){bg=COLORS.accent+"20";border=COLORS.accent;color=COLORS.accent;anim="shake-anim";}
 }
 return(
-<div key={i} onClick={()=>answerTreat(i)} style={{padding:"12px 16px",background:bg,border:`2px solid ${border}`,borderRadius:12,cursor:treatSelected===null?"pointer":"default",transition:"all .2s",color,fontWeight:treatSelected!==null&&i===ts.correct?700:400}}>
+<div key={i} className={anim} onClick={()=>answerTreat(i)} style={{padding:"12px 16px",background:bg,border:`2px solid ${border}`,borderRadius:12,cursor:treatSelected===null?"pointer":"default",transition:"all .2s",color,fontWeight:treatSelected!==null&&i===ts.correct?700:400}}>
 <span style={{fontWeight:700,marginRight:10,opacity:.5}}>{String.fromCharCode(65+i)}</span>{o}
 </div>
 );
@@ -813,10 +885,9 @@ const pct = Math.round(totalCorrect/totalQ*100);
 const examAlgo = ALGORITHM_DATA.find(a=>a.id===ec.bpr);
 return (
 <div className="fade-in" style={{textAlign:"center",paddingTop:30}}>
-<div style={{fontSize:64,marginBottom:16}}>{pct>=80?" ":pct>=60?" ":" "}</div>
-<h2 style={{fontSize:24,fontWeight:700}}>Prüfungsfall abgeschlossen</h2>
+<ScoreCircle pct={pct} size={160}/>
+<h2 style={{fontSize:24,fontWeight:700,marginTop:20}}>Prüfungsfall abgeschlossen</h2>
 <p style={{fontSize:14,color:COLORS.textMuted,margin:"8px 0"}}>{ec.meldung}</p>
-<p style={{fontSize:48,fontWeight:700,color:pct>=80?COLORS.green:pct>=60?COLORS.yellow:COLORS.accent,margin:"12px 0"}}>{pct}%</p>
 <div style={{display:"flex",justifyContent:"center",gap:16,marginTop:8}}>
 <div style={{textAlign:"center"}}>
 <div style={{fontSize:11,color:COLORS.textDim}}>Diagnose</div>
@@ -1078,8 +1149,10 @@ return (
 <div key={oi} onClick={()=>{
 if(answered) return;
 setTreeAnswered(oi);
-if(oi===d.correct) setTreeScore(s=>s+1);
-}} style={{padding:"12px 16px",borderRadius:10,background:bg,border:`1px solid ${border}`,cursor:answered?"default":"pointer",transition:"all .2s",fontSize:13}}>
+if(oi===d.correct) {setTreeScore(s=>s+1);haptic("success");}
+else haptic("error");
+}} className={answered?(isCorrect?"correct-pop":(isSelected?"shake-anim":"")):""}
+style={{padding:"12px 16px",borderRadius:10,background:bg,border:`1px solid ${border}`,cursor:answered?"default":"pointer",transition:"all .2s",fontSize:13}}>
 {opt}
 {answered && isCorrect && " ✓"}
 {answered && isSelected && !isCorrect && " ✗"}
@@ -3823,7 +3896,8 @@ const answer = (idx)=>{
 if(selected!==null) return;
 setSelected(idx);
 const correct = idx===questions[qi].correct;
-if(correct) setScore(s=>s+1);
+if(correct) {setScore(s=>s+1);haptic("success");}
+else haptic("error");
 setAnswers(a=>[...a,{qId:questions[qi].id,selected:idx,correct,type:"quiz"}]);
 };
 const nextQ = ()=>{
@@ -3897,10 +3971,9 @@ BPR.forEach(b=>bprNames[b.id]=b.name);
 LEITSYMPTOME.forEach(l=>bprNames[l.id]=l.name);
 return (
 <div className="fade-in" style={{textAlign:"center",paddingTop:20}}>
-<div style={{fontSize:64,marginBottom:16}}>{passed?" ":" "}</div>
-<h2 style={{fontSize:28,fontWeight:700,color:passed?COLORS.green:COLORS.accent}}>{passed?"Bestanden!":"Nicht bestanden"}</h2>
-<p style={{fontSize:48,fontWeight:700,color:passed?COLORS.green:COLORS.accent,margin:"12px 0"}}>{pct}%</p>
-<p style={{color:COLORS.textMuted}}>{totalScore} von {totalQuestions} richtig · Bestehensgrenze: 70%</p>
+<ScoreCircle pct={pct} size={160}/>
+<h2 style={{fontSize:28,fontWeight:700,color:passed?COLORS.green:COLORS.accent,marginTop:20}}>{passed?"Bestanden!":"Nicht bestanden"}</h2>
+<p style={{color:COLORS.textMuted,marginTop:8}}>{totalScore} von {totalQuestions} richtig · Bestehensgrenze: 70%</p>
 <div style={{display:"flex",justifyContent:"center",gap:16,flexWrap:"wrap",margin:"16px 0"}}>
 <div style={{textAlign:"center",background:COLORS.card,border:`1px solid ${COLORS.border}`,borderRadius:12,padding:"12px 20px"}}>
 <div style={{fontSize:11,color:COLORS.textDim}}>Quiz-Fragen</div>
@@ -3997,7 +4070,7 @@ return (
 {exploreCategories.map(cat=>{
 const isRevealed = caseRevealed[cat.key];
 return (
-<div key={cat.key} onClick={()=>setCaseRevealed(r=>({...r,[cat.key]:true}))} style={{background:isRevealed?cat.color+"08":COLORS.card,border:`2px solid ${isRevealed?cat.color+"40":COLORS.border}`,borderRadius:14,padding:14,cursor:"pointer",transition:"all .3s"}}>
+<div key={cat.key} onClick={()=>{haptic("light");setCaseRevealed(r=>({...r,[cat.key]:true}))}} style={{background:isRevealed?cat.color+"08":COLORS.card,border:`2px solid ${isRevealed?cat.color+"40":COLORS.border}`,borderRadius:14,padding:14,cursor:"pointer",transition:"all .3s"}}>
 <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:isRevealed?10:0}}>
 <span style={{fontSize:20}}><Icon name={cat.iconName} size={18} color={cat.color}/></span>
 <span style={{fontSize:14,fontWeight:700,color:isRevealed?cat.color:COLORS.text}}>{cat.label}</span>
@@ -4025,7 +4098,8 @@ if(caseDiagSelected!==null) return;
 setCaseDiagSelected(idx);
 const correct = idx===ec.correctDiagnose;
 setCaseDiagCorrect(correct);
-if(correct) setCaseDiagScore(1);
+if(correct) {setCaseDiagScore(1);haptic("success");}
+else haptic("error");
 setAnswers(a=>[...a,{type:"case",label:"Diagnose: "+ec.diagnoseOptionen[ec.correctDiagnose],selected:idx,correct}]);
 };
 return (
@@ -4043,13 +4117,15 @@ return (
 <div style={{display:"flex",flexDirection:"column",gap:10}}>
 {ec.diagnoseOptionen.map((o,i)=>{
 let bg=COLORS.bg,border=COLORS.border,color=COLORS.text;
+let anim="";
 if(caseDiagSelected!==null){
-if(i===ec.correctDiagnose){bg=COLORS.green+"20";border=COLORS.green;color=COLORS.green;}
-else if(i===caseDiagSelected&&i!==ec.correctDiagnose){bg=COLORS.accent+"20";border=COLORS.accent;color=COLORS.accent;}
+if(i===ec.correctDiagnose){bg=COLORS.green+"20";border=COLORS.green;color=COLORS.green;anim="correct-pop";}
+else if(i===caseDiagSelected&&i!==ec.correctDiagnose){bg=COLORS.accent+"20";border=COLORS.accent;color=COLORS.accent;anim="shake-anim";}
 }
 return(
-<div key={i} onClick={()=>submitDiag(i)} style={{padding:"14px 18px",background:bg,border:`2px solid ${border}`,borderRadius:12,cursor:caseDiagSelected===null?"pointer":"default",transition:"all .2s",color,fontWeight:caseDiagSelected!==null&&i===ec.correctDiagnose?700:400}}>
+<div key={i} className={anim} onClick={()=>submitDiag(i)} style={{padding:"14px 18px",background:bg,border:`2px solid ${border}`,borderRadius:12,cursor:caseDiagSelected===null?"pointer":"default",transition:"all .2s",color,fontWeight:caseDiagSelected!==null&&i===ec.correctDiagnose?700:400,position:"relative",overflow:"hidden"}}>
 <span style={{fontWeight:700,marginRight:10,opacity:.5}}>{String.fromCharCode(65+i)}</span>{o}
+{caseDiagSelected===i&&i===ec.correctDiagnose&&<ConfettiBurst active={true}/>}
 </div>
 );
 })}
@@ -4081,7 +4157,8 @@ const answerTreat = (idx)=>{
 if(caseTreatSelected!==null) return;
 setCaseTreatSelected(idx);
 const correct = idx===ts.correct;
-if(correct) setCaseTreatScore(s=>s+1);
+if(correct) {setCaseTreatScore(s=>s+1);haptic("success");}
+else haptic("error");
 setAnswers(a=>[...a,{type:"case",label:ts.q,selected:idx,correct}]);
 };
 const nextTreat = ()=>{
@@ -4107,12 +4184,13 @@ return (
 <div style={{display:"flex",flexDirection:"column",gap:10}}>
 {ts.opts.map((o,i)=>{
 let bg=COLORS.bg,border=COLORS.border,color=COLORS.text;
+let anim="";
 if(caseTreatSelected!==null){
-if(i===ts.correct){bg=COLORS.green+"20";border=COLORS.green;color=COLORS.green;}
-else if(i===caseTreatSelected){bg=COLORS.accent+"20";border=COLORS.accent;color=COLORS.accent;}
+if(i===ts.correct){bg=COLORS.green+"20";border=COLORS.green;color=COLORS.green;anim="correct-pop";}
+else if(i===caseTreatSelected){bg=COLORS.accent+"20";border=COLORS.accent;color=COLORS.accent;anim="shake-anim";}
 }
 return(
-<div key={i} onClick={()=>answerTreat(i)} style={{padding:"12px 16px",background:bg,border:`2px solid ${border}`,borderRadius:12,cursor:caseTreatSelected===null?"pointer":"default",transition:"all .2s",color,fontWeight:caseTreatSelected!==null&&i===ts.correct?700:400}}>
+<div key={i} className={anim} onClick={()=>answerTreat(i)} style={{padding:"12px 16px",background:bg,border:`2px solid ${border}`,borderRadius:12,cursor:caseTreatSelected===null?"pointer":"default",transition:"all .2s",color,fontWeight:caseTreatSelected!==null&&i===ts.correct?700:400}}>
 <span style={{fontWeight:700,marginRight:10,opacity:.5}}>{String.fromCharCode(65+i)}</span>{o}
 </div>
 );
@@ -4157,12 +4235,13 @@ return (
 <div style={{display:"flex",flexDirection:"column",gap:10}}>
 {q.opts.map((o,i)=>{
 let bg=COLORS.bg,border=COLORS.border,color=COLORS.text;
+let anim="";
 if(selected!==null){
-if(i===q.correct){bg=COLORS.green+"20";border=COLORS.green;color=COLORS.green;}
-else if(i===selected&&i!==q.correct){bg=COLORS.accent+"20";border=COLORS.accent;color=COLORS.accent;}
+if(i===q.correct){bg=COLORS.green+"20";border=COLORS.green;color=COLORS.green;anim="correct-pop";}
+else if(i===selected&&i!==q.correct){bg=COLORS.accent+"20";border=COLORS.accent;color=COLORS.accent;anim="shake-anim";}
 }
 return(
-<div key={i} onClick={()=>answer(i)} style={{padding:"12px 16px",background:bg,border:`2px solid ${border}`,borderRadius:12,cursor:selected===null?"pointer":"default",transition:"all .2s",color,fontWeight:selected!==null&&i===q.correct?700:400}}>
+<div key={i} className={anim} onClick={()=>answer(i)} style={{padding:"12px 16px",background:bg,border:`2px solid ${border}`,borderRadius:12,cursor:selected===null?"pointer":"default",transition:"all .2s",color,fontWeight:selected!==null&&i===q.correct?700:400}}>
 <span style={{fontWeight:700,marginRight:10,opacity:.5}}>{String.fromCharCode(65+i)}</span>{o}
 </div>
 );
