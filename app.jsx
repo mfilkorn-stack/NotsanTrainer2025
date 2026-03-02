@@ -410,31 +410,22 @@ return(
 function Dashboard({stats,navigate}) {
 const pct = stats.quizTotal>0?Math.round(stats.quizCorrect/stats.quizTotal*100):0;
 const modules = [
-{iconName:"book",title:"Nachschlagewerk",desc:`${MEDICATIONS.length} Medikamente · ${INVASIVE.length} Invasive Maßn. · ${LEITSYMPTOME.length} Leitsymptome · ${BPR.length} Krankheitsbilder · ${EKG_DATA.length} EKG-Befunde · ${SINNHAFT_DATA.length} Übergabe · ${SCORES_DATA.length+CHECKLISTS_DATA.length+ABCDE_DATA.length} Werkzeuge`,color:COLORS.blue,glow:COLORS.blueGlow,view:"reference"},
-{iconName:"brain",title:"Multiple-Choice Quiz",desc:`${QUIZ_QUESTIONS.length} Fragen · ${MEDICATIONS.length} Medikamente · ${INVASIVE.length} Invasive Maßn. · ${LEITSYMPTOME.length} Leitsymptome · ${BPR.length} Krankheitsbilder · ${EKG_DATA.length} EKG · ${SINNHAFT_DATA.length} Übergabe · ${QUIZ_QUESTIONS.filter(q=>q.cat==="Werkzeuge").length} Werkzeuge`,color:COLORS.green,glow:COLORS.greenGlow,view:"quiz"},
-{iconName:"folder",title:"Fallsimulationen",desc:`${CASES.length} Trainingsfälle · ${EXAM_CASES.length} Prüfungsfälle · Algorithmus-Trainer`,color:COLORS.orange,glow:"rgba(249,115,22,0.12)",view:"cases"},
-{iconName:"graduationCap",title:"Gesamtprüfung",desc:"25 Fragen + 1 Prüfungsfall · 40 min",color:COLORS.accent,glow:COLORS.accentGlow,view:"exam"},
-{iconName:"chart",title:"Statistiken & Feedback",desc:"Lernfortschritt & Analyse",color:COLORS.yellow,glow:COLORS.yellowGlow,view:"stats"},
+{iconName:"book",title:"Lexikon",desc:`${MEDICATIONS.length} Medikamente · ${INVASIVE.length} Invasive Maßn. · ${LEITSYMPTOME.length} Leitsymptome · ${BPR.length} Krankheitsbilder · ${EKG_DATA.length} EKG-Befunde · ${SINNHAFT_DATA.length} Übergabe · ${SCORES_DATA.length+CHECKLISTS_DATA.length+ABCDE_DATA.length} Werkzeuge`,color:COLORS.blue,glow:COLORS.blueGlow,view:"reference"},
+{iconName:"brain",title:"Quiz",desc:`${QUIZ_QUESTIONS.length} Fragen · ${MEDICATIONS.length} Medikamente · ${INVASIVE.length} Invasive Maßn. · ${LEITSYMPTOME.length} Leitsymptome · ${BPR.length} Krankheitsbilder · ${EKG_DATA.length} EKG · ${SINNHAFT_DATA.length} Übergabe · ${QUIZ_QUESTIONS.filter(q=>q.cat==="Werkzeuge").length} Werkzeuge`,color:COLORS.green,glow:COLORS.greenGlow,view:"quiz"},
+{iconName:"folder",title:"Fälle",desc:`${CASES.length} Trainingsfälle · ${EXAM_CASES.length} Prüfungsfälle · Algorithmus-Trainer`,color:COLORS.orange,glow:"rgba(249,115,22,0.12)",view:"cases"},
+{iconName:"graduationCap",title:"Prüfung",desc:"25 Fragen + 1 Prüfungsfall · 40 min",color:COLORS.accent,glow:COLORS.accentGlow,view:"exam"},
+{iconName:"chart",title:"Statistik",desc:"Lernfortschritt & Analyse",color:COLORS.yellow,glow:COLORS.yellowGlow,view:"stats"},
 ];
 return (
 <div className="fade-in">
-{/* Hero Section */}
-<div style={{textAlign:"center",margin:"24px 0 40px",position:"relative"}}>
-<div style={{display:"flex",justifyContent:"center",marginBottom:20}}>
-<LogoLarge size={72}/>
-</div>
-<h1 style={{fontSize:32,fontWeight:800,letterSpacing:-1,lineHeight:1.15}}>NotSan<span style={{color:COLORS.accent,background:`linear-gradient(135deg,${COLORS.accent},${COLORS.orange})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Trainer</span> 2025</h1>
-<p style={{color:COLORS.textMuted,fontSize:14,marginTop:8,fontWeight:400,letterSpacing:.2}}>Trainingsapp für Notfallsanitäter · SAA und BPR 2025 · 6-Länder-Arbeitsgruppe</p>
-</div>
-{stats.quizTotal>0 && (
-<Card style={{marginBottom:28,background:`linear-gradient(135deg,${COLORS.card},#131b35)`,border:`1px solid ${COLORS.border}`}}>
+<Card style={{marginBottom:20,background:`linear-gradient(135deg,${COLORS.card},#131b35)`,border:`1px solid ${COLORS.border}`}}>
 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:16}}>
 <div>
 <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
 <Icon name="activity" size={16} color={COLORS.textDim}/>
 <span style={{fontSize:12,color:COLORS.textMuted,fontWeight:600,textTransform:"uppercase",letterSpacing:1}}>Dein Lernfortschritt</span>
 </div>
-<div style={{fontSize:32,fontWeight:800,letterSpacing:-1}}>{pct}% <span style={{fontSize:14,fontWeight:500,color:COLORS.textMuted}}>Erfolgsquote</span></div>
+<div style={{fontSize:32,fontWeight:800,letterSpacing:-1}}>{stats.quizTotal>0?`${pct}%`:"0%"} <span style={{fontSize:14,fontWeight:500,color:COLORS.textMuted}}>Erfolgsquote</span></div>
 </div>
 <div style={{display:"flex",gap:28,flexWrap:"wrap"}}>
 <div style={{textAlign:"center"}}><div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:4}}><Icon name="check" size={16} color={COLORS.green}/><span style={{fontSize:24,fontWeight:700,color:COLORS.green}}>{stats.quizCorrect}</span></div><div style={{fontSize:11,color:COLORS.textDim,fontWeight:500}}>Richtig</div></div>
@@ -442,9 +433,8 @@ return (
 <div style={{textAlign:"center"}}><div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:4}}><Icon name="folder" size={16} color={COLORS.orange}/><span style={{fontSize:24,fontWeight:700,color:COLORS.orange}}>{stats.casesCompleted}</span></div><div style={{fontSize:11,color:COLORS.textDim,fontWeight:500}}>Fälle</div></div>
 </div>
 </div>
-<div style={{marginTop:16}}><ProgressBar value={pct} max={100} color={pct>=70?COLORS.green:pct>=40?COLORS.yellow:COLORS.accent} h={6}/></div>
+<div style={{marginTop:16}}><ProgressBar value={stats.quizTotal>0?pct:0} max={100} color={pct>=70?COLORS.green:pct>=40?COLORS.yellow:COLORS.accent} h={6}/></div>
 </Card>
-)}
 <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:16}}>
 {modules.map((m,i)=>(
 <Card key={i} onClick={()=>navigate(m.view)} glow={m.glow} style={{animationDelay:`${i*70}ms`}} className="fade-in">
@@ -506,7 +496,7 @@ setQi(qi+1);setSelected(null);
 if(!category) return (
 <div className="fade-in">
 <Button onClick={()=>navigate("dashboard")} variant="ghost" size="sm" style={{marginBottom:20}}><Icon name="arrowLeft" size={14}/> Zurück</Button>
-<h2 style={{fontSize:22,fontWeight:700,marginBottom:20}}> Multiple-Choice Quiz</h2>
+<h2 style={{fontSize:22,fontWeight:700,marginBottom:20}}> Quiz</h2>
 <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:16}}>
 {[{id:"Medikamente",label:"Medikamente",count:QUIZ_QUESTIONS.filter(q=>q.cat==="Medikamente").length,color:COLORS.accent,iconName:"pill"},
 {id:"Invasive Maßnahmen",label:"Invasive Maßnahmen",count:QUIZ_QUESTIONS.filter(q=>q.cat==="Invasive Maßnahmen").length,color:COLORS.blue,iconName:"syringe"},
@@ -1318,7 +1308,7 @@ const filteredCases = catFilter==="all" ? CASES : CASES.filter(c=>c.bpr===catFil
 if(mode==="select") return (
 <div className="fade-in">
 <Button onClick={()=>navigate("dashboard")} variant="ghost" size="sm" style={{marginBottom:20}}><Icon name="arrowLeft" size={14}/> Zurück</Button>
-<h2 style={{fontSize:22,fontWeight:700,marginBottom:8}}> Fallsimulationen</h2>
+<h2 style={{fontSize:22,fontWeight:700,marginBottom:8}}> Fälle</h2>
 <p style={{color:COLORS.textMuted,fontSize:13,marginBottom:24}}>Wählen Sie den Modus:</p>
 <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:16}}>
 <Card onClick={()=>setMode("training")} style={{cursor:"pointer",borderColor:COLORS.orange+"40",textAlign:"center",padding:32}}>
@@ -3291,7 +3281,7 @@ const tabs = [{id:"meds",label:"Medikamente",iconName:"pill",color:COLORS.accent
 return (
 <div className="fade-in">
 <Button onClick={()=>navigate("dashboard")} variant="ghost" size="sm" style={{marginBottom:16}}><Icon name="arrowLeft" size={14}/> Zurück</Button>
-<h2 style={{fontSize:22,fontWeight:700,marginBottom:16}}> Nachschlagewerk</h2>
+<h2 style={{fontSize:22,fontWeight:700,marginBottom:16}}> Lexikon</h2>
 <input value={search} onChange={e=>setSearch(e.target.value)} placeholder=" Suchen..." style={{width:"100%",padding:"12px 16px",background:COLORS.card,border:`1px solid ${COLORS.border}`,borderRadius:12,color:COLORS.text,fontSize:14,fontFamily:"'Outfit',sans-serif",marginBottom:16,outline:"none"}}/>
 <div style={{display:"flex",gap:4,marginBottom:20,flexWrap:"wrap"}}>
 {tabs.map(t=>(
@@ -3931,7 +3921,7 @@ LEITSYMPTOME.forEach(l=>bprNames[l.id]=l.name);
 return (
 <div className="fade-in" style={{textAlign:"center",paddingTop:40}}>
 <div style={{fontSize:64,marginBottom:16}}> </div>
-<h2 style={{fontSize:28,fontWeight:700}}>Gesamtprüfung</h2>
+<h2 style={{fontSize:28,fontWeight:700}}>Prüfung</h2>
 <p style={{color:COLORS.textMuted,margin:"12px 0 24px",maxWidth:540,marginLeft:"auto",marginRight:"auto",lineHeight:1.7}}>
 25 Quiz-Fragen aus allen Kategorien + 1 Prüfungsfall mit Erkundung, Diagnosestellung und Behandlung. Zeitlimit: 40 Minuten. Bestehensgrenze: 70%.
 </p>
@@ -4279,7 +4269,7 @@ const reset = ()=>{if(confirm("Alle Statistiken zurücksetzen?"))setStats({quizC
 return (
 <div className="fade-in">
 <Button onClick={()=>navigate("dashboard")} variant="ghost" size="sm" style={{marginBottom:16}}><Icon name="arrowLeft" size={14}/> Zurück</Button>
-<h2 style={{fontSize:22,fontWeight:700,marginBottom:20}}> Statistiken & Feedback</h2>
+<h2 style={{fontSize:22,fontWeight:700,marginBottom:20}}> Statistik</h2>
 <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:12,marginBottom:24}}>
 {[{label:"Erfolgsquote",value:`${pct}%`,color:pct>=70?COLORS.green:COLORS.accent,iconName:"target"},
 {label:"Fragen beantwortet",value:stats.quizTotal,color:COLORS.blue,iconName:"brain"},
