@@ -849,6 +849,28 @@ xabcde:{c:"Keine Blutung",a:"Massive Zungenschwellung + Stridor → ATEMWEG KRIT
 spezial:{name:"ACE-Hemmer-Angioödem",result:"ACE-Hemmer-induziertes Angioödem – BESONDERHEIT:\n→ KEINE Anaphylaxie! Bradykinin-vermittelt!\n→ Adrenalin KANN helfen, ist aber weniger wirksam!\n→ Prednisolon + Dimetinden versuchen\n→ Icatibant 30 mg s.c. (Bradykinin-Antagonist – wenn verfügbar)\n→ Frühzeitige Intubation erwägen BEVOR Schwellung zunimmt!\n→ Koniotomie-Bereitschaft!\n→ ACE-Hemmer SOFORT und DAUERHAFT absetzen!\n CAVE: Kann auch nach Jahren unter ACE-Hemmer auftreten!\n Keine Urtikaria = NICHT allergisch = Adrenalin weniger wirksam!"},
 diagnoseOptionen:["ACE-Hemmer-induziertes Angioödem","Allergisches Angioödem, differentialdiagnostisch abzugrenzen von funktioneller Störung","Anaphylaxie bei unklarer Ätiologie","Peritonsillarabszess"],
 correctDiagnose:0,
-diagnoseErklaerung:"ACE-Hemmer + Angioödem + KEINE Urtikaria + KEIN Giemen = Bradykinin-vermitteltes Angioödem. Adrenalin weniger wirksam! Frühzeitig Intubation erwägen, ACE-Hemmer absetzen!"}
+diagnoseErklaerung:"ACE-Hemmer + Angioödem + KEINE Urtikaria + KEIN Giemen = Bradykinin-vermitteltes Angioödem. Adrenalin weniger wirksam! Frühzeitig Intubation erwägen, ACE-Hemmer absetzen!"},
+// ── RECHTLICHE GRUNDLAGEN ──
+{id:"exam_aufklaerung",bpr:"aufklaerung",caseId:151,
+meldung:"Starke Bauchschmerzen, weiblich, 45 Jahre, Wohnung",
+ankunft:"Die Patientin sitzt gekrümmt auf dem Sofa und hält sich den Bauch. Sie ist wach, ansprechbar und offensichtlich schmerzgeplagt.",
+findings:{vitalzeichen:"RR 145/85 | HF 98 | SpO₂ 98% | AF 20 | BZ 110 mg/dl | Temp 37,8°C",anamnese:"S: Seit 3h zunehmende Bauchschmerzen rechter Unterbauch, NRS 7. A: Penicillin-Allergie. M: L-Thyroxin. P: Appendektomie vor 10 J., Schilddrüsenunterfunktion. L: Letzte Mahlzeit vor 5h. E: Schmerzen begannen periumbilikal, jetzt rechter Unterbauch. R: Risikofaktoren für gynäkologische Ursache abklären.",inspektion:"Schmerzverzerrtes Gesicht, Schonhaltung, kein Peritonismus bei Inspektion.",auskultation:"Darmgeräusche spärlich aber vorhanden. Lunge: VAG bds., keine Rasselgeräusche.",ekg:"Sinustachykardie, keine ST-Veränderungen.",neurologie:"GCS 15, orientiert zu allen Qualitäten, Pupillen isokor.",palpation:"Druckschmerz rechter Unterbauch, Loslassschmerz positiv, kein Peritonismus."},
+diagnoseOptionen:["V.a. akutes Abdomen (DD Adnexitis, Ovarialzyste)","Gastroenteritis bei unklarer Ätiologie","Harnwegsinfekt bei normaler Temperatur","Muskuläre Verspannung ohne organische Ursache"],
+correctDiagnose:0,
+diagnoseErklaerung:"Schmerzverlagerung + Druckschmerz + Loslassschmerz rechter Unterbauch bei jüngerer Frau → DD akutes Abdomen. Aufklärung über i.v.-Zugang und Analgesie erforderlich!"},
+{id:"exam_einwilligung",bpr:"einwilligungsfaehigkeit",caseId:152,
+meldung:"Gestürzte Person, männlich, ca. 35 Jahre, Altstadt/Fußgängerzone",
+ankunft:"Ein Mann liegt auf dem Boden neben einer Parkbank. Starker Alkoholgeruch. Schürfwunde an der Stirn, leicht blutend. Wehrt sich gegen jede Annäherung.",
+findings:{vitalzeichen:"RR 155/90 | HF 105 | SpO₂ 96% | AF 18 | BZ 95 mg/dl | Temp 36,2°C",anamnese:"S: Sturz vor ca. 20 min, Zeugen berichten Stolpern. A: Keine Allergien bekannt. M: Keine Vormedikation. P: Keine Vorerkrankungen bekannt. L: Unbekannt. E: Starker Alkoholkonsum. R: Unfallhergang nicht sicher rekonstruierbar.",inspektion:"Schürfwunde Stirn ca. 3 cm, leicht blutend. Pupillen isokor, lichtreagibel. Kleidung verschmutzt.",auskultation:"Lunge: VAG bds., keine RG. Herz: rein, rhythmisch, tachykard.",ekg:"Sinustachykardie, keine ST-Veränderungen, keine Rhythmusstörungen.",neurologie:"GCS 13 (A3, V4, M6). Zeitlich und örtlich desorientiert. Motorisch: alle Extremitäten bewegt. Pupillen isokor, prompt reagibel.",palpation:"Druckschmerz frontal, kein Hinweis auf Fraktur palpabel. Keine HWS-Klopfschmerz."},
+diagnoseOptionen:["V.a. SHT bei alkoholisiertem Pat. – Einwilligungsfähigkeit eingeschränkt","Einfache Alkoholintoxikation ohne weiteren Handlungsbedarf","Epileptischer Anfall bei normaler Bewusstseinslage","Synkope bei niedriger Herzfrequenz"],
+correctDiagnose:0,
+diagnoseErklaerung:"GCS 13 + Sturz auf Kopf + Alkohol + Desorientierung → V.a. SHT. Einwilligungsfähigkeit durch GCS < 15, Desorientierung und Alkohol NICHT gegeben. Hohe Behandlungspflichtigkeit!"},
+{id:"exam_verweigerung",bpr:"transportverweigerung",caseId:153,
+meldung:"Brustschmerzen, männlich, 62 Jahre, Einfamilienhaus",
+ankunft:"Patient sitzt in seinem Sessel, fasst sich an die Brust. Ehefrau hat den Rettungsdienst gerufen. Patient begrüßt Sie freundlich aber bestimmt: 'Ich bleibe hier, das kenne ich.'",
+findings:{vitalzeichen:"RR 165/95 | HF 88 | SpO₂ 94% | AF 16 | BZ 135 mg/dl | Temp 36,6°C",anamnese:"S: Retrosternale Schmerzen seit 30 min, Ausstrahlung linker Arm, NRS 6. A: Keine Allergien. M: ASS 100, Metoprolol 47,5, Simvastatin. P: KHK, Z.n. Stent-Implantation 2022, Hyperlipidämie, art. Hypertonie. L: Letzte Mahlzeit vor 2h. E: Schmerzen in Ruhe aufgetreten. R: Bekannte 3-Gefäß-KHK.",inspektion:"Kaltschweißig, leicht blass, keine Zyanose, keine Ödeme.",auskultation:"Lunge: VAG bds., keine RG. Herz: rein, rhythmisch.",ekg:"Sinusrhythmus. ST-Senkungen in V4-V6. Keine ST-Hebungen.",neurologie:"GCS 15, voll orientiert, klar und kooperativ. Pupillen isokor.",palpation:"Thorax nicht druckschmerzhaft. Periphere Pulse kräftig tastbar."},
+diagnoseOptionen:["V.a. NSTE-ACS bei bekannter KHK","Muskuloskelettaler Thoraxschmerz bei regelrechtem EKG","Refluxösophagitis mit guter Prognose","Interkostalneuralgie bei normalem Befund"],
+correctDiagnose:0,
+diagnoseErklaerung:"Retrosternale Schmerzen + Ausstrahlung + KHK-Anamnese + ST-Senkungen V4-V6 + Kaltschweißigkeit → V.a. NSTE-ACS. Hohe Behandlungspflichtigkeit! Patient ist aber einwilligungsfähig → verschärfte Aufklärung + NA."}
 
 ]);

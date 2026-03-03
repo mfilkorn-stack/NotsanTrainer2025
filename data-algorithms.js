@@ -413,6 +413,49 @@ decisions:[
 gaps:[
 {text:"6P: Pain, Pallor, ___, Paresthesia, ___, Prostration",answer:"Pulselessness;Paralysis"},
 {text:"Heparin: ___ I.E. i.v.",answer:"5.000"}
+]},
+// ── RECHTLICHE GRUNDLAGEN ──
+{id:"aufklaerung",name:"Aufklärung",kat:"Rechtliche Grundlagen",
+steps:["Notwendigkeit einer invasiven Maßnahme/Medikamentengabe prüfen","Indikation/Kontraindikation gemäß SAA/BPR","Durchführbarkeit: Maßnahme beherrschen, technisch/örtlich/zeitlich umsetzbar","Einwilligungsfähigkeit prüfen","Nicht einwilligungsfähig → mutmaßlicher Pat.-Wille","Einwilligungsfähig → situationsgerechte Aufklärung","Aufklärungsinhalt: Grund, Qualifikation, Nutzen, Risiken, Alternativen, Nachteile einer Ablehnung","Einwilligung → Durchführung gemäß SAA/BPR","Ablehnung → NA-Alarmierung / Kontakt TNA","Dokumentation"],
+decisions:[
+{q:"Patient ist ansprechbar, GCS 15, orientiert. Sie möchten einen i.v.-Zugang legen. Was tun Sie zuerst?",opts:["Zugang sofort legen – Zeitdruck","Situationsgerechte Aufklärung durchführen"],correct:1,feedback:"BPR: Bei einwilligungsfähigen Pat. IMMER erst aufklären, dann Einwilligung einholen."},
+{q:"Patient ist bewusstlos (GCS 3). Sie müssen einen EGA einlegen. Brauchen Sie eine Einwilligung?",opts:["Ja, Angehörige müssen erst zustimmen","Nein, es gilt der mutmaßliche Pat.-Wille"],correct:1,feedback:"BPR: Bei nicht einwilligungsfähigen Pat. gilt der mutmaßliche Pat.-Wille. Versorgung gemäß SAA/BPR."},
+{q:"Was gehört NICHT zur situationsgerechten Aufklärung?",opts:["Erläuterung von Nutzen und Risiken","Garantie eines komplikationslosen Verlaufs"],correct:1,feedback:"Eine Garantie kann nie gegeben werden. Aufklärung umfasst: Grund, Qualifikation, Nutzen, Risiken, Alternativen, Nachteile einer Ablehnung."},
+{q:"Patient lehnt die Maßnahme durch Sie als NotSan ab. Was tun?",opts:["Maßnahme trotzdem durchführen – medizinisch indiziert","Akzeptieren und NA-Alarmierung / Kontakt TNA"],correct:1,feedback:"BPR: Lehnt der Pat. die Durchführung durch nichtärztliches Personal ab, ist dies zu akzeptieren. NA/TNA hinzuziehen."},
+{q:"Was droht bei mangelhafter Dokumentation der Aufklärung?",opts:["Keine Konsequenzen im Rettungsdienst","Sorgfaltspflichtverletzung mit Beweislastumkehr"],correct:1,feedback:"BPR: Verstoß gegen Befunderhebungs-/Dokumentationspflicht = Sorgfaltspflichtverletzung, kann zur Beweislastumkehr im Gerichtsverfahren führen."}
+],
+gaps:[
+{text:"Aufklärung erfolgt durch den ___ Mitarbeitenden vor Ort",answer:"höchstqualifizierten"},
+{text:"Bei Bewusstlosen gilt der ___ Pat.-Wille",answer:"mutmaßliche"},
+{text:"Pat. lehnt Maßnahme ab → ___-Alarmierung oder Kontakt ___",answer:"NA;TNA"}
+]},
+{id:"einwilligungsfaehigkeit",name:"Einwilligungsfähigkeit",kat:"Rechtliche Grundlagen",
+steps:["Selbstbestimmungsrecht: Bindungswirkung des freien Pat.-Willens","4 Kriterien: Informationsverständnis, -verarbeitung, Bewertung, Bestimmbarkeit","Psychische Ursachen prüfen: Delir, Demenz, Schizophrenie, Manie, Depression, Suizidalität","Somatische Ursachen prüfen: GCS < 15, Desorientierung, Alkohol/Drogen/Medikamente, Krampfanfall, Hypoglykämie","Sondersituation Minderjährige: < 14 J. nicht einwilligungsfähig, > 16 J. oft schon","Eltern/Sorgeberechtigte entscheiden bei nicht einwilligungsfähigen Minderjährigen"],
+decisions:[
+{q:"Patient riecht stark nach Alkohol, GCS 14, zeitlich desorientiert. Einwilligungsfähig?",opts:["Ja – er kann noch sprechen","Nein – GCS < 15 + Desorientierung + Alkohol"],correct:1,feedback:"BPR: GCS < 15, zeitliche Desorientierung und erhebliche Alkoholbeeinträchtigung = somatische Ursachen für fehlende Einwilligungsfähigkeit."},
+{q:"15-jährige Jugendliche mit Bauchschmerzen, orientiert, verständig. Eltern nicht erreichbar. Einwilligungsfähig?",opts:["Nein – unter 18 = nie einwilligungsfähig","Möglich – Einzelfallprüfung, > 14 J., reif und verständig"],correct:1,feedback:"BPR: Keine feste Altersgrenze. Ab 14-16 Jahren im Einzelfall prüfen. Alter, Reife und Schwere der Erkrankung berücksichtigen."},
+{q:"Welches Kriterium gehört NICHT zu den 4 Aspekten der Einwilligungsfähigkeit?",opts:["Informationsverständnis","Körperliche Belastbarkeit"],correct:1,feedback:"Die 4 Aspekte: Informationsverständnis, Informationsverarbeitung, Bewertung erhaltener Informationen, Bestimmbarkeit des eigenen Willens."},
+{q:"Patient hat eine bekannte Demenz, ist aber aktuell orientiert und versteht die Aufklärung. Einwilligungsfähig?",opts:["Nein – Demenz = grundsätzlich nicht einwilligungsfähig","Ja – aktuelle Situation entscheidend, alle 4 Kriterien erfüllt"],correct:1,feedback:"BPR: Entscheidend ist die aktuelle Fähigkeit. Wenn alle 4 Kriterien erfüllt sind, ist der Pat. trotz Grunderkrankung einwilligungsfähig."}
+],
+gaps:[
+{text:"4 Kriterien: Informations___, Informations___, ___ erhaltener Informationen, ___ des eigenen Willens",answer:"verständnis;verarbeitung;Bewertung;Bestimmbarkeit"},
+{text:"Somatisch: GCS < ___, Beeinträchtigung durch ___/___/Arzneimittel",answer:"15;Alkohol;Drogen"},
+{text:"Kinder < ___ Jahre: nicht einwilligungsfähig. Jugendliche > ___ Jahre: oft schon",answer:"14;16"}
+]},
+{id:"transportverweigerung",name:"Behandlungs-/Transportverweigerung",kat:"Rechtliche Grundlagen",
+steps:["Pat. lehnt Behandlung/Transport ab","Behandlungspflichtigkeit einschätzen: hoch vs. niedrig","Einwilligungsfähigkeit prüfen","Hohe Pflichtigkeit + nicht einwilligungsfähig → NA, ggf. Zwangsbehandlung","Hohe Pflichtigkeit + einwilligungsfähig → verschärfte Aufklärung + NA","Niedrige Pflichtigkeit + einwilligungsfähig → verschärfte Aufklärung + Angehörige","Niedrige Pflichtigkeit + nicht einwilligungsfähig → NA/TNA + gesetzl. Vertreter","Verweigerung: Formblatt, Zeugen, Kopie beim Pat.","Angemessene Hilfe sicherstellen: 112, 116 117, Hausarzt","Ausführliche Dokumentation"],
+decisions:[
+{q:"70-jährige Patientin mit V.a. Apoplex (Hemiparese, Aphasie) verweigert Transport. Wie stufen Sie die Behandlungspflichtigkeit ein?",opts:["Niedrig – sie ist wach","Hoch – manifeste ABCDE-Problematik (D-Problem)"],correct:1,feedback:"BPR: Neurologisches Defizit = manifeste ABCDE-Problematik (D-Problem). Hohe Behandlungspflichtigkeit!"},
+{q:"Gleiche Patientin: Sie ist orientiert, GCS 15, versteht die Aufklärung. Was tun Sie?",opts:["Transport erzwingen – rechtfertigender Notstand","Verschärfte Aufklärung + NA hinzuziehen"],correct:1,feedback:"BPR: Bei hoher Behandlungspflichtigkeit + einwilligungsfähig → verschärfte Aufklärung und NA hinzuziehen."},
+{q:"30-Jähriger nach Synkope, jetzt beschwerdefrei, GCS 15, alle Vitale normal. Verweigert Transport. Behandlungspflichtigkeit?",opts:["Hoch – Synkope könnte sich wiederholen","Eher niedrig – keine manifeste ABCDE-Problematik"],correct:1,feedback:"BPR: Aktuell keine manifeste ABCDE-Problematik und nicht sicher davon auszugehen → eher niedrige Behandlungspflichtigkeit."},
+{q:"Patient verweigert – welche Hilfsangebote müssen Sie sicherstellen?",opts:["Keine – Patient hat selbst entschieden","Notruf 112, ärztl. Notdienst 116 117, Hausarzt"],correct:1,feedback:"BPR: Angemessene Hilfe sicherstellen: erneuter Notruf 112, ärztlicher Notdienst (KV) 116 117, Hausarzt."},
+{q:"Wer muss bei einer Transportverweigerung IMMER unterschreiben?",opts:["Nur der Patient selbst unter allen Umständen","Zeugenunterschriften der Besatzung – ausnahmslos"],correct:1,feedback:"BPR: Zeugenunterschriften der Besatzung sind ausnahmslos zu leisten. Die Pat.-Unterschrift ist empfehlenswert, aber nicht zwingend erforderlich."}
+],
+gaps:[
+{text:"Hohe Behandlungspflichtigkeit: manifeste ___-Problematik",answer:"ABCDE"},
+{text:"§ ___ StGB: rechtfertigender Notstand",answer:"34"},
+{text:"Angemessene Hilfe: Notruf ___, KV ___, ___",answer:"112;116 117;Hausarzt"},
+{text:"Verschärfte Aufklärung: in ___ Worten die gravierenden negativen ___",answer:"klaren;Auswirkungen"}
 ]}
 ];
 // ═══════════════════════════════════════════════════════
