@@ -410,8 +410,8 @@ return(
 function Dashboard({stats,navigate}) {
 const pct = stats.quizTotal>0?Math.round(stats.quizCorrect/stats.quizTotal*100):0;
 const modules = [
-{iconName:"book",title:"Lexikon",desc:`${MEDICATIONS.length} Medikamente · ${INVASIVE.length} Invasive Maßn. · ${LEITSYMPTOME.length} Leitsymptome · ${BPR.length} Krankheitsbilder · ${EKG_DATA.length} EKG-Befunde · ${SINNHAFT_DATA.length} Übergabe · ${SCORES_DATA.length+CHECKLISTS_DATA.length+ABCDE_DATA.length} Werkzeuge`,color:COLORS.blue,glow:COLORS.blueGlow,view:"reference"},
-{iconName:"brain",title:"Quiz",desc:`${QUIZ_QUESTIONS.length} Fragen · ${MEDICATIONS.length} Medikamente · ${INVASIVE.length} Invasive Maßn. · ${LEITSYMPTOME.length} Leitsymptome · ${BPR.length} Krankheitsbilder · ${EKG_DATA.length} EKG · ${SINNHAFT_DATA.length} Übergabe · ${QUIZ_QUESTIONS.filter(q=>q.cat==="Werkzeuge").length} Werkzeuge`,color:COLORS.green,glow:COLORS.greenGlow,view:"quiz"},
+{iconName:"book",title:"Lexikon",desc:`${MEDICATIONS.length} Medikamente · ${INVASIVE.length} Invasive Maßn. · ${LEITSYMPTOME.length} Leitsymptome · ${BPR.filter(b=>b.kategorie!=="Rechtliche Grundlagen").length} Krankheitsbilder · ${EKG_DATA.length} EKG · ${SINNHAFT_DATA.length} Übergabe · ${SCORES_DATA.length+CHECKLISTS_DATA.length+ABCDE_DATA.length} Werkzeuge · ${BPR.filter(b=>b.kategorie==="Rechtliche Grundlagen").length} Recht`,color:COLORS.blue,glow:COLORS.blueGlow,view:"reference"},
+{iconName:"brain",title:"Quiz",desc:`${QUIZ_QUESTIONS.length} Fragen in ${[...new Set(QUIZ_QUESTIONS.map(q=>q.cat))].length} Kategorien inkl. Recht & Aufklärung`,color:COLORS.green,glow:COLORS.greenGlow,view:"quiz"},
 {iconName:"folder",title:"Fälle",desc:`${CASES.length} Trainingsfälle · ${EXAM_CASES.length} Prüfungsfälle · Algorithmus-Trainer`,color:COLORS.orange,glow:"rgba(249,115,22,0.12)",view:"cases"},
 {iconName:"graduationCap",title:"Prüfung",desc:"25 Fragen + 1 Prüfungsfall · 40 min",color:COLORS.accent,glow:COLORS.accentGlow,view:"exam"},
 {iconName:"chart",title:"Statistik",desc:"Lernfortschritt & Analyse",color:COLORS.yellow,glow:COLORS.yellowGlow,view:"stats"},
@@ -505,6 +505,7 @@ if(!category) return (
 {id:"EKG-Befunde",label:"EKG-Befunde",count:QUIZ_QUESTIONS.filter(q=>q.cat==="EKG-Befunde").length,color:"#e11d48",iconName:"activity"},
 {id:"Übergabe",label:"Übergabe",count:QUIZ_QUESTIONS.filter(q=>q.cat==="Übergabe").length,color:"#8b5cf6",iconName:"megaphone"},
 {id:"Werkzeuge",label:"Werkzeuge",count:QUIZ_QUESTIONS.filter(q=>q.cat==="Werkzeuge").length,color:"#14b8a6",iconName:"wrench"},
+{id:"Recht & Aufklärung",label:"Recht & Aufklärung",count:QUIZ_QUESTIONS.filter(q=>q.cat==="Recht & Aufklärung").length,color:"#f59e0b",iconName:"shield"},
 {id:"all",label:"Alle Kategorien",count:QUIZ_QUESTIONS.length,color:COLORS.purple,iconName:"layers"},
 ].map(c=>(
 <Card key={c.id} onClick={()=>startQuiz(c.id)}>
@@ -2951,7 +2952,8 @@ setTab(t); setDetail(d); window.scrollTo(0,0);
 const filteredMeds = MEDICATIONS.filter(m=>m.name.toLowerCase().includes(search.toLowerCase())||m.gruppe.toLowerCase().includes(search.toLowerCase()));
 const filteredInv = INVASIVE.filter(m=>m.name.toLowerCase().includes(search.toLowerCase()));
 const filteredLeit = LEITSYMPTOME.filter(l=>l.name.toLowerCase().includes(search.toLowerCase()));
-const filteredBpr = BPR.filter(b=>b.name.toLowerCase().includes(search.toLowerCase())||b.kategorie.toLowerCase().includes(search.toLowerCase()));
+const filteredBpr = BPR.filter(b=>(b.name.toLowerCase().includes(search.toLowerCase())||b.kategorie.toLowerCase().includes(search.toLowerCase()))&&b.kategorie!=="Rechtliche Grundlagen");
+const filteredRecht = BPR.filter(b=>(b.name.toLowerCase().includes(search.toLowerCase())||b.kategorie.toLowerCase().includes(search.toLowerCase()))&&b.kategorie==="Rechtliche Grundlagen");
 const filteredEkg = EKG_DATA.filter(e=>e.name.toLowerCase().includes(search.toLowerCase())||e.kategorie.toLowerCase().includes(search.toLowerCase()));
 const filteredSinnhaft = SINNHAFT_DATA.filter(s=>s.name.toLowerCase().includes(search.toLowerCase())||s.kategorie.toLowerCase().includes(search.toLowerCase()));
 const filteredScores = SCORES_DATA.filter(s=>s.name.toLowerCase().includes(search.toLowerCase())||(s.kategorie&&s.kategorie.toLowerCase().includes(search.toLowerCase())));
@@ -3074,6 +3076,27 @@ return (
 <span style={{fontSize:12,color:COLORS.textDim,fontWeight:600}}>SAAs:</span>
 {l.saas.map(s=><LinkedBadge key={s} text={s} navigate={navigate} color={COLORS.blue}/>)}
 </div>}
+</Card>
+</div>
+);
+}
+if(tab==="recht") {
+const b = BPR.find(x=>x.id===detail);
+return (
+<div className="fade-in">
+<Button onClick={()=>setDetail(null)} variant="ghost" size="sm" style={{marginBottom:16}}><Icon name="arrowLeft" size={14}/> Zurück</Button>
+<Card>
+<Badge color="#f59e0b">{b.kategorie}</Badge>
+<h2 style={{fontSize:22,fontWeight:700,margin:"12px 0"}}>{b.name}</h2>
+<div style={{marginBottom:16}}>
+<h4 style={{fontSize:13,fontWeight:700,color:"#f59e0b",marginBottom:12,textTransform:"uppercase"}}>Ablauf / Schritte</h4>
+{b.schritte.map((s,i)=>(
+<div key={i} style={{display:"flex",gap:12,marginBottom:10,alignItems:"flex-start"}}>
+<div style={{width:28,height:28,borderRadius:14,background:"#f59e0b20",color:"#f59e0b",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,flexShrink:0}}>{i+1}</div>
+<LinkedText text={s} navigate={navigate} style={{fontSize:14,color:COLORS.text,lineHeight:1.5,paddingTop:4}}/>
+</div>
+))}
+</div>
 </Card>
 </div>
 );
@@ -3277,7 +3300,7 @@ return (
 );
 }
 }
-const tabs = [{id:"meds",label:"Medikamente",iconName:"pill",color:COLORS.accent,count:filteredMeds.length},{id:"invasive",label:"Invasive Maßnahmen",iconName:"syringe",color:COLORS.blue,count:filteredInv.length},{id:"leitsymptome",label:"Leitsymptome",iconName:"stethoscope",color:COLORS.orange,count:filteredLeit.length},{id:"bpr",label:"Krankheitsbilder",iconName:"heartPulse",color:COLORS.green,count:filteredBpr.length},{id:"ekg",label:"EKG-Befunde",iconName:"activity",color:"#e11d48",count:filteredEkg.length},{id:"sinnhaft",label:"Übergabe",iconName:"megaphone",color:"#8b5cf6",count:filteredSinnhaft.length},{id:"werkzeuge",label:"Werkzeuge",iconName:"wrench",color:"#14b8a6",count:filteredTools.length}];
+const tabs = [{id:"meds",label:"Medikamente",iconName:"pill",color:COLORS.accent,count:filteredMeds.length},{id:"invasive",label:"Invasive Maßnahmen",iconName:"syringe",color:COLORS.blue,count:filteredInv.length},{id:"leitsymptome",label:"Leitsymptome",iconName:"stethoscope",color:COLORS.orange,count:filteredLeit.length},{id:"bpr",label:"Krankheitsbilder",iconName:"heartPulse",color:COLORS.green,count:filteredBpr.length},{id:"ekg",label:"EKG-Befunde",iconName:"activity",color:"#e11d48",count:filteredEkg.length},{id:"sinnhaft",label:"Übergabe",iconName:"megaphone",color:"#8b5cf6",count:filteredSinnhaft.length},{id:"werkzeuge",label:"Werkzeuge",iconName:"wrench",color:"#14b8a6",count:filteredTools.length},{id:"recht",label:"Recht & Aufklärung",iconName:"shield",color:"#f59e0b",count:filteredRecht.length}];
 return (
 <div className="fade-in">
 <Button onClick={()=>navigate("dashboard")} variant="ghost" size="sm" style={{marginBottom:16}}><Icon name="arrowLeft" size={14}/> Zurück</Button>
@@ -3392,6 +3415,11 @@ return (
 </Card>
 ))}
 </div>}
+{tab==="recht" && filteredRecht.map(b=>(<Card key={b.id} onClick={()=>{setDetail(b.id);window.scrollTo(0,0);}} style={{padding:16}}>
+<Badge color="#f59e0b" bg="#f59e0b10">{b.kategorie}</Badge>
+<div style={{fontSize:15,fontWeight:700,margin:"8px 0 4px"}}>{b.name}</div>
+<div style={{fontSize:12,color:COLORS.textMuted}}>{b.schritte.length} Schritte</div>
+</Card>))}
 </div>
 );
 }
@@ -4265,6 +4293,7 @@ const weakBpr = QUIZ_QUESTIONS.filter(q=>stats.wrongQuestions.includes(q.id)&&q.
 const weakEkg = QUIZ_QUESTIONS.filter(q=>stats.wrongQuestions.includes(q.id)&&q.cat==="EKG-Befunde");
 const weakUe = QUIZ_QUESTIONS.filter(q=>stats.wrongQuestions.includes(q.id)&&q.cat==="Übergabe");
 const weakWz = QUIZ_QUESTIONS.filter(q=>stats.wrongQuestions.includes(q.id)&&q.cat==="Werkzeuge");
+const weakRecht = QUIZ_QUESTIONS.filter(q=>stats.wrongQuestions.includes(q.id)&&q.cat==="Recht & Aufklärung");
 const reset = ()=>{if(confirm("Alle Statistiken zurücksetzen?"))setStats({quizCorrect:0,quizTotal:0,casesCompleted:0,examScores:[],wrongQuestions:[]});};
 return (
 <div className="fade-in">
@@ -4302,7 +4331,7 @@ return (
 <p style={{color:COLORS.textMuted,fontSize:14}}>Noch keine Schwachstellen identifiziert. Starte ein Quiz!</p>
 ) : (
 <div>
-{[{label:"Medikamente",items:weakMeds,color:COLORS.accent},{label:"Invasive Maßnahmen",items:weakInv,color:COLORS.blue},{label:"Leitsymptome",items:weakLeit,color:COLORS.orange},{label:"Krankheitsbilder",items:weakBpr,color:COLORS.green},{label:"EKG-Befunde",items:weakEkg,color:"#e11d48"},{label:"Übergabe",items:weakUe,color:"#8b5cf6"}]
+{[{label:"Medikamente",items:weakMeds,color:COLORS.accent},{label:"Invasive Maßnahmen",items:weakInv,color:COLORS.blue},{label:"Leitsymptome",items:weakLeit,color:COLORS.orange},{label:"Krankheitsbilder",items:weakBpr,color:COLORS.green},{label:"EKG-Befunde",items:weakEkg,color:"#e11d48"},{label:"Übergabe",items:weakUe,color:"#8b5cf6"},{label:"Recht & Aufklärung",items:weakRecht,color:"#f59e0b"}]
 .filter(s=>s.items.length>0).map(s=>(
 <div key={s.label} style={{marginBottom:16}}>
 <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
