@@ -567,8 +567,15 @@ onMouseLeave={e=>{if(selected===null)e.currentTarget.style.borderColor=COLORS.bo
 })}
 </div>
 {selected!==null && (
-<div style={{marginTop:16,display:"flex",justifyContent:"flex-end"}}>
+<div style={{marginTop:16}}>
+{q.explanation && <Card style={{background:COLORS.blue+"10",borderColor:COLORS.blue+"30"}}>
+<div style={{fontSize:13,lineHeight:1.6,color:COLORS.textMuted}}>
+<strong style={{color:COLORS.blue}}>Erläuterung:</strong> {q.explanation}
+</div>
+</Card>}
+<div style={{marginTop:12,display:"flex",justifyContent:"flex-end"}}>
 <Button onClick={nextQ}>{qi+1>=questions.length?"Ergebnis anzeigen":"Nächste Frage →"}</Button>
+</div>
 </div>
 )}
 </Card>
@@ -4267,11 +4274,11 @@ return(
 </div>
 {selected!==null && (
 <div style={{marginTop:16}}>
-<Card style={{background:COLORS.blue+"10",borderColor:COLORS.blue+"30"}}>
+{q.explanation && <Card style={{background:COLORS.blue+"10",borderColor:COLORS.blue+"30"}}>
 <div style={{fontSize:13,lineHeight:1.6,color:COLORS.textMuted}}>
 <strong style={{color:COLORS.blue}}>Erläuterung:</strong> {q.explanation}
 </div>
-</Card>
+</Card>}
 <div style={{marginTop:12,textAlign:"right"}}>
 <Button onClick={nextQ}>{qi+1>=questions.length?"Ergebnis":(qi+1===CASE_AFTER_Q?" Weiter zum Prüfungsfall":"Weiter →")}</Button>
 </div>
