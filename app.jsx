@@ -599,6 +599,7 @@ const [treatSelected, setTreatSelected] = useState(null);
 const [treatScore, setTreatScore] = useState(0);
 const [diagScore, setDiagScore] = useState(0);
 const [catFilter, setCatFilter] = useState("all");
+const [caseSearch, setCaseSearch] = useState("");
 const [algoExercise, setAlgoExercise] = useState(null);
 const bprNames = useMemo(()=>{
 const map={};
@@ -615,7 +616,7 @@ cats[c.bpr].count++;
 });
 return Object.values(cats).sort((a,b)=>a.name.localeCompare(b.name));
 },[bprNames]);
-const filteredCases = catFilter==="all" ? EXAM_CASES : EXAM_CASES.filter(c=>c.bpr===catFilter);
+const filteredCases = (catFilter==="all" ? EXAM_CASES : EXAM_CASES.filter(c=>c.bpr===catFilter)).filter(c=>{if(!caseSearch) return true;const s=caseSearch.toLowerCase();return c.meldung.toLowerCase().includes(s)||(bprNames[c.bpr]||"").toLowerCase().includes(s)||c.ankunft.toLowerCase().includes(s);});
 const startCase = (idx)=>{
 setCaseIdx(idx);setPhase("explore");setRevealed({});setDiagSelected(null);setDiagCorrect(null);
 setTreatStep(0);setTreatSelected(null);setTreatScore(0);setDiagScore(0);
@@ -629,6 +630,7 @@ if(caseIdx===null) return (
 <p style={{color:COLORS.textMuted,fontSize:13,margin:0}}>Nur Einsatzmeldung – erkunden Sie den Fall systematisch und stellen Sie die Verdachtsdiagnose.</p>
 <Button size="sm" onClick={()=>startCase(Math.floor(Math.random()*EXAM_CASES.length))} style={{background:COLORS.purple,fontSize:12,padding:"6px 14px",whiteSpace:"nowrap"}}> Zufälliger Fall</Button>
 </div>
+<input value={caseSearch} onChange={e=>setCaseSearch(e.target.value)} placeholder="Fall suchen (Meldung, Krankheitsbild)..." style={{width:"100%",padding:"10px 14px",borderRadius:12,border:`1px solid ${COLORS.border}`,background:COLORS.card,color:COLORS.text,fontSize:13,marginBottom:12,outline:"none",boxSizing:"border-box"}}/>
 <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:20}}>
 <div onClick={()=>setCatFilter("all")} style={{padding:"6px 12px",borderRadius:20,fontSize:12,fontWeight:600,cursor:"pointer",background:catFilter==="all"?COLORS.purple:COLORS.bg,color:catFilter==="all"?"#fff":COLORS.textMuted,border:`1px solid ${catFilter==="all"?COLORS.purple:COLORS.border}`,transition:"all .2s"}}>
 Alle ({EXAM_CASES.length})
@@ -1296,6 +1298,7 @@ const [selected, setSelected] = useState(null);
 const [caseScore, setCaseScore] = useState(0);
 const [caseDone, setCaseDone] = useState(false);
 const [catFilter, setCatFilter] = useState("all");
+const [caseSearch, setCaseSearch] = useState("");
 const [algoExercise, setAlgoExercise] = useState(null); // {algo, type} for inline algo trainer
 const bprNames = useMemo(()=>{
 const map={};
@@ -1311,7 +1314,7 @@ cats[c.bpr].count++;
 });
 return Object.values(cats).sort((a,b)=>a.name.localeCompare(b.name));
 },[bprNames]);
-const filteredCases = catFilter==="all" ? CASES : CASES.filter(c=>c.bpr===catFilter);
+const filteredCases = (catFilter==="all" ? CASES : CASES.filter(c=>c.bpr===catFilter)).filter(c=>{if(!caseSearch) return true;const s=caseSearch.toLowerCase();return c.title.toLowerCase().includes(s)||c.scenario.toLowerCase().includes(s)||(bprNames[c.bpr]||"").toLowerCase().includes(s);});
 // ─── MODE SELECT ───
 if(mode==="select") return (
 <div className="fade-in">
@@ -1356,6 +1359,7 @@ if(caseIdx===null) return (
 <p style={{color:COLORS.textMuted,fontSize:13,margin:0}}>{CASES.length} Fälle zu {categories.length} Krankheitsbildern</p>
 <Button size="sm" onClick={()=>{const r=Math.floor(Math.random()*CASES.length);setCaseIdx(r);setStep(0);setSelected(null);setCaseScore(0);setCaseDone(false);}} style={{background:COLORS.orange,fontSize:12,padding:"6px 14px"}}> Zufälliger Fall</Button>
 </div>
+<input value={caseSearch} onChange={e=>setCaseSearch(e.target.value)} placeholder="Fall suchen (Titel, Szenario, Krankheitsbild)..." style={{width:"100%",padding:"10px 14px",borderRadius:12,border:`1px solid ${COLORS.border}`,background:COLORS.card,color:COLORS.text,fontSize:13,marginBottom:12,outline:"none",boxSizing:"border-box"}}/>
 <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:20}}>
 <div onClick={()=>setCatFilter("all")} style={{padding:"6px 12px",borderRadius:20,fontSize:12,fontWeight:600,cursor:"pointer",background:catFilter==="all"?COLORS.orange:COLORS.bg,color:catFilter==="all"?"#fff":COLORS.textMuted,border:`1px solid ${catFilter==="all"?COLORS.orange:COLORS.border}`,transition:"all .2s"}}>
 Alle ({CASES.length})
