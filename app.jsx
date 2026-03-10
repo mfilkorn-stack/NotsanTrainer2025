@@ -2979,10 +2979,12 @@ return (
 <div style={{fontSize:12,color:COLORS.textDim,marginBottom:20}}>Konzentration: {m.konzentration}</div>
 {[{label:"Indikationen",items:m.indikationen,color:COLORS.green},
 {label:"Kontraindikationen",items:m.kontra,color:COLORS.accent},
+...(m.relKontra&&m.relKontra.length>0?[{label:"Relative Kontraindikationen",subtitle:"Anwendung nach sorgfältiger Nutzen-/Risiko-Abwägung",items:m.relKontra,color:COLORS.orange}]:[]),
 {label:"UAW / Risiken",items:m.uaw,color:COLORS.yellow}
 ].map(s=>(
 <div key={s.label} style={{marginBottom:16}}>
 <h4 style={{fontSize:13,fontWeight:700,color:s.color,marginBottom:8,textTransform:"uppercase",letterSpacing:.5}}>{s.label}</h4>
+{s.subtitle&&<div style={{fontSize:11,color:COLORS.textDim,marginBottom:6,fontStyle:"italic"}}>{s.subtitle}</div>}
 {s.items.map((item,i)=><div key={i} style={{fontSize:14,color:COLORS.textMuted,padding:"4px 0",paddingLeft:12,borderLeft:`2px solid ${s.color}30`}}>• <LinkedText text={item} navigate={navigate}/></div>)}
 </div>
 ))}
