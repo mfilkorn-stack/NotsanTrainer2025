@@ -3014,6 +3014,24 @@ return (
 {s.items.map((item,i)=><div key={i} style={{fontSize:14,color:COLORS.textMuted,padding:"4px 0",paddingLeft:12,borderLeft:`2px solid ${s.color}30`}}>• <LinkedText text={item} navigate={navigate}/></div>)}
 </div>
 ))}
+{m.alternativen && m.alternativen.length > 0 && (
+<div style={{marginBottom:16}}>
+<h4 style={{fontSize:13,fontWeight:700,color:COLORS.purple,marginBottom:8,textTransform:"uppercase"}}>Alternativen</h4>
+{m.alternativen.map((a,i)=><div key={i} style={{fontSize:14,color:COLORS.textMuted,padding:"4px 0",paddingLeft:12,borderLeft:`2px solid ${COLORS.purple}30`}}>• {a}</div>)}
+</div>
+)}
+{m.aufklaerung && m.aufklaerung.length > 0 && (
+<div style={{marginBottom:16}}>
+<h4 style={{fontSize:13,fontWeight:700,color:COLORS.yellow,marginBottom:8,textTransform:"uppercase"}}>Aufklärung / Risiken</h4>
+{m.aufklaerung.map((a,i)=><div key={i} style={{fontSize:14,color:COLORS.textMuted,padding:"4px 0",paddingLeft:12,borderLeft:`2px solid ${COLORS.yellow}30`}}>• {a}</div>)}
+</div>
+)}
+{m.einwilligung && m.einwilligung.length > 0 && (
+<div style={{marginBottom:16}}>
+<h4 style={{fontSize:13,fontWeight:700,color:"#8b5cf6",marginBottom:8,textTransform:"uppercase"}}>Einwilligung</h4>
+{m.einwilligung.map((e,i)=><div key={i} style={{fontSize:14,color:COLORS.textMuted,padding:"4px 0",paddingLeft:12,borderLeft:"2px solid #8b5cf630"}}>• {e}</div>)}
+</div>
+)}
 <div style={{marginBottom:16}}>
 <h4 style={{fontSize:13,fontWeight:700,color:COLORS.blue,marginBottom:8,textTransform:"uppercase"}}>Durchführung</h4>
 <LinkedText text={m.durchfuehrung} navigate={navigate} style={{fontSize:14,color:COLORS.text,background:COLORS.blue+"10",padding:12,borderRadius:8,lineHeight:1.7,display:"block"}}/>
@@ -3025,13 +3043,13 @@ return (
 {m.gegenmassnahmen && (
 <div style={{marginBottom:16}}>
 <h4 style={{fontSize:13,fontWeight:700,color:COLORS.orange,marginBottom:8,textTransform:"uppercase"}}>Gegenmaßnahmen bei Komplikationen</h4>
-<LinkedText text={m.gegenmassnahmen} navigate={navigate} style={{fontSize:14,color:COLORS.textMuted,background:COLORS.orange+"10",padding:12,borderRadius:8,lineHeight:1.7,display:"block"}}/>
+{Array.isArray(m.gegenmassnahmen) ? m.gegenmassnahmen.map((g,i)=><div key={i} style={{fontSize:14,color:COLORS.textMuted,padding:"4px 0",paddingLeft:12,borderLeft:`2px solid ${COLORS.orange}30`}}>• {g}</div>) : <LinkedText text={m.gegenmassnahmen} navigate={navigate} style={{fontSize:14,color:COLORS.textMuted,background:COLORS.orange+"10",padding:12,borderRadius:8,lineHeight:1.7,display:"block"}}/>}
 </div>
 )}
-{m.alternativen && m.alternativen.length > 0 && (
+{m.verlaufskontrolle && m.verlaufskontrolle.length > 0 && (
 <div style={{marginBottom:16}}>
-<h4 style={{fontSize:13,fontWeight:700,color:COLORS.purple,marginBottom:8,textTransform:"uppercase"}}>Alternativen</h4>
-{m.alternativen.map((a,i)=><div key={i} style={{fontSize:14,color:COLORS.textMuted,padding:"4px 0",paddingLeft:12,borderLeft:`2px solid ${COLORS.purple}30`}}>• {a}</div>)}
+<h4 style={{fontSize:13,fontWeight:700,color:COLORS.blue,marginBottom:8,textTransform:"uppercase"}}>Verlaufskontrolle</h4>
+{m.verlaufskontrolle.map((v,i)=><div key={i} style={{fontSize:14,color:COLORS.textMuted,padding:"4px 0",paddingLeft:12,borderLeft:`2px solid ${COLORS.blue}30`}}>• {v}</div>)}
 </div>
 )}
 {m.gauge && (
