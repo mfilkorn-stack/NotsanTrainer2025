@@ -1,4 +1,13 @@
-var { useState, useEffect, useCallback, useMemo } = React;
+var { useState, useEffect, useCallback, useMemo, useRef } = React;
+
+function useDebounce(value, delay) {
+const [debounced, setDebounced] = useState(value);
+useEffect(() => {
+const t = setTimeout(() => setDebounced(value), delay);
+return () => clearTimeout(t);
+}, [value, delay]);
+return debounced;
+}
 
 function LinkedText({text, navigate, style}) {
 if(!text || !navigate) return <span style={style}>{text}</span>;
@@ -315,6 +324,29 @@ const Card = ({children,style:s,onClick,glow}) => (
 onMouseEnter={e=>{if(onClick){e.currentTarget.style.borderColor=COLORS.accent+"60";e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow=`0 12px 40px rgba(0,0,0,.5), 0 0 30px ${glow||COLORS.accent+"15"}`;}}}
 onMouseLeave={e=>{if(onClick){e.currentTarget.style.borderColor=COLORS.border;e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow=glow?`0 0 40px ${glow}`:"0 4px 24px rgba(0,0,0,.4)";}}}>{children}</div>
 );
+const EmptyState = ({text="Keine Ergebnisse",sub="Versuchen Sie einen anderen Suchbegriff.",iconName="search"}) => (
+<div style={{textAlign:"center",padding:"48px 20px",color:COLORS.textDim,gridColumn:"1/-1"}}>
+<Icon name={iconName} size={40} color={COLORS.textDim} style={{marginBottom:12}}/>
+<div style={{fontSize:16,fontWeight:600,color:COLORS.textMuted,marginBottom:6}}>{text}</div>
+<div style={{fontSize:13}}>{sub}</div>
+</div>
+);
+function ConfirmModal({open,title,message,onConfirm,onCancel,confirmLabel="Zurücksetzen"}) {
+if(!open) return null;
+return (
+<div onClick={onCancel} style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.6)",backdropFilter:"blur(4px)"}}>
+<div className="fade-in" onClick={e=>e.stopPropagation()} style={{background:COLORS.card,border:`1px solid ${COLORS.border}`,borderRadius:18,padding:28,maxWidth:400,width:"90%",textAlign:"center"}}>
+<div style={{fontSize:40,marginBottom:12}}>&#9888;</div>
+<h3 style={{fontSize:18,fontWeight:700,marginBottom:8}}>{title}</h3>
+<p style={{color:COLORS.textMuted,fontSize:14,lineHeight:1.6,marginBottom:24}}>{message}</p>
+<div style={{display:"flex",gap:12,justifyContent:"center"}}>
+<Button onClick={onCancel} variant="ghost">Abbrechen</Button>
+<Button onClick={onConfirm} style={{background:COLORS.accent}}>{confirmLabel}</Button>
+</div>
+</div>
+</div>
+);
+}
 const ProgressBar = ({value,max,color=COLORS.accent,h=8}) => (
 <div style={{width:"100%",height:h,background:COLORS.border,borderRadius:h,overflow:"hidden"}}>
 <div style={{width:`${Math.min(100,(value/max)*100)}%`,height:"100%",background:`linear-gradient(90deg,${color},${color}cc)`,borderRadius:h,transition:"width .6s cubic-bezier(.16,1,.3,1)",boxShadow:`0 0 12px ${color}40`}}/>
@@ -337,7 +369,7 @@ setLoaded(true);
 useEffect(()=>{
 if(loaded){try{localStorage.setItem("notsan-stats",JSON.stringify(stats));}catch(e){}}
 },[stats,loaded]);
-const navigate = (v,sub=null)=>{setView(v);setSubView(sub);window.scrollTo(0,0);};
+const navigate = (v,sub=null)=>{setView(v);setSubView(sub);window.scrollTo({top:0,behavior:'smooth'});};
 return (
 <div style={{minHeight:"100vh",background:COLORS.bg}}>
 <style>{css}</style>
@@ -616,7 +648,8 @@ cats[c.bpr].count++;
 });
 return Object.values(cats).sort((a,b)=>a.name.localeCompare(b.name));
 },[bprNames]);
-const filteredCases = (catFilter==="all" ? EXAM_CASES : EXAM_CASES.filter(c=>c.bpr===catFilter)).filter(c=>{if(!caseSearch) return true;const s=caseSearch.toLowerCase();return (c.meldung||"").toLowerCase().includes(s)||(bprNames[c.bpr]||"").toLowerCase().includes(s)||(c.ankunft||"").toLowerCase().includes(s);});
+const debouncedCaseSearch = useDebounce(caseSearch, 250);
+const filteredCases = (catFilter==="all" ? EXAM_CASES : EXAM_CASES.filter(c=>c.bpr===catFilter)).filter(c=>{if(!debouncedCaseSearch) return true;const s=debouncedCaseSearch.toLowerCase();return (c.meldung||"").toLowerCase().includes(s)||(bprNames[c.bpr]||"").toLowerCase().includes(s)||(c.ankunft||"").toLowerCase().includes(s);});
 const startCase = (idx)=>{
 setCaseIdx(idx);setPhase("explore");setRevealed({});setDiagSelected(null);setDiagCorrect(null);
 setTreatStep(0);setTreatSelected(null);setTreatScore(0);setDiagScore(0);
@@ -627,7 +660,7 @@ if(caseIdx===null) return (
 <Button onClick={()=>navigate("cases")} variant="ghost" size="sm" style={{marginBottom:20}}><Icon name="arrowLeft" size={14}/> Zurück</Button>
 <h2 style={{fontSize:22,fontWeight:700,marginBottom:4}}> Prüfungsfälle</h2>
 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,marginBottom:16}}>
-<p style={{color:COLORS.textMuted,fontSize:13,margin:0}}>Nur Einsatzmeldung – erkunden Sie den Fall systematisch und stellen Sie die Verdachtsdiagnose.</p>
+<p style={{color:COLORS.textMuted,fontSize:13,margin:0}}>{filteredCases.length} von {EXAM_CASES.length} Prüfungsfällen{debouncedCaseSearch?` für „${debouncedCaseSearch}"`:""}</p>
 <Button size="sm" onClick={()=>startCase(Math.floor(Math.random()*EXAM_CASES.length))} style={{background:COLORS.purple,fontSize:12,padding:"6px 14px",whiteSpace:"nowrap"}}> Zufälliger Fall</Button>
 </div>
 <input value={caseSearch} onChange={e=>setCaseSearch(e.target.value)} placeholder="Fall suchen (Meldung, Krankheitsbild)..." style={{width:"100%",padding:"10px 14px",borderRadius:12,border:`1px solid ${COLORS.border}`,background:COLORS.card,color:COLORS.text,fontSize:13,marginBottom:12,outline:"none",boxSizing:"border-box"}}/>
@@ -652,6 +685,7 @@ return (
 </Card>
 );
 })}
+{filteredCases.length===0 && <EmptyState text="Keine Prüfungsfälle gefunden" sub="Passen Sie den Filter oder die Suche an."/>}
 </div>
 </div>
 );
@@ -1316,7 +1350,8 @@ cats[c.bpr].count++;
 });
 return Object.values(cats).sort((a,b)=>a.name.localeCompare(b.name));
 },[bprNames]);
-const filteredCases = (catFilter==="all" ? CASES : CASES.filter(c=>c.bpr===catFilter)).filter(c=>{if(!caseSearch) return true;const s=caseSearch.toLowerCase();return (c.title||"").toLowerCase().includes(s)||(c.scenario||"").toLowerCase().includes(s)||(bprNames[c.bpr]||"").toLowerCase().includes(s);});
+const debouncedCaseSearch = useDebounce(caseSearch, 250);
+const filteredCases = (catFilter==="all" ? CASES : CASES.filter(c=>c.bpr===catFilter)).filter(c=>{if(!debouncedCaseSearch) return true;const s=debouncedCaseSearch.toLowerCase();return (c.title||"").toLowerCase().includes(s)||(c.scenario||"").toLowerCase().includes(s)||(bprNames[c.bpr]||"").toLowerCase().includes(s);});
 // ─── MODE SELECT ───
 if(mode==="select") return (
 <div className="fade-in">
@@ -1358,7 +1393,7 @@ if(caseIdx===null) return (
 <Button onClick={()=>setMode("select")} variant="ghost" size="sm" style={{marginBottom:20}}>← Modus wählen</Button>
 <h2 style={{fontSize:22,fontWeight:700,marginBottom:8}}> Trainingsfälle</h2>
 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,marginBottom:16}}>
-<p style={{color:COLORS.textMuted,fontSize:13,margin:0}}>{CASES.length} Fälle zu {categories.length} Krankheitsbildern</p>
+<p style={{color:COLORS.textMuted,fontSize:13,margin:0}}>{filteredCases.length} von {CASES.length} Fällen{debouncedCaseSearch?` für „${debouncedCaseSearch}"`:""}</p>
 <Button size="sm" onClick={()=>{const r=Math.floor(Math.random()*CASES.length);setCaseIdx(r);setStep(0);setSelected(null);setCaseScore(0);setCaseDone(false);}} style={{background:COLORS.orange,fontSize:12,padding:"6px 14px"}}> Zufälliger Fall</Button>
 </div>
 <input value={caseSearch} onChange={e=>setCaseSearch(e.target.value)} placeholder="Fall suchen (Titel, Szenario, Krankheitsbild)..." style={{width:"100%",padding:"10px 14px",borderRadius:12,border:`1px solid ${COLORS.border}`,background:COLORS.card,color:COLORS.text,fontSize:13,marginBottom:12,outline:"none",boxSizing:"border-box"}}/>
@@ -1387,6 +1422,7 @@ return (
 </Card>
 );
 })}
+{filteredCases.length===0 && <EmptyState text="Keine Fälle gefunden" sub="Passen Sie den Filter oder die Suche an."/>}
 </div>
 </div>
 );
@@ -2960,19 +2996,20 @@ useEffect(()=>{
 if(subView && subView.includes(":")) {
 const t = subView.split(":")[0];
 const d = subView.split(":").slice(1).join(":");
-setTab(t); setDetail(d); window.scrollTo(0,0);
+setTab(t); setDetail(d); window.scrollTo({top:0,behavior:'smooth'});
 }
 },[subView]);
-const filteredMeds = MEDICATIONS.filter(m=>m.name.toLowerCase().includes(search.toLowerCase())||m.gruppe.toLowerCase().includes(search.toLowerCase()));
-const filteredInv = INVASIVE.filter(m=>m.name.toLowerCase().includes(search.toLowerCase()));
-const filteredLeit = LEITSYMPTOME.filter(l=>l.name.toLowerCase().includes(search.toLowerCase()));
-const filteredBpr = BPR.filter(b=>(b.name.toLowerCase().includes(search.toLowerCase())||b.kategorie.toLowerCase().includes(search.toLowerCase()))&&b.kategorie!=="Rechtliche Grundlagen");
-const filteredRecht = BPR.filter(b=>(b.name.toLowerCase().includes(search.toLowerCase())||b.kategorie.toLowerCase().includes(search.toLowerCase()))&&b.kategorie==="Rechtliche Grundlagen");
-const filteredEkg = EKG_DATA.filter(e=>e.name.toLowerCase().includes(search.toLowerCase())||e.kategorie.toLowerCase().includes(search.toLowerCase()));
-const filteredSinnhaft = SINNHAFT_DATA.filter(s=>s.name.toLowerCase().includes(search.toLowerCase())||s.kategorie.toLowerCase().includes(search.toLowerCase()));
-const filteredScores = SCORES_DATA.filter(s=>s.name.toLowerCase().includes(search.toLowerCase())||(s.kategorie&&s.kategorie.toLowerCase().includes(search.toLowerCase())));
-const filteredChecklists = CHECKLISTS_DATA.filter(c=>c.name.toLowerCase().includes(search.toLowerCase())||(c.kategorie&&c.kategorie.toLowerCase().includes(search.toLowerCase())));
-const filteredAbcde = ABCDE_DATA.filter(a=>a.title.toLowerCase().includes(search.toLowerCase()));
+const debouncedSearch = useDebounce(search, 250);
+const filteredMeds = MEDICATIONS.filter(m=>m.name.toLowerCase().includes(debouncedSearch.toLowerCase())||m.gruppe.toLowerCase().includes(debouncedSearch.toLowerCase()));
+const filteredInv = INVASIVE.filter(m=>m.name.toLowerCase().includes(debouncedSearch.toLowerCase()));
+const filteredLeit = LEITSYMPTOME.filter(l=>l.name.toLowerCase().includes(debouncedSearch.toLowerCase()));
+const filteredBpr = BPR.filter(b=>(b.name.toLowerCase().includes(debouncedSearch.toLowerCase())||b.kategorie.toLowerCase().includes(debouncedSearch.toLowerCase()))&&b.kategorie!=="Rechtliche Grundlagen");
+const filteredRecht = BPR.filter(b=>(b.name.toLowerCase().includes(debouncedSearch.toLowerCase())||b.kategorie.toLowerCase().includes(debouncedSearch.toLowerCase()))&&b.kategorie==="Rechtliche Grundlagen");
+const filteredEkg = EKG_DATA.filter(e=>e.name.toLowerCase().includes(debouncedSearch.toLowerCase())||e.kategorie.toLowerCase().includes(debouncedSearch.toLowerCase()));
+const filteredSinnhaft = SINNHAFT_DATA.filter(s=>s.name.toLowerCase().includes(debouncedSearch.toLowerCase())||s.kategorie.toLowerCase().includes(debouncedSearch.toLowerCase()));
+const filteredScores = SCORES_DATA.filter(s=>s.name.toLowerCase().includes(debouncedSearch.toLowerCase())||(s.kategorie&&s.kategorie.toLowerCase().includes(debouncedSearch.toLowerCase())));
+const filteredChecklists = CHECKLISTS_DATA.filter(c=>c.name.toLowerCase().includes(debouncedSearch.toLowerCase())||(c.kategorie&&c.kategorie.toLowerCase().includes(debouncedSearch.toLowerCase())));
+const filteredAbcde = ABCDE_DATA.filter(a=>a.title.toLowerCase().includes(debouncedSearch.toLowerCase()));
 const filteredTools = [...filteredScores,...filteredChecklists,...filteredAbcde];
 if(detail) {
 if(tab==="meds") {
@@ -3339,7 +3376,8 @@ return (
 <div className="fade-in">
 <Button onClick={()=>navigate("dashboard")} variant="ghost" size="sm" style={{marginBottom:16}}><Icon name="arrowLeft" size={14}/> Zurück</Button>
 <h2 style={{fontSize:22,fontWeight:700,marginBottom:16}}> Lexikon</h2>
-<input value={search} onChange={e=>setSearch(e.target.value)} placeholder=" Suchen..." style={{width:"100%",padding:"12px 16px",background:COLORS.card,border:`1px solid ${COLORS.border}`,borderRadius:12,color:COLORS.text,fontSize:14,fontFamily:"'Outfit',sans-serif",marginBottom:16,outline:"none"}}/>
+<input value={search} onChange={e=>setSearch(e.target.value)} placeholder=" Suchen..." style={{width:"100%",padding:"12px 16px",background:COLORS.card,border:`1px solid ${COLORS.border}`,borderRadius:12,color:COLORS.text,fontSize:14,fontFamily:"'Outfit',sans-serif",marginBottom:debouncedSearch?8:16,outline:"none"}}/>
+{debouncedSearch && <div style={{fontSize:12,color:COLORS.textMuted,marginBottom:12}}>{tabs.find(t=>t.id===tab)?.count||0} Ergebnisse für „{debouncedSearch}"</div>}
 <div style={{display:"flex",gap:4,marginBottom:20,flexWrap:"wrap"}}>
 {tabs.map(t=>(
 <button key={t.id} onClick={()=>setTab(t.id)} style={{padding:"8px 16px",borderRadius:10,border:`1px solid ${tab===t.id?COLORS.accent:COLORS.border}`,background:tab===t.id?COLORS.accent+"15":"transparent",color:tab===t.id?COLORS.accent:COLORS.textMuted,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
@@ -3355,13 +3393,15 @@ return (
 <div style={{fontSize:12,color:COLORS.textMuted,marginTop:6}}>{m.indikationen[0]}</div>
 </Card>
 ))}
+{tab==="meds" && filteredMeds.length===0 && <EmptyState sub={debouncedSearch?`Keine Medikamente für "${debouncedSearch}" gefunden.`:"Keine Einträge in dieser Kategorie."}/>}
 {tab==="invasive" && filteredInv.map(m=>(
 <Card key={m.id} onClick={()=>setDetail(m.id)} style={{padding:16}}>
 <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>{m.name}</div>
 <div style={{fontSize:12,color:COLORS.textMuted,marginTop:4}}>{m.indikationen[0]}</div>
 </Card>
 ))}
-{tab==="leitsymptome" && filteredLeit.map(l=>(<Card key={l.id} onClick={()=>{setDetail(l.id);window.scrollTo(0,0);}} style={{padding:16}}>
+{tab==="invasive" && filteredInv.length===0 && <EmptyState sub={debouncedSearch?`Keine Maßnahmen für "${debouncedSearch}" gefunden.`:"Keine Einträge in dieser Kategorie."}/>}
+{tab==="leitsymptome" && filteredLeit.map(l=>(<Card key={l.id} onClick={()=>{setDetail(l.id);window.scrollTo({top:0,behavior:'smooth'});}} style={{padding:16}}>
 <Badge color={COLORS.orange} bg={COLORS.orange+"10"}>Leitsymptom</Badge>
 <div style={{fontSize:15,fontWeight:700,margin:"8px 0 4px"}}>{l.name}</div>
 <div style={{fontSize:12,color:COLORS.textMuted,marginBottom:8}}>{l.schritte.length} Schritte · {l.medikamente.length>0?l.medikamente.join(", "):"Algorithmus"}</div>
@@ -3370,7 +3410,8 @@ return (
 Ablaufdiagramm verfügbar
 </div>}
 </Card>))}
-{tab==="bpr" && filteredBpr.map(b=>(<Card key={b.id} onClick={()=>{setDetail(b.id);window.scrollTo(0,0);}} style={{padding:16}}>
+{tab==="leitsymptome" && filteredLeit.length===0 && <EmptyState sub={debouncedSearch?`Keine Leitsymptome für "${debouncedSearch}" gefunden.`:"Keine Einträge in dieser Kategorie."}/>}
+{tab==="bpr" && filteredBpr.map(b=>(<Card key={b.id} onClick={()=>{setDetail(b.id);window.scrollTo({top:0,behavior:'smooth'});}} style={{padding:16}}>
 <Badge color={COLORS.green} bg={COLORS.green+"10"}>{b.kategorie}</Badge>
 <div style={{fontSize:15,fontWeight:700,margin:"8px 0 4px"}}>{b.name}</div>
 <div style={{fontSize:12,color:COLORS.textMuted,marginBottom:BPR_FLOWS[b.id]?8:0}}>{b.schritte.length} Schritte · {b.medikamente.length>0?b.medikamente.join(", "):"Algorithmus"}</div>
@@ -3379,6 +3420,7 @@ Ablaufdiagramm verfügbar
 Ablaufdiagramm verfügbar
 </div>}
 </Card>))}
+{tab==="bpr" && filteredBpr.length===0 && <EmptyState sub={debouncedSearch?`Keine Behandlungspfade für "${debouncedSearch}" gefunden.`:"Keine Einträge in dieser Kategorie."}/>}
 {tab==="ekg" && filteredEkg.map(e=>(
 <Card key={e.id} onClick={()=>setDetail(e.id)} style={{padding:16}}>
 <Badge color={"#e11d48"} bg={"#e11d4810"}>{e.kategorie}</Badge>
@@ -3387,6 +3429,7 @@ Ablaufdiagramm verfügbar
 <div style={{fontSize:12,color:COLORS.textMuted}}>{e.merkmale[0]}</div>
 </Card>
 ))}
+{tab==="ekg" && filteredEkg.length===0 && <EmptyState sub={debouncedSearch?`Keine EKG-Befunde für "${debouncedSearch}" gefunden.`:"Keine Einträge in dieser Kategorie."}/>}
 </div>
 {tab==="sinnhaft" && <div style={{display:"grid",gap:8}}>
 <div style={{padding:16,background:COLORS.accent+"08",borderRadius:12,border:`1px solid ${COLORS.accent}30`,marginBottom:8}}>
@@ -3395,7 +3438,7 @@ Ablaufdiagramm verfügbar
 <div style={{display:"flex",flexWrap:"wrap",gap:6,marginTop:8}}>{["S","I","N","N","H","A","F","T"].map((b,i)=><span key={i} style={{background:COLORS.accent+"20",color:COLORS.accent,padding:"2px 8px",borderRadius:6,fontSize:12,fontWeight:700}}>{b}</span>)}</div>
 </div>
 {filteredSinnhaft.map(s=>(
-<div key={s.id} onClick={()=>{setDetail(s.id);window.scrollTo(0,0)}} style={{background:COLORS.card,border:`1px solid ${COLORS.border}`,borderRadius:12,padding:14,cursor:"pointer",transition:"all .2s",display:"flex",alignItems:"center",gap:12}}>
+<div key={s.id} onClick={()=>{setDetail(s.id);window.scrollTo({top:0,behavior:'smooth'})}} style={{background:COLORS.card,border:`1px solid ${COLORS.border}`,borderRadius:12,padding:14,cursor:"pointer",transition:"all .2s",display:"flex",alignItems:"center",gap:12}}>
 <div style={{width:42,height:42,borderRadius:10,background:COLORS.accent+"15",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,fontWeight:800,color:COLORS.accent,flexShrink:0}}>{s.buchstabe}</div>
 <div style={{flex:1,minWidth:0}}>
 <div style={{fontSize:15,fontWeight:600,color:COLORS.text}}>{s.name}</div>
@@ -3404,13 +3447,14 @@ Ablaufdiagramm verfügbar
 <div style={{color:COLORS.textDim,fontSize:16}}>→</div>
 </div>
 ))}
+{filteredSinnhaft.length===0 && <EmptyState sub={debouncedSearch?`Keine SINNHAFT-Einträge für "${debouncedSearch}" gefunden.`:"Keine Einträge verfügbar."}/>}
 </div>}
 {tab==="werkzeuge" && <div style={{display:"grid",gap:8}}>
 <div style={{padding:"8px 0",borderBottom:"1px solid "+COLORS.border,marginBottom:4}}>
 <span style={{fontSize:12,fontWeight:700,color:COLORS.purple,textTransform:"uppercase"}}> Scores ({filteredScores.length})</span>
 </div>
 {filteredScores.map(s=>(
-<Card key={s.id} onClick={()=>{setDetail(s.id);window.scrollTo(0,0);}} style={{padding:14}}>
+<Card key={s.id} onClick={()=>{setDetail(s.id);window.scrollTo({top:0,behavior:'smooth'});}} style={{padding:14}}>
 <Badge color={COLORS.purple} bg={COLORS.purple+"10"}>{s.kategorie}</Badge>
 <div style={{fontSize:15,fontWeight:700,margin:"6px 0 4px"}}>{s.name}</div>
 <div style={{fontSize:12,color:COLORS.textMuted}}>{s.items.length} Parameter</div>
@@ -3422,7 +3466,7 @@ Ablaufdiagramm verfügbar
 {filteredChecklists.map(cl=>{
 const totalChecks = cl.items.reduce((sum,g)=>sum+g.checks.length,0);
 return (
-<Card key={cl.id} onClick={()=>{setDetail(cl.id);window.scrollTo(0,0);}} style={{padding:14}}>
+<Card key={cl.id} onClick={()=>{setDetail(cl.id);window.scrollTo({top:0,behavior:'smooth'});}} style={{padding:14}}>
 <div style={{display:"flex",alignItems:"center",gap:8}}>
 <span style={{fontSize:22}}><Icon name={cl.iconName} size={18} color={cl.color}/></span>
 <div style={{flex:1}}>
@@ -3438,7 +3482,7 @@ return (
 <span style={{fontSize:12,fontWeight:700,color:COLORS.orange,textTransform:"uppercase"}}> ABCDE-Schema ({filteredAbcde.length})</span>
 </div>
 {filteredAbcde.map(a=>(
-<Card key={a.letter} onClick={()=>{setDetail(a.letter);window.scrollTo(0,0);}} style={{padding:14}}>
+<Card key={a.letter} onClick={()=>{setDetail(a.letter);window.scrollTo({top:0,behavior:'smooth'});}} style={{padding:14}}>
 <div style={{display:"flex",alignItems:"center",gap:12}}>
 <div style={{width:40,height:40,borderRadius:10,background:a.color+"20",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,fontWeight:800,color:a.color}}>{a.letter}</div>
 <div>
@@ -3448,12 +3492,14 @@ return (
 </div>
 </Card>
 ))}
+{filteredTools.length===0 && <EmptyState sub={debouncedSearch?`Keine Werkzeuge für "${debouncedSearch}" gefunden.`:"Keine Einträge verfügbar."}/>}
 </div>}
-{tab==="recht" && filteredRecht.map(b=>(<Card key={b.id} onClick={()=>{setDetail(b.id);window.scrollTo(0,0);}} style={{padding:16}}>
+{tab==="recht" && filteredRecht.map(b=>(<Card key={b.id} onClick={()=>{setDetail(b.id);window.scrollTo({top:0,behavior:'smooth'});}} style={{padding:16}}>
 <Badge color="#f59e0b" bg="#f59e0b10">{b.kategorie}</Badge>
 <div style={{fontSize:15,fontWeight:700,margin:"8px 0 4px"}}>{b.name}</div>
 <div style={{fontSize:12,color:COLORS.textMuted}}>{b.schritte.length} Schritte</div>
 </Card>))}
+{tab==="recht" && filteredRecht.length===0 && <EmptyState sub={debouncedSearch?`Keine Rechtsgrundlagen für "${debouncedSearch}" gefunden.`:"Keine Einträge in dieser Kategorie."}/>}
 </div>
 );
 }
@@ -3937,13 +3983,25 @@ setTimeLeft(40*60);setStarted(true);
 setCasePhase(null);setCaseRevealed({});setCaseDiagSelected(null);setCaseDiagCorrect(null);
 setCaseTreatStep(0);setCaseTreatSelected(null);setCaseTreatScore(0);setCaseDiagScore(0);
 };
+const [timerWarning, setTimerWarning] = useState(null);
 useEffect(()=>{
 if(!started||done) return;
 const t = setInterval(()=>{
-setTimeLeft(tl=>{if(tl<=1){setDone(true);return 0;}return tl-1;});
+setTimeLeft(tl=>{
+if(tl<=1){setDone(true);return 0;}
+if(tl===600) setTimerWarning("10 Minuten verbleibend");
+if(tl===300) setTimerWarning("5 Minuten verbleibend!");
+if(tl===60) setTimerWarning("Letzte Minute!");
+return tl-1;
+});
 },1000);
 return ()=>clearInterval(t);
 },[started,done]);
+useEffect(()=>{
+if(!timerWarning) return;
+const t = setTimeout(()=>setTimerWarning(null),3000);
+return ()=>clearTimeout(t);
+},[timerWarning]);
 const answer = (idx)=>{
 if(selected!==null) return;
 setSelected(idx);
@@ -3974,7 +4032,13 @@ setStats(s=>({...s,examScores:[...s.examScores,{date:new Date().toISOString(),sc
 };
 const mm = Math.floor(timeLeft/60);
 const ss = timeLeft%60;
-const timerBadge = <Badge color={timeLeft<300?COLORS.accent:COLORS.textMuted}>{String(mm).padStart(2,"0")}:{String(ss).padStart(2,"0")}</Badge>;
+const timerColor = timeLeft<=60?COLORS.accent:timeLeft<=300?COLORS.orange:timeLeft<=600?"#eab308":COLORS.textMuted;
+const timerBadge = <Badge color={timerColor}><span style={timeLeft<=300?{animation:timeLeft<=60?"pulse 0.8s infinite":"pulse 2s infinite"}:{}}>{String(mm).padStart(2,"0")}:{String(ss).padStart(2,"0")}</span></Badge>;
+const timerToast = timerWarning ? (
+<div className="fade-in" style={{position:"fixed",top:20,left:"50%",transform:"translateX(-50%)",zIndex:9998,background:timeLeft<=60?COLORS.accent:timeLeft<=300?COLORS.orange:"#eab308",color:"#fff",padding:"10px 24px",borderRadius:12,fontSize:14,fontWeight:700,boxShadow:"0 4px 24px rgba(0,0,0,0.5)",pointerEvents:"none"}}>
+{timerWarning}
+</div>
+) : null;
 // ─── START SCREEN ───
 if(!started) {
 const bprNames = {};
@@ -4105,6 +4169,7 @@ render:()=><pre style={{fontSize:13,lineHeight:1.8,color:COLORS.text,fontFamily:
 const revealedCount = Object.keys(caseRevealed).length;
 return (
 <div className="fade-in">
+{timerToast}
 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:8}}>
 <Badge color={COLORS.purple}> Prüfungsfall – Erkundung</Badge>
 <div style={{display:"flex",gap:8}}>{timerBadge}<Badge color={COLORS.blue}>{score} Quiz-Punkte</Badge></div>
@@ -4156,6 +4221,7 @@ setAnswers(a=>[...a,{type:"case",label:"Diagnose: "+ec.diagnoseOptionen[ec.corre
 };
 return (
 <div className="fade-in">
+{timerToast}
 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:8}}>
 <Button onClick={()=>setCasePhase("explore")} variant="ghost" size="sm"><Icon name="arrowLeft" size={14}/> Zurück</Button>
 <div style={{display:"flex",gap:8}}><Badge color={COLORS.purple}>Verdachtsdiagnose</Badge>{timerBadge}</div>
@@ -4223,6 +4289,7 @@ setCaseTreatStep(caseTreatStep+1);setCaseTreatSelected(null);
 };
 return (
 <div className="fade-in">
+{timerToast}
 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:8}}>
 <Badge color={COLORS.purple}> Prüfungsfall – Behandlung {caseTreatStep+1}/{treatSteps.length}</Badge>
 <div style={{display:"flex",gap:8}}>{timerBadge}<Badge color={COLORS.blue}>{score} Quiz</Badge></div>
@@ -4273,6 +4340,7 @@ const totalItems = questions.length + 1 + treatLen;
 const currentItem = casePhase===null&&qi>=CASE_AFTER_Q ? CASE_AFTER_Q + 1 + treatLen + (qi - CASE_AFTER_Q + 1) : qi + 1;
 return (
 <div className="fade-in">
+{timerToast}
 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:8}}>
 <Badge color={COLORS.blue}>Frage {qi+1}/{questions.length}</Badge>
 <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -4319,6 +4387,7 @@ return(
 // STATISTICS
 // ═══════════════════════════════════════════════════════
 function Statistics({stats,setStats,navigate}) {
+const [confirmOpen, setConfirmOpen] = useState(false);
 const pct = stats.quizTotal>0?Math.round(stats.quizCorrect/stats.quizTotal*100):0;
 const weakMeds = QUIZ_QUESTIONS.filter(q=>stats.wrongQuestions.includes(q.id)&&q.cat==="Medikamente");
 const weakInv = QUIZ_QUESTIONS.filter(q=>stats.wrongQuestions.includes(q.id)&&q.cat==="Invasive Maßnahmen");
@@ -4328,7 +4397,8 @@ const weakEkg = QUIZ_QUESTIONS.filter(q=>stats.wrongQuestions.includes(q.id)&&q.
 const weakUe = QUIZ_QUESTIONS.filter(q=>stats.wrongQuestions.includes(q.id)&&q.cat==="Übergabe");
 const weakWz = QUIZ_QUESTIONS.filter(q=>stats.wrongQuestions.includes(q.id)&&q.cat==="Werkzeuge");
 const weakRecht = QUIZ_QUESTIONS.filter(q=>stats.wrongQuestions.includes(q.id)&&q.cat==="Recht & Aufklärung");
-const reset = ()=>{if(confirm("Alle Statistiken zurücksetzen?"))setStats({quizCorrect:0,quizTotal:0,casesCompleted:0,examScores:[],wrongQuestions:[]});};
+const reset = ()=>setConfirmOpen(true);
+const doReset = ()=>{setStats({quizCorrect:0,quizTotal:0,casesCompleted:0,examScores:[],wrongQuestions:[]});setConfirmOpen(false);};
 return (
 <div className="fade-in">
 <Button onClick={()=>navigate("dashboard")} variant="ghost" size="sm" style={{marginBottom:16}}><Icon name="arrowLeft" size={14}/> Zurück</Button>
@@ -4387,6 +4457,7 @@ return (
 <div style={{display:"flex",justifyContent:"center",marginTop:24}}>
 <Button onClick={reset} variant="ghost" size="sm"> Statistiken zurücksetzen</Button>
 </div>
+<ConfirmModal open={confirmOpen} title="Statistiken zurücksetzen?" message="Alle Quizergebnisse, Fallstatistiken und Prüfungsergebnisse werden unwiderruflich gelöscht." onConfirm={doReset} onCancel={()=>setConfirmOpen(false)}/>
 </div>
 );
 }
