@@ -616,7 +616,7 @@ cats[c.bpr].count++;
 });
 return Object.values(cats).sort((a,b)=>a.name.localeCompare(b.name));
 },[bprNames]);
-const filteredCases = (catFilter==="all" ? EXAM_CASES : EXAM_CASES.filter(c=>c.bpr===catFilter)).filter(c=>{if(!caseSearch) return true;const s=caseSearch.toLowerCase();return c.meldung.toLowerCase().includes(s)||(bprNames[c.bpr]||"").toLowerCase().includes(s)||c.ankunft.toLowerCase().includes(s);});
+const filteredCases = (catFilter==="all" ? EXAM_CASES : EXAM_CASES.filter(c=>c.bpr===catFilter)).filter(c=>{if(!caseSearch) return true;const s=caseSearch.toLowerCase();return (c.meldung||"").toLowerCase().includes(s)||(bprNames[c.bpr]||"").toLowerCase().includes(s)||(c.ankunft||"").toLowerCase().includes(s);});
 const startCase = (idx)=>{
 setCaseIdx(idx);setPhase("explore");setRevealed({});setDiagSelected(null);setDiagCorrect(null);
 setTreatStep(0);setTreatSelected(null);setTreatScore(0);setDiagScore(0);
@@ -656,6 +656,7 @@ return (
 </div>
 );
 const ec = EXAM_CASES[caseIdx];
+if(!ec) return <div className="fade-in"><Button onClick={()=>{setCaseIdx(null);}} variant="ghost" size="sm">← Zurück</Button><p style={{color:COLORS.textMuted,marginTop:16}}>Fall nicht gefunden.</p></div>;
 const linkedCase = CASES.find(c=>c.id===ec.caseId);
 const treatSteps = linkedCase ? linkedCase.steps : [];
 // ─── EXPLORE PHASE ───
@@ -1223,6 +1224,7 @@ if(gapsDone) return (
 </div>
 );
 const gap = allGaps[gapIdx];
+if(!gap) return <div className="fade-in"><p style={{color:COLORS.textMuted}}>Keine Lücken verfügbar.</p><Button onClick={onBack} variant="ghost" size="sm">← Zurück</Button></div>;
 const answers = gap.answer.split(";");
 const parts = gap.text.split("___");
 const inputCount = parts.length - 1;
@@ -1314,7 +1316,7 @@ cats[c.bpr].count++;
 });
 return Object.values(cats).sort((a,b)=>a.name.localeCompare(b.name));
 },[bprNames]);
-const filteredCases = (catFilter==="all" ? CASES : CASES.filter(c=>c.bpr===catFilter)).filter(c=>{if(!caseSearch) return true;const s=caseSearch.toLowerCase();return c.title.toLowerCase().includes(s)||c.scenario.toLowerCase().includes(s)||(bprNames[c.bpr]||"").toLowerCase().includes(s);});
+const filteredCases = (catFilter==="all" ? CASES : CASES.filter(c=>c.bpr===catFilter)).filter(c=>{if(!caseSearch) return true;const s=caseSearch.toLowerCase();return (c.title||"").toLowerCase().includes(s)||(c.scenario||"").toLowerCase().includes(s)||(bprNames[c.bpr]||"").toLowerCase().includes(s);});
 // ─── MODE SELECT ───
 if(mode==="select") return (
 <div className="fade-in">
@@ -1389,6 +1391,7 @@ return (
 </div>
 );
 const c = CASES[caseIdx];
+if(!c) return <div className="fade-in"><Button onClick={()=>{setCaseIdx(null);}} variant="ghost" size="sm">← Zurück</Button><p style={{color:COLORS.textMuted,marginTop:16}}>Fall nicht gefunden.</p></div>;
 const matchingAlgo = ALGORITHM_DATA.find(a=>a.id===c.bpr);
 // ─── ALGO EXERCISE INLINE (within training case) ───
 if(caseDone && algoExercise) {
