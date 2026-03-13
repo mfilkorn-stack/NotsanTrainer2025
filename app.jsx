@@ -507,11 +507,17 @@ const [qi, setQi] = useState(0);
 const [selected, setSelected] = useState(null);
 const [score, setScore] = useState(0);
 const [done, setDone] = useState(false);
+const autoStarted = React.useRef(false);
+const isSchwach = (cat) => cat==="schwachstellen"||cat?.startsWith("schwach_");
 const startQuiz = (cat) => {
-const filtered = cat==="all"?QUIZ_QUESTIONS:QUIZ_QUESTIONS.filter(q=>q.cat===cat);
+let filtered;
+if(cat==="schwachstellen") filtered=QUIZ_QUESTIONS.filter(q=>stats.wrongQuestions.includes(q.id));
+else if(cat?.startsWith("schwach_")) {const rc=cat.replace("schwach_","");filtered=QUIZ_QUESTIONS.filter(q=>stats.wrongQuestions.includes(q.id)&&q.cat===rc);}
+else filtered=cat==="all"?QUIZ_QUESTIONS:QUIZ_QUESTIONS.filter(q=>q.cat===cat);
 const shuffled = [...filtered].sort(()=>Math.random()-.5).slice(0,Math.min(15,filtered.length));
 setQuestions(shuffled);setQi(0);setSelected(null);setScore(0);setDone(false);setCategory(cat);
 };
+React.useEffect(()=>{if(subView&&isSchwach(subView)&&!autoStarted.current){autoStarted.current=true;startQuiz(subView);}},[]);
 const answer = (idx) => {
 if(selected!==null) return;
 setSelected(idx);
@@ -519,7 +525,7 @@ const correct = idx===questions[qi].correct;
 if(correct) {setScore(s=>s+1);haptic("success");}
 else haptic("error");
 setStats(s=>{
-const wrong = correct?s.wrongQuestions:([...s.wrongQuestions,questions[qi].id]);
+const wrong = correct?s.wrongQuestions.filter(id=>id!==questions[qi].id):([...s.wrongQuestions,questions[qi].id]);
 return{...s,quizCorrect:s.quizCorrect+(correct?1:0),quizTotal:s.quizTotal+1,wrongQuestions:[...new Set(wrong)]};
 });
 };
@@ -541,7 +547,7 @@ if(!category) return (
 {id:"Werkzeuge",label:"Werkzeuge",count:QUIZ_QUESTIONS.filter(q=>q.cat==="Werkzeuge").length,color:"#14b8a6",iconName:"wrench"},
 {id:"Recht & Aufklärung",label:"Recht & Aufklärung",count:QUIZ_QUESTIONS.filter(q=>q.cat==="Recht & Aufklärung").length,color:"#f59e0b",iconName:"shield"},
 {id:"all",label:"Alle Kategorien",count:QUIZ_QUESTIONS.length,color:COLORS.purple,iconName:"layers"},
-].map(c=>(
+].concat(stats.wrongQuestions.length>0?[{id:"schwachstellen",label:"Schwachstellen trainieren",count:stats.wrongQuestions.length,color:COLORS.accent,iconName:"target"}]:[]).map(c=>(
 <Card key={c.id} onClick={()=>startQuiz(c.id)}>
 <div style={{textAlign:"center"}}>
 <div style={{fontSize:36,marginBottom:8}}><Icon name={c.iconName} size={18} color={c.color}/></div>
@@ -555,14 +561,19 @@ if(!category) return (
 );
 if(done) {
 const pct = Math.round(score/questions.length*100);
+const schwachMode = isSchwach(category);
+const remaining = schwachMode?QUIZ_QUESTIONS.filter(q=>stats.wrongQuestions.includes(q.id)).length:0;
 return (
 <div className="fade-in" style={{textAlign:"center",paddingTop:40}}>
 <ScoreCircle pct={pct} size={160}/>
-<h2 style={{fontSize:28,fontWeight:700,marginTop:20}}>Quiz beendet!</h2>
+<h2 style={{fontSize:28,fontWeight:700,marginTop:20}}>{schwachMode?"Schwachstellen-Training beendet!":"Quiz beendet!"}</h2>
 <p style={{color:COLORS.textMuted,marginTop:8}}>{score} von {questions.length} richtig</p>
-<div style={{display:"flex",justifyContent:"center",gap:12,marginTop:24}}>
+{schwachMode && score>0 && <p style={{color:COLORS.green,fontSize:14,marginTop:8}}>{score} Schwachstelle{score>1?"n":""} behoben!</p>}
+{schwachMode && remaining>0 && <p style={{color:COLORS.textDim,fontSize:13,marginTop:4}}>Noch {remaining} Schwachstelle{remaining>1?"n":""} übrig</p>}
+{schwachMode && remaining===0 && <p style={{color:COLORS.green,fontSize:14,marginTop:8,fontWeight:700}}>Alle Schwachstellen behoben!</p>}
+<div style={{display:"flex",justifyContent:"center",gap:12,marginTop:24,flexWrap:"wrap"}}>
 <Button onClick={()=>setCategory(null)} variant="secondary">Kategorien</Button>
-<Button onClick={()=>startQuiz(category)}>Nochmal</Button>
+{schwachMode && remaining>0 ? <Button onClick={()=>startQuiz(category)}>Weiter trainieren</Button> : <Button onClick={()=>startQuiz(category)}>Nochmal</Button>}
 </div>
 </div>
 );
@@ -573,6 +584,7 @@ return (
 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:8}}>
 <Button onClick={()=>setCategory(null)} variant="ghost" size="sm"><Icon name="arrowLeft" size={14}/> Zurück</Button>
 <div style={{display:"flex",alignItems:"center",gap:12}}>
+{isSchwach(category) && <Badge color={COLORS.accent}>Schwachstellen</Badge>}
 <Badge color={COLORS.blue}>Frage {qi+1}/{questions.length}</Badge>
 <Badge color={COLORS.green}>{score} richtig</Badge>
 </div>
@@ -4480,12 +4492,16 @@ return (
 <p style={{color:COLORS.textMuted,fontSize:14}}>Noch keine Schwachstellen identifiziert. Starte ein Quiz!</p>
 ) : (
 <div>
-{[{label:"Medikamente",items:weakMeds,color:COLORS.accent},{label:"Invasive Maßnahmen",items:weakInv,color:COLORS.blue},{label:"Leitsymptome",items:weakLeit,color:COLORS.orange},{label:"Krankheitsbilder",items:weakBpr,color:COLORS.green},{label:"EKG-Befunde",items:weakEkg,color:"#e11d48"},{label:"Übergabe",items:weakUe,color:"#8b5cf6"},{label:"Recht & Aufklärung",items:weakRecht,color:"#f59e0b"}]
+<div style={{marginBottom:16}}>
+<Button onClick={()=>navigate("quiz","schwachstellen")} size="sm"><Icon name="target" size={14}/> Alle Schwachstellen trainieren ({stats.wrongQuestions.length})</Button>
+</div>
+{[{label:"Medikamente",catId:"Medikamente",items:weakMeds,color:COLORS.accent},{label:"Invasive Maßnahmen",catId:"Invasive Maßnahmen",items:weakInv,color:COLORS.blue},{label:"Leitsymptome",catId:"Leitsymptome",items:weakLeit,color:COLORS.orange},{label:"Krankheitsbilder",catId:"Behandlungspfade",items:weakBpr,color:COLORS.green},{label:"EKG-Befunde",catId:"EKG-Befunde",items:weakEkg,color:"#e11d48"},{label:"Übergabe",catId:"Übergabe",items:weakUe,color:"#8b5cf6"},{label:"Recht & Aufklärung",catId:"Recht & Aufklärung",items:weakRecht,color:"#f59e0b"}]
 .filter(s=>s.items.length>0).map(s=>(
 <div key={s.label} style={{marginBottom:16}}>
-<div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+<div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,flexWrap:"wrap"}}>
 <Badge color={s.color}>{s.label}</Badge>
 <span style={{fontSize:12,color:COLORS.textDim}}>{s.items.length} Fragen falsch</span>
+<Button onClick={()=>navigate("quiz","schwach_"+s.catId)} variant="ghost" size="sm" style={{marginLeft:"auto",fontSize:12}}>Trainieren →</Button>
 </div>
 {s.items.map(q=>(
 <div key={q.id} style={{fontSize:13,color:COLORS.textMuted,padding:"6px 12px",borderLeft:`2px solid ${s.color}40`,marginBottom:4}}>
