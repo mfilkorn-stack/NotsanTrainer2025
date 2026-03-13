@@ -5915,5 +5915,36 @@ gaps:[
 ]}
 ];
 // ═══════════════════════════════════════════════════════
+// VERSION HISTORY
+// ═══════════════════════════════════════════════════════
+var APP_VERSION = "0.9";
+var VERSION_HISTORY = [
+{version:"0.9",date:"2026-03-13",changes:[
+"UX: Leere Zustände, Suchverzögerung, Timer-Warnungen, Bestätigungsdialoge, sanftes Scrollen",
+"Gleichmäßige Kachelhöhen in allen Grid-Layouts (iPad-optimiert)",
+"Original-EKG-Bilder für alle 26 EKG-Befunde mit Vollbild-Viewer",
+"EKG-Bilder in Lexikon, Fällen, Prüfungsfällen und Prüfung integriert",
+"EKG-Typ-Zuordnung für alle Prüfungsfälle"
+]},
+{version:"0.8",date:"2025-10-01",changes:[
+"Freitextsuche in Trainingsfälle und Prüfungsfälle",
+"Defensive Null-Guards gegen potenzielle Crashes"
+]},
+{version:"0.7",date:"2025-09-15",changes:[
+"Relative Kontraindikationen für alle 29 Medikamente ergänzt",
+"Aufklärung, Einwilligung & Verlaufskontrolle für alle 18 invasiven Maßnahmen",
+"100 neue Quizfragen zu relativen Kontraindikationen & invasiven Maßnahmen",
+"Neue Fallschritte: relKontra, Aufklärung, Einwilligung, Verlaufskontrolle"
+]},
+{version:"0.6",date:"2025-07-01",changes:[
+"Initiale Version der NotSan Trainer App",
+"1000+ Quizfragen zu allen SAA/BPR-Themen",
+"50+ Trainingsfälle mit Schritt-für-Schritt-Simulation",
+"30+ Prüfungsfälle mit Diagnose & Therapie",
+"Lexikon: Medikamente, Invasive Maßnahmen, EKG-Befunde, Scores",
+"Prüfungsmodus mit 40-Minuten-Timer"
+]}
+];
+// ═══════════════════════════════════════════════════════
 // ENTITY LINKING SYSTEM
 // ═══════════════════════════════════════════════════════
