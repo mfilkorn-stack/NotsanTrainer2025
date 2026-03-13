@@ -442,7 +442,7 @@ return(
 function Dashboard({stats,navigate}) {
 const pct = stats.quizTotal>0?Math.round(stats.quizCorrect/stats.quizTotal*100):0;
 const modules = [
-{iconName:"book",title:"Lexikon",desc:`${MEDICATIONS.length} Medikamente · ${INVASIVE.length} Invasive Maßn. · ${LEITSYMPTOME.length} Leitsymptome · ${BPR.filter(b=>b.kategorie!=="Rechtliche Grundlagen").length} Krankheitsbilder · ${EKG_DATA.length} EKG · ${SINNHAFT_DATA.length} Übergabe · ${SCORES_DATA.length+CHECKLISTS_DATA.length+ABCDE_DATA.length} Werkzeuge · ${BPR.filter(b=>b.kategorie==="Rechtliche Grundlagen").length} Recht`,color:COLORS.blue,glow:COLORS.blueGlow,view:"reference"},
+{iconName:"book",title:"Lexikon",desc:`${MEDICATIONS.length+INVASIVE.length+LEITSYMPTOME.length+BPR.length+EKG_DATA.length+SINNHAFT_DATA.length+SCORES_DATA.length+CHECKLISTS_DATA.length+ABCDE_DATA.length} Einträge in 8 Kategorien`,color:COLORS.blue,glow:COLORS.blueGlow,view:"reference"},
 {iconName:"brain",title:"Quiz",desc:`${QUIZ_QUESTIONS.length} Fragen in ${[...new Set(QUIZ_QUESTIONS.map(q=>q.cat))].length} Kategorien inkl. Recht & Aufklärung`,color:COLORS.green,glow:COLORS.greenGlow,view:"quiz"},
 {iconName:"folder",title:"Fälle",desc:`${CASES.length} Trainingsfälle · ${EXAM_CASES.length} Prüfungsfälle · Algorithmus-Trainer`,color:COLORS.orange,glow:"rgba(249,115,22,0.12)",view:"cases"},
 {iconName:"graduationCap",title:"Prüfung",desc:"25 Fragen + 1 Prüfungsfall · 40 min",color:COLORS.accent,glow:COLORS.accentGlow,view:"exam"},
@@ -469,15 +469,15 @@ return (
 </Card>
 <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:16}}>
 {modules.map((m,i)=>(
-<Card key={i} onClick={()=>navigate(m.view)} glow={m.glow} style={{animationDelay:`${i*70}ms`}} className="fade-in">
+<Card key={i} onClick={()=>navigate(m.view)} glow={m.glow} style={{animationDelay:`${i*70}ms`,display:"flex",flexDirection:"column",justifyContent:"flex-start",minHeight:140}} className="fade-in">
 <div style={{position:"absolute",top:-20,right:-20,width:80,height:80,borderRadius:"50%",background:m.color+"08",filter:"blur(20px)"}}/>
-<div style={{display:"flex",alignItems:"flex-start",gap:16,position:"relative"}}>
+<div style={{display:"flex",alignItems:"flex-start",gap:16,position:"relative",flex:1}}>
 <div style={{width:50,height:50,borderRadius:14,background:`linear-gradient(135deg,${m.color}20,${m.color}08)`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:`1px solid ${m.color}20`}}>
 <Icon name={m.iconName} size={24} color={m.color}/>
 </div>
-<div>
+<div style={{flex:1,minWidth:0}}>
 <h3 style={{fontSize:16,fontWeight:700,marginBottom:5,color:m.color}}>{m.title}</h3>
-<p style={{fontSize:13,color:COLORS.textMuted,lineHeight:1.6,fontWeight:400}}>{m.desc}</p>
+<p style={{fontSize:13,color:COLORS.textMuted,lineHeight:1.6,fontWeight:400,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical"}}>{m.desc}</p>
 </div>
 </div>
 
