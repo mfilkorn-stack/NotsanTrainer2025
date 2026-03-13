@@ -238,6 +238,8 @@ body{background:${COLORS.bg};color:${COLORS.text};font-family:'Outfit',system-ui
 @keyframes floatPulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.05);opacity:1}}
 @keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 .fade-in{animation:fadeIn .5s cubic-bezier(.16,1,.3,1) both;}
+.card-grid{display:grid;gap:12px;}
+.card-grid>*{height:100%;box-sizing:border-box;}
 .slide-in{animation:slideIn .35s ease-out both;}
 .glass{background:rgba(15,21,37,0.7);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}
 @media(min-width:769px){.bottom-nav{display:none!important;}.desktop-nav{display:flex!important;}}
@@ -320,7 +322,7 @@ onMouseEnter={e=>{if(!disabled){e.target.style.transform="translateY(-2px) scale
 onMouseLeave={e=>{e.target.style.transform="none";e.target.style.boxShadow=variants[variant].boxShadow||"none";}}>{children}</button>;
 };
 const Card = ({children,style:s,onClick,glow}) => (
-<div onClick={onClick} style={{background:COLORS.card,border:`1px solid ${COLORS.border}`,borderRadius:18,padding:24,boxShadow:glow?`0 0 40px ${glow}, inset 0 1px 0 rgba(255,255,255,0.04)`:"0 4px 24px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,0.03)",cursor:onClick?"pointer":"default",transition:"all .35s cubic-bezier(.16,1,.3,1)",position:"relative",overflow:"hidden",...s}}
+<div onClick={onClick} style={{background:COLORS.card,border:`1px solid ${COLORS.border}`,borderRadius:18,padding:24,boxShadow:glow?`0 0 40px ${glow}, inset 0 1px 0 rgba(255,255,255,0.04)`:"0 4px 24px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,0.03)",cursor:onClick?"pointer":"default",transition:"all .35s cubic-bezier(.16,1,.3,1)",position:"relative",overflow:"hidden",boxSizing:"border-box",...s}}
 onMouseEnter={e=>{if(onClick){e.currentTarget.style.borderColor=COLORS.accent+"60";e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow=`0 12px 40px rgba(0,0,0,.5), 0 0 30px ${glow||COLORS.accent+"15"}`;}}}
 onMouseLeave={e=>{if(onClick){e.currentTarget.style.borderColor=COLORS.border;e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow=glow?`0 0 40px ${glow}`:"0 4px 24px rgba(0,0,0,.4)";}}}>{children}</div>
 );
@@ -442,7 +444,7 @@ return(
 function Dashboard({stats,navigate}) {
 const pct = stats.quizTotal>0?Math.round(stats.quizCorrect/stats.quizTotal*100):0;
 const modules = [
-{iconName:"book",title:"Lexikon",desc:`${MEDICATIONS.length} Medikamente · ${INVASIVE.length} Invasive Maßn. · ${LEITSYMPTOME.length} Leitsymptome · ${BPR.filter(b=>b.kategorie!=="Rechtliche Grundlagen").length} Krankheitsbilder · ${EKG_DATA.length} EKG · ${SINNHAFT_DATA.length} Übergabe · ${SCORES_DATA.length+CHECKLISTS_DATA.length+ABCDE_DATA.length} Werkzeuge · ${BPR.filter(b=>b.kategorie==="Rechtliche Grundlagen").length} Recht`,color:COLORS.blue,glow:COLORS.blueGlow,view:"reference"},
+{iconName:"book",title:"Lexikon",desc:`${MEDICATIONS.length+INVASIVE.length+LEITSYMPTOME.length+BPR.length+EKG_DATA.length+SINNHAFT_DATA.length+SCORES_DATA.length+CHECKLISTS_DATA.length+ABCDE_DATA.length} Einträge in 8 Kategorien`,color:COLORS.blue,glow:COLORS.blueGlow,view:"reference"},
 {iconName:"brain",title:"Quiz",desc:`${QUIZ_QUESTIONS.length} Fragen in ${[...new Set(QUIZ_QUESTIONS.map(q=>q.cat))].length} Kategorien inkl. Recht & Aufklärung`,color:COLORS.green,glow:COLORS.greenGlow,view:"quiz"},
 {iconName:"folder",title:"Fälle",desc:`${CASES.length} Trainingsfälle · ${EXAM_CASES.length} Prüfungsfälle · Algorithmus-Trainer`,color:COLORS.orange,glow:"rgba(249,115,22,0.12)",view:"cases"},
 {iconName:"graduationCap",title:"Prüfung",desc:"25 Fragen + 1 Prüfungsfall · 40 min",color:COLORS.accent,glow:COLORS.accentGlow,view:"exam"},
@@ -467,17 +469,17 @@ return (
 </div>
 <div style={{marginTop:16}}><ProgressBar value={stats.quizTotal>0?pct:0} max={100} color={pct>=70?COLORS.green:pct>=40?COLORS.yellow:COLORS.accent} h={6}/></div>
 </Card>
-<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:16}}>
+<div className="card-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:16}}>
 {modules.map((m,i)=>(
-<Card key={i} onClick={()=>navigate(m.view)} glow={m.glow} style={{animationDelay:`${i*70}ms`}} className="fade-in">
+<Card key={i} onClick={()=>navigate(m.view)} glow={m.glow} style={{animationDelay:`${i*70}ms`,display:"flex",flexDirection:"column",justifyContent:"flex-start",minHeight:140}} className="fade-in">
 <div style={{position:"absolute",top:-20,right:-20,width:80,height:80,borderRadius:"50%",background:m.color+"08",filter:"blur(20px)"}}/>
-<div style={{display:"flex",alignItems:"flex-start",gap:16,position:"relative"}}>
+<div style={{display:"flex",alignItems:"flex-start",gap:16,position:"relative",flex:1}}>
 <div style={{width:50,height:50,borderRadius:14,background:`linear-gradient(135deg,${m.color}20,${m.color}08)`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:`1px solid ${m.color}20`}}>
 <Icon name={m.iconName} size={24} color={m.color}/>
 </div>
-<div>
+<div style={{flex:1,minWidth:0}}>
 <h3 style={{fontSize:16,fontWeight:700,marginBottom:5,color:m.color}}>{m.title}</h3>
-<p style={{fontSize:13,color:COLORS.textMuted,lineHeight:1.6,fontWeight:400}}>{m.desc}</p>
+<p style={{fontSize:13,color:COLORS.textMuted,lineHeight:1.6,fontWeight:400,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical"}}>{m.desc}</p>
 </div>
 </div>
 
@@ -529,7 +531,7 @@ if(!category) return (
 <div className="fade-in">
 <Button onClick={()=>navigate("dashboard")} variant="ghost" size="sm" style={{marginBottom:20}}><Icon name="arrowLeft" size={14}/> Zurück</Button>
 <h2 style={{fontSize:22,fontWeight:700,marginBottom:20}}> Quiz</h2>
-<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:16}}>
+<div className="card-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:16}}>
 {[{id:"Medikamente",label:"Medikamente",count:QUIZ_QUESTIONS.filter(q=>q.cat==="Medikamente").length,color:COLORS.accent,iconName:"pill"},
 {id:"Invasive Maßnahmen",label:"Invasive Maßnahmen",count:QUIZ_QUESTIONS.filter(q=>q.cat==="Invasive Maßnahmen").length,color:COLORS.blue,iconName:"syringe"},
 {id:"Leitsymptome",label:"Leitsymptome",count:QUIZ_QUESTIONS.filter(q=>q.cat==="Leitsymptome").length,color:COLORS.orange,iconName:"stethoscope"},
@@ -674,7 +676,7 @@ Alle ({EXAM_CASES.length})
 </div>
 ))}
 </div>
-<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:12}}>
+<div className="card-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:12}}>
 {filteredCases.map((c,i)=>{
 const globalIdx = EXAM_CASES.indexOf(c);
 return (
@@ -1028,7 +1030,7 @@ if(!selectedAlgo) return (
 <div key={c.name} onClick={()=>setCatFilter(c.name)} style={{padding:"6px 12px",borderRadius:20,fontSize:11,fontWeight:600,cursor:"pointer",background:catFilter===c.name?COLORS.green:COLORS.bg,color:catFilter===c.name?"#fff":COLORS.textMuted,border:`1px solid ${catFilter===c.name?COLORS.green:COLORS.border}`,transition:"all .2s",whiteSpace:"nowrap"}}>{c.name} ({c.count})</div>
 ))}
 </div>
-<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:12}}>
+<div className="card-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:12}}>
 {filtered.map(algo=>(
 <Card key={algo.id} style={{padding:16}}>
 <h4 style={{fontSize:15,fontWeight:700,marginBottom:4}}>{algo.name}</h4>
@@ -1051,7 +1053,7 @@ return (
 <Button onClick={backToSelect} variant="ghost" size="sm" style={{marginBottom:20}}><Icon name="arrowLeft" size={14}/> Zurück</Button>
 <h2 style={{fontSize:22,fontWeight:700,marginBottom:8}}> {algo.name}</h2>
 <p style={{color:COLORS.textMuted,fontSize:13,marginBottom:24}}>Wählen Sie eine Übungsform:</p>
-<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:16}}>
+<div className="card-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:16}}>
 <Card onClick={()=>startOrder(algo)} style={{cursor:"pointer",textAlign:"center",padding:28,borderColor:COLORS.orange+"40"}}>
 <div style={{fontSize:40,marginBottom:10}}> </div>
 <h3 style={{fontSize:17,fontWeight:700,color:COLORS.orange}}>Schritte ordnen</h3>
@@ -1358,7 +1360,7 @@ if(mode==="select") return (
 <Button onClick={()=>navigate("dashboard")} variant="ghost" size="sm" style={{marginBottom:20}}><Icon name="arrowLeft" size={14}/> Zurück</Button>
 <h2 style={{fontSize:22,fontWeight:700,marginBottom:8}}> Fälle</h2>
 <p style={{color:COLORS.textMuted,fontSize:13,marginBottom:24}}>Wählen Sie den Modus:</p>
-<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:16}}>
+<div className="card-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:16}}>
 <Card onClick={()=>setMode("training")} style={{cursor:"pointer",borderColor:COLORS.orange+"40",textAlign:"center",padding:32}}>
 <div style={{fontSize:48,marginBottom:12}}> </div>
 <h3 style={{fontSize:20,fontWeight:700,color:COLORS.orange,marginBottom:8}}>Trainingsfälle</h3>
@@ -1407,7 +1409,7 @@ Alle ({CASES.length})
 </div>
 ))}
 </div>
-<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:12}}>
+<div className="card-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:12}}>
 {filteredCases.map((c,i)=>{
 const globalIdx = CASES.indexOf(c);
 return (
@@ -3385,7 +3387,7 @@ return (
 </button>
 ))}
 </div>
-<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:12}}>
+<div className="card-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:12}}>
 {tab==="meds" && filteredMeds.map(m=>(
 <Card key={m.id} onClick={()=>setDetail(m.id)} style={{padding:16}}>
 <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>{m.name}</div>
@@ -3831,7 +3833,7 @@ return (
 </button>
 ))}
 </div>
-<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:12}}>
+<div className="card-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:12}}>
 {tab==="scores" && SCORES_DATA.map(s=>(
 <Card key={s.id} onClick={()=>setDetail(s.id)} style={{padding:16,cursor:"pointer"}}>
 <Badge color={COLORS.purple} bg={COLORS.purple+"10"}>{s.kategorie}</Badge>
@@ -4403,7 +4405,7 @@ return (
 <div className="fade-in">
 <Button onClick={()=>navigate("dashboard")} variant="ghost" size="sm" style={{marginBottom:16}}><Icon name="arrowLeft" size={14}/> Zurück</Button>
 <h2 style={{fontSize:22,fontWeight:700,marginBottom:20}}> Statistik</h2>
-<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:12,marginBottom:24}}>
+<div className="card-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:12,marginBottom:24}}>
 {[{label:"Erfolgsquote",value:`${pct}%`,color:pct>=70?COLORS.green:COLORS.accent,iconName:"target"},
 {label:"Fragen beantwortet",value:stats.quizTotal,color:COLORS.blue,iconName:"brain"},
 {label:"Fälle abgeschlossen",value:stats.casesCompleted,color:COLORS.orange,iconName:"folder"},
