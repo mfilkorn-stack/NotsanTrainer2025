@@ -408,7 +408,7 @@ return(
 <Logo size={38}/>
 <div>
 <div className="header-logo-text" style={{fontSize:17,fontWeight:700,letterSpacing:-.5,lineHeight:1.1}}>NotSan<span style={{color:COLORS.accent}}>Trainer</span></div>
-<div style={{fontSize:10,color:COLORS.textDim,letterSpacing:1,fontWeight:500,textTransform:"uppercase"}}>SAA / BPR 2025</div>
+<div style={{fontSize:10,color:COLORS.textDim,letterSpacing:1,fontWeight:500,textTransform:"uppercase"}}>v{APP_VERSION} · SAA / BPR 2025</div>
 </div>
 </div>
 <nav className="desktop-nav" style={{display:"flex",gap:2,flexWrap:"wrap"}}>
@@ -4497,6 +4497,23 @@ return (
 ))}
 </div>
 )}
+</Card>
+<Card style={{marginBottom:24}}>
+<h3 style={{fontSize:16,fontWeight:700,marginBottom:16}}><Icon name="clock" size={16}/> Versionsverlauf</h3>
+{VERSION_HISTORY.map((v,i)=>(
+<div key={v.version} style={{marginBottom:16,paddingBottom:16,borderBottom:i<VERSION_HISTORY.length-1?`1px solid ${COLORS.border}`:"none"}}>
+<div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,flexWrap:"wrap"}}>
+<Badge color={i===0?COLORS.green:COLORS.blue}>v{v.version}</Badge>
+<span style={{fontSize:12,color:COLORS.textDim}}>{v.date}</span>
+{i===0 && <Badge color={COLORS.green}>Aktuell</Badge>}
+</div>
+<ul style={{margin:0,paddingLeft:20}}>
+{v.changes.map((c,j)=>(
+<li key={j} style={{fontSize:13,color:COLORS.textMuted,marginBottom:4,lineHeight:1.5}}>{c}</li>
+))}
+</ul>
+</div>
+))}
 </Card>
 <FeedbackForm />
 <div style={{display:"flex",justifyContent:"center",marginTop:24}}>
