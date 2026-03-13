@@ -718,7 +718,7 @@ render:()=><LinkedText text={ec.findings.inspektion} navigate={navigate} style={
 {key:"auskultation",iconName:"ear",label:"Auskultation",color:"#8b5cf6",
 render:()=><LinkedText text={ec.findings.auskultation} navigate={navigate} style={{fontSize:13,lineHeight:1.8,color:COLORS.text}}/>},
 {key:"ekg",iconName:"activity",label:"12-Kanal-EKG",color:COLORS.accent,
-render:()=><LinkedText text={ec.findings.ekg} navigate={navigate} style={{fontSize:13,lineHeight:1.8,color:COLORS.text}}/>},
+render:()=>{const ekgData=ec.findings.ekgType?EKG_DATA.find(e=>e.id===ec.findings.ekgType):null;return(<div><LinkedText text={ec.findings.ekg} navigate={navigate} style={{fontSize:13,lineHeight:1.8,color:COLORS.text}}/>{ekgData&&ekgData.images&&<div style={{marginTop:12}}><EkgImageViewer images={ekgData.images}/></div>}</div>);}},
 {key:"neurologie",iconName:"neurology",label:"Neurologie / Pupillen",color:"#06b6d4",
 render:()=><LinkedText text={ec.findings.neurologie} navigate={navigate} style={{fontSize:13,lineHeight:1.8,color:COLORS.text}}/>},
 {key:"palpation",iconName:"hand",label:"Palpation / Pulsstatus",color:"#f97316",
@@ -1481,10 +1481,11 @@ return (
 <Card style={{marginBottom:16,background:`linear-gradient(135deg,${COLORS.orange}08,${COLORS.card})`,borderColor:COLORS.orange+"30"}}>
 <Badge color={COLORS.orange}>{c.title}</Badge>
 <LinkedText text={c.scenario} navigate={navigate} style={{marginTop:10,fontSize:14,lineHeight:1.7,color:COLORS.textMuted,display:"block"}}/>
-{CASE_EKG_MAP[c.id] && <div style={{marginTop:12}}>
+{CASE_EKG_MAP[c.id] && (()=>{const ekgData=EKG_DATA.find(e=>e.id===CASE_EKG_MAP[c.id]);return(<div style={{marginTop:12}}>
 <div style={{fontSize:12,fontWeight:700,color:"#e11d48",marginBottom:6,textTransform:"uppercase",letterSpacing:.5}}> Monitor / 12-Kanal-EKG</div>
 <EcgDiagram ekgId={CASE_EKG_MAP[c.id]} compact={true}/>
-</div>}
+{ekgData&&ekgData.images&&<div style={{marginTop:8}}><EkgImageViewer images={ekgData.images}/></div>}
+</div>);})()}
 </Card>
 <ProgressBar value={step+1} max={c.steps.length} color={COLORS.orange} h={4}/>
 <Card style={{marginTop:16}}>
@@ -2526,6 +2527,43 @@ viewBox: "0 0 " + VW + " " + VH,
 style: {width: "100%", maxWidth: compact ? 300 : 500, background: "#0a0e1a", borderRadius: compact ? 8 : 12, border: "1px solid #1e293b", padding: compact ? 4 : 8}
 }, ...svgEls);
 }
+function EkgFullscreen({images,startIndex,onClose}) {
+const [idx, setIdx] = useState(startIndex);
+const img = images[idx];
+return (
+<div onClick={onClose} style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.92)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20}}>
+<div onClick={e=>e.stopPropagation()} style={{maxWidth:"95vw",maxHeight:"85vh",position:"relative",display:"flex",flexDirection:"column",alignItems:"center"}}>
+<img src={img.src} alt={img.caption} style={{maxWidth:"100%",maxHeight:"75vh",objectFit:"contain",borderRadius:8}}/>
+<div style={{color:"#fff",textAlign:"center",marginTop:12,fontSize:13}}>{img.caption}</div>
+<div style={{color:"#999",textAlign:"center",fontSize:11,fontStyle:"italic",marginTop:2}}>{img.source}</div>
+{images.length>1 && (
+<div style={{display:"flex",justifyContent:"center",gap:16,marginTop:16}}>
+<button onClick={()=>setIdx(i=>(i-1+images.length)%images.length)} style={{color:"#fff",background:"rgba(255,255,255,0.1)",border:"none",borderRadius:8,padding:"8px 16px",cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontSize:13}}>← Vorheriges</button>
+<span style={{color:"#999",alignSelf:"center",fontSize:13}}>{idx+1}/{images.length}</span>
+<button onClick={()=>setIdx(i=>(i+1)%images.length)} style={{color:"#fff",background:"rgba(255,255,255,0.1)",border:"none",borderRadius:8,padding:"8px 16px",cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontSize:13}}>Nächstes →</button>
+</div>
+)}
+</div>
+<button onClick={onClose} style={{position:"absolute",top:20,right:20,color:"#fff",background:"rgba(255,255,255,0.1)",border:"none",borderRadius:"50%",width:40,height:40,fontSize:20,cursor:"pointer"}}>✕</button>
+</div>
+);
+}
+function EkgImageViewer({images}) {
+const [viewing, setViewing] = useState(null);
+if(!images || !images.length) return null;
+return (<div>
+<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:12}}>
+{images.map((img,i) => (
+<div key={i} onClick={()=>setViewing(i)} style={{cursor:"pointer"}}>
+<img src={img.src} alt={img.caption} loading="lazy" style={{width:"100%",borderRadius:12,border:`1px solid ${COLORS.border}`}}/>
+<div style={{fontSize:11,color:COLORS.textDim,marginTop:4}}>{img.caption}</div>
+<div style={{fontSize:10,color:COLORS.textDim,fontStyle:"italic"}}>{img.source}</div>
+</div>
+))}
+</div>
+{viewing!==null && <EkgFullscreen images={images} startIndex={viewing} onClose={()=>setViewing(null)}/>}
+</div>);
+}
 function EcgDiagram({ekgId, compact=false}) {
 const W = compact ? 320 : 380;
 const H = compact ? 260 : 320;
@@ -3345,9 +3383,13 @@ return (
 <h2 style={{fontSize:22,fontWeight:700,margin:"12px 0"}}>{e.name}</h2>
 <div style={{fontSize:14,color:COLORS.textMuted,marginBottom:16,lineHeight:1.6}}>{e.beschreibung}</div>
 <div style={{marginBottom:16}}>
-<h4 style={{fontSize:13,fontWeight:700,color:"#e11d48",marginBottom:8,textTransform:"uppercase",letterSpacing:.5}}>12-Kanal-EKG</h4>
+<h4 style={{fontSize:13,fontWeight:700,color:"#e11d48",marginBottom:8,textTransform:"uppercase",letterSpacing:.5}}>12-Kanal-EKG (Schema)</h4>
 <EcgDiagram ekgId={e.id}/>
 </div>
+{e.images && e.images.length>0 && <div style={{marginBottom:16}}>
+<h4 style={{fontSize:13,fontWeight:700,color:"#e11d48",marginBottom:8,textTransform:"uppercase",letterSpacing:.5}}>Original-EKGs</h4>
+<EkgImageViewer images={e.images}/>
+</div>}
 <div style={{marginBottom:16}}>
 <h4 style={{fontSize:13,fontWeight:700,color:"#e11d48",marginBottom:8,textTransform:"uppercase",letterSpacing:.5}}>EKG-Merkmale</h4>
 {e.merkmale.map((item,i)=><div key={i} style={{fontSize:14,color:COLORS.textMuted,padding:"4px 0",paddingLeft:12,borderLeft:"2px solid #e11d4830"}}>• {item}</div>)}
@@ -3429,6 +3471,7 @@ Ablaufdiagramm verfügbar
 <div style={{fontSize:15,fontWeight:700,margin:"8px 0 4px"}}>{e.name}</div>
 <div style={{margin:"8px 0",opacity:0.85}}><EcgDiagram ekgId={e.id} compact={true}/></div>
 <div style={{fontSize:12,color:COLORS.textMuted}}>{e.merkmale[0]}</div>
+{e.images && e.images.length>0 && <div style={{fontSize:11,color:"#e11d48",marginTop:6}}>{e.images.length} Original-EKG{e.images.length>1?"s":""}</div>}
 </Card>
 ))}
 {tab==="ekg" && filteredEkg.length===0 && <EmptyState sub={debouncedSearch?`Keine EKG-Befunde für "${debouncedSearch}" gefunden.`:"Keine Einträge in dieser Kategorie."}/>}
@@ -4158,7 +4201,7 @@ render:()=><LinkedText text={ec.findings.inspektion} navigate={navigate} style={
 {key:"auskultation",iconName:"ear",label:"Auskultation",color:"#8b5cf6",
 render:()=><LinkedText text={ec.findings.auskultation} navigate={navigate} style={{fontSize:13,lineHeight:1.8,color:COLORS.text}}/>},
 {key:"ekg",iconName:"activity",label:"12-Kanal-EKG",color:COLORS.accent,
-render:()=><div>{CASE_EKG_MAP[ec.caseId] && <div style={{marginBottom:10}}><EcgDiagram ekgId={CASE_EKG_MAP[ec.caseId]}/></div>}<LinkedText text={ec.findings.ekg} navigate={navigate} style={{fontSize:13,lineHeight:1.8,color:COLORS.text}}/></div>},
+render:()=>{const ekgId=CASE_EKG_MAP[ec.caseId]||ec.findings.ekgType;const ekgData=ekgId?EKG_DATA.find(e=>e.id===ekgId):null;return(<div>{ekgId&&<div style={{marginBottom:10}}><EcgDiagram ekgId={ekgId}/></div>}<LinkedText text={ec.findings.ekg} navigate={navigate} style={{fontSize:13,lineHeight:1.8,color:COLORS.text}}/>{ekgData&&ekgData.images&&<div style={{marginTop:12}}><EkgImageViewer images={ekgData.images}/></div>}</div>);}},
 {key:"neurologie",iconName:"neurology",label:"Neurologie / Pupillen",color:"#06b6d4",
 render:()=><LinkedText text={ec.findings.neurologie} navigate={navigate} style={{fontSize:13,lineHeight:1.8,color:COLORS.text}}/>},
 {key:"palpation",iconName:"hand",label:"Palpation / Pulsstatus",color:"#f97316",
