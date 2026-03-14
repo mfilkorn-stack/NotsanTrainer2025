@@ -5946,5 +5946,11 @@ var VERSION_HISTORY = [
 ]}
 ];
 // ═══════════════════════════════════════════════════════
+// MODULE EXPORT (for tests, no-op in browser)
+// ═══════════════════════════════════════════════════════
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { MEDICATIONS, INVASIVE, LEITSYMPTOME, BPR, SINNHAFT_DATA, EKG_DATA, QUIZ_QUESTIONS, CASES, EXAM_CASES, ALGORITHM_DATA, APP_VERSION, VERSION_HISTORY };
+}
+// ═══════════════════════════════════════════════════════
 // ENTITY LINKING SYSTEM
 // ═══════════════════════════════════════════════════════

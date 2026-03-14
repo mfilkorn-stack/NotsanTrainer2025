@@ -35,3 +35,8 @@ return map;
 var ENTITY_MAP = buildEntityMap();
 // Sorted by length descending so longer matches are found first
 var ENTITY_KEYS = Object.keys(ENTITY_MAP).sort((a,b)=>b.length-a.length);
+
+// Module export for tests (no-op in browser)
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { buildEntityMap, ENTITY_MAP, ENTITY_KEYS };
+}

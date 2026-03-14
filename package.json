@@ -1,0 +1,13 @@
+{
+  "name": "notsantrainer2025",
+  "version": "0.9.0",
+  "private": true,
+  "description": "NotSanTrainer 2025 - Trainingsapp für Notfallsanitäter",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "vitest": "^3.1.1"
+  }
+}
