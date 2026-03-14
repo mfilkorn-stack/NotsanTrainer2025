@@ -1227,30 +1227,7 @@ else {setTreeStep(s=>s+1);setTreeAnswered(null);}
 );
 }
 // ─── EXERCISE: FILL GAPS ───
-// Tolerant gap matching: strips parentheses, brackets, extra spaces, units etc.
-function gapMatch(userRaw, expectedRaw) {
-if(!userRaw || !expectedRaw) return false;
-const normalize = (s) => s.toLowerCase().trim()
-.replace(/[()[\]{}„""''«»]/g, "")
-.replace(/\s+/g, " ")
-.trim();
-const userVal = normalize(userRaw);
-if(!userVal) return false;
-const expected = normalize(expectedRaw);
-// Direct match after normalization
-if(userVal === expected) return true;
-// Extract core numbers for numeric comparison
-const userNums = userVal.replace(/[^0-9.,]/g, "").replace(",", ".");
-const expNums = expected.replace(/[^0-9.,]/g, "").replace(",", ".");
-if(userNums && expNums && userNums === expNums) return true;
-// Split expected by / or , for alternatives
-const expectedParts = expected.split(/[\/,]/).map(p => p.trim()).filter(Boolean);
-if(expectedParts.some(ep => userVal.includes(ep) || ep.includes(userVal))) return true;
-// Check if user typed the essential part (numbers + key word)
-if(userVal.length >= 2 && expected.includes(userVal)) return true;
-if(expected.length >= 2 && userVal.includes(expected)) return true;
-return false;
-}
+// gapMatch() is loaded from utils.js
 if(exerciseType==="gaps") {
 const algo = selectedAlgo;
 const allGaps = algo.gaps;
@@ -2807,24 +2784,7 @@ return mkLead(beats);
 // ECG WAVEFORM DATA PER CONDITION
 // ═══════════════════════════════════════════════════════
 // Map quiz question to EKG diagram
-function getEkgIdForQuiz(qId) {
-const map = {
-eq1:"vf", eq2:"stemi_inferior", eq3:"hyperkaliaemie", eq4:"avblock1",
-eq5:"vhf", eq6:"vt", eq7:"lae_ekg", eq8:"hypothermie_ekg",
-eq9:"avblock2_1", eq10:"lsb", eq11:"asystolie", eq12:"stemi_posterior",
-eq13:"torsade", eq14:"torsade", eq15:"perikarditis_ekg", eq16:"vhf",
-eq17:"vhflattern", eq18:"asystolie", eq19:"pea", eq20:"hypokaliaemie",
-eq21:"avblock3", eq22:"avblock2_2", eq23:"lae_ekg", eq24:"rsb",
-eq25:"stemi_inferior", eq26:"vhf", eq27:"svt", eq28:"avblock3",
-eq29:"sinusbrady", eq30:"lsb", eq31:"vf", eq32:"torsade",
-eq33:"torsade", eq34:"pea", eq35:"sinusrhythmus", eq36:"vf",
-eq37:"stemi_inferior", eq38:"perikarditis_ekg", eq39:"pea",
-eq40:"sinusrhythmus", eq41:"lae_ekg", eq42:"sinusrhythmus",
-eq43:"svt", eq44:"stemi_anterior", eq45:"vhf", eq46:"vt",
-eq47:"vf", eq48:"hyperkaliaemie", eq49:"sinusrhythmus", eq50:"stemi_inferior"
-};
-return map[qId] || "sinusrhythmus";
-}
+// getEkgIdForQuiz() is loaded from utils.js
 const ECG_WAVES = {};
 // 1. Normal Sinus
 ECG_WAVES["sinusrhythmus"] = sinus(null, 3);
