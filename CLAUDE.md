@@ -3,3 +3,6 @@
 ## SAA und BPR Referenzdokument
 Die aktuelle Version der SAA und BPR findest du immer unter:
 https://github.com/mfilkorn-stack/NotsanTrainer2025/blob/b865e6cf310aeb555b90aba7970881cff0d278ba/saa_bpr_2025.pdf
+
+## User-Präferenzen
+- Der User möchte immer den Terminal-Befehl zum Kopieren erhalten (z.B. für git, npm, gh CLI Befehle)
