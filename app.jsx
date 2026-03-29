@@ -503,20 +503,16 @@ return (
 <div style={{position:"absolute",top:-20,right:-20,width:80,height:80,borderRadius:"50%",background:COLORS.green+"08",filter:"blur(20px)"}}/>
 <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14,position:"relative"}}>
 <DashIcon name="brain" color={COLORS.green}/>
-<div style={{flex:1}}>
+<div>
 <h3 style={{fontSize:17,fontWeight:700,color:COLORS.green}}>Quiz</h3>
-{stats.quizTotal>0?<div style={{display:"flex",alignItems:"center",gap:8,marginTop:4}}>
-<div style={{flex:1,height:5,borderRadius:3,background:COLORS.bg,overflow:"hidden"}}><div style={{width:`${pct}%`,height:"100%",borderRadius:3,background:pct>=70?COLORS.green:pct>=40?COLORS.yellow:COLORS.accent,transition:"width .6s"}}/></div>
-<span style={{fontSize:12,fontWeight:700,color:pct>=70?COLORS.green:pct>=40?COLORS.yellow:COLORS.accent}}>{pct}%</span>
-</div>:<p style={{fontSize:12,color:COLORS.textMuted,marginTop:2}}>Teste dein Wissen</p>}
+<p style={{fontSize:12,color:COLORS.textMuted,marginTop:2}}>{QUIZ_QUESTIONS.length} Fragen · Teste dein Wissen</p>
 </div>
 </div>
-<div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:stats.wrongQuestions&&stats.wrongQuestions.length>0?10:0}}>
-{Object.entries(quizCatIcons).slice(0,6).map(([cat,icon])=>{const cnt=QUIZ_QUESTIONS.filter(q=>q.cat===cat).length;return(
-<div key={cat} style={{display:"inline-flex",alignItems:"center",gap:3,padding:"3px 7px",borderRadius:7,background:(quizCatColors[cat]||COLORS.green)+"10",fontSize:10,color:quizCatColors[cat]||COLORS.green,fontWeight:600}}>
-<Icon name={icon} size={10} color={quizCatColors[cat]||COLORS.green}/>{cnt}
+<div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:stats.wrongQuestions&&stats.wrongQuestions.length>0?10:0}}>
+{Object.entries(quizCatIcons).map(([cat,icon])=>{const cnt=QUIZ_QUESTIONS.filter(q=>q.cat===cat).length;return(
+<div key={cat} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"4px 8px",borderRadius:8,background:(quizCatColors[cat]||COLORS.green)+"10",border:`1px solid ${(quizCatColors[cat]||COLORS.green)}15`,fontSize:11,color:quizCatColors[cat]||COLORS.green,fontWeight:600}}>
+<Icon name={icon} size={11} color={quizCatColors[cat]||COLORS.green}/>{cat} <span style={{opacity:.6}}>{cnt}</span>
 </div>);})}
-<div style={{display:"inline-flex",alignItems:"center",gap:3,padding:"3px 7px",borderRadius:7,background:COLORS.textDim+"20",fontSize:10,color:COLORS.textMuted,fontWeight:600}}>+{QUIZ_QUESTIONS.length} Fragen</div>
 </div>
 {stats.wrongQuestions&&stats.wrongQuestions.length>0&&<div style={{display:"flex",alignItems:"center",gap:6,padding:"6px 10px",borderRadius:8,background:COLORS.accent+"10",border:`1px solid ${COLORS.accent}20`,marginTop:"auto"}}>
 <Icon name="target" size={13} color={COLORS.accent}/>
@@ -587,7 +583,7 @@ return (
 </div>
 {stats.quizTotal>0?<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
 {[{label:"Quiz beantwortet",value:stats.quizTotal,icon:"brain",color:COLORS.green},
-{label:"Erfolgsquote",value:`${pct}%`,icon:"check",color:pct>=70?COLORS.green:pct>=40?COLORS.yellow:COLORS.accent},
+{label:"Schwachstellen",value:stats.wrongQuestions?stats.wrongQuestions.length:0,icon:"target",color:stats.wrongQuestions&&stats.wrongQuestions.length>0?COLORS.accent:COLORS.green},
 {label:"Fälle gelöst",value:stats.casesCompleted,icon:"folder",color:COLORS.orange},
 {label:"Prüfungen",value:stats.examScores?stats.examScores.length:0,icon:"graduationCap",color:COLORS.accent}
 ].map(m=>(
