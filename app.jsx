@@ -548,7 +548,7 @@ if(!category) return (
 {id:"Recht & Aufklärung",label:"Recht & Aufklärung",count:QUIZ_QUESTIONS.filter(q=>q.cat==="Recht & Aufklärung").length,color:"#f59e0b",iconName:"shield"},
 {id:"all",label:"Alle Kategorien",count:QUIZ_QUESTIONS.length,color:COLORS.purple,iconName:"layers"},
 ].concat(stats.wrongQuestions.length>0?[{id:"schwachstellen",label:"Schwachstellen trainieren",count:stats.wrongQuestions.length,color:COLORS.accent,iconName:"target"}]:[]).map(c=>(
-<Card key={c.id} onClick={()=>startQuiz(c.id)}>
+<Card key={c.id} onClick={()=>startQuiz(c.id)} style={{display:"flex",flexDirection:"column",justifyContent:"center"}}>
 <div style={{textAlign:"center"}}>
 <div style={{fontSize:36,marginBottom:8}}><Icon name={c.iconName} size={18} color={c.color}/></div>
 <h3 style={{color:c.color,fontWeight:700}}>{c.label}</h3>
@@ -692,10 +692,10 @@ Alle ({EXAM_CASES.length})
 {filteredCases.map((c,i)=>{
 const globalIdx = EXAM_CASES.indexOf(c);
 return (
-<Card key={globalIdx} onClick={()=>startCase(globalIdx)}>
+<Card key={globalIdx} onClick={()=>startCase(globalIdx)} style={{display:"flex",flexDirection:"column"}}>
 <Badge color={COLORS.purple}>Prüfungsfall {globalIdx+1}</Badge>
 <h3 style={{fontSize:15,fontWeight:700,margin:"8px 0 4px"}}> {c.meldung}</h3>
-<p style={{fontSize:12,color:COLORS.textDim,marginTop:6}}>Erkundung → Diagnose → Behandlung</p>
+<p style={{fontSize:12,color:COLORS.textDim,marginTop:"auto",paddingTop:6}}>Erkundung → Diagnose → Behandlung</p>
 </Card>
 );
 })}
@@ -1044,10 +1044,10 @@ if(!selectedAlgo) return (
 </div>
 <div className="card-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:12}}>
 {filtered.map(algo=>(
-<Card key={algo.id} style={{padding:16}}>
+<Card key={algo.id} style={{padding:16,display:"flex",flexDirection:"column"}}>
 <h4 style={{fontSize:15,fontWeight:700,marginBottom:4}}>{algo.name}</h4>
 <p style={{color:COLORS.textMuted,fontSize:11,marginBottom:12}}>{algo.kat} · {algo.steps.length} Schritte · {algo.decisions.length} Entscheidungen · {algo.gaps.length} Lücken</p>
-<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+<div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:"auto"}}>
 <Button size="sm" onClick={()=>startOrder(algo)} style={{background:COLORS.orange,fontSize:11,padding:"5px 10px"}}> Schritte ordnen</Button>
 <Button size="sm" onClick={()=>startTree(algo)} style={{background:COLORS.purple,fontSize:11,padding:"5px 10px"}}> Entscheidungsbaum</Button>
 <Button size="sm" onClick={()=>startGaps(algo)} style={{background:COLORS.green,fontSize:11,padding:"5px 10px"}}> Lücken füllen</Button>
@@ -1066,17 +1066,17 @@ return (
 <h2 style={{fontSize:22,fontWeight:700,marginBottom:8}}> {algo.name}</h2>
 <p style={{color:COLORS.textMuted,fontSize:13,marginBottom:24}}>Wählen Sie eine Übungsform:</p>
 <div className="card-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:16}}>
-<Card onClick={()=>startOrder(algo)} style={{cursor:"pointer",textAlign:"center",padding:28,borderColor:COLORS.orange+"40"}}>
+<Card onClick={()=>startOrder(algo)} style={{cursor:"pointer",textAlign:"center",padding:28,borderColor:COLORS.orange+"40",display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center"}}>
 <div style={{fontSize:40,marginBottom:10}}> </div>
 <h3 style={{fontSize:17,fontWeight:700,color:COLORS.orange}}>Schritte ordnen</h3>
 <p style={{color:COLORS.textMuted,fontSize:12,marginTop:6}}>{algo.steps.length} Schritte in richtige Reihenfolge bringen</p>
 </Card>
-{algo.decisions.length>0 && <Card onClick={()=>startTree(algo)} style={{cursor:"pointer",textAlign:"center",padding:28,borderColor:COLORS.purple+"40"}}>
+{algo.decisions.length>0 && <Card onClick={()=>startTree(algo)} style={{cursor:"pointer",textAlign:"center",padding:28,borderColor:COLORS.purple+"40",display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center"}}>
 <div style={{fontSize:40,marginBottom:10}}> </div>
 <h3 style={{fontSize:17,fontWeight:700,color:COLORS.purple}}>Entscheidungsbaum</h3>
 <p style={{color:COLORS.textMuted,fontSize:12,marginTop:6}}>{algo.decisions.length} Entscheidungen treffen</p>
 </Card>}
-{algo.gaps.length>0 && <Card onClick={()=>startGaps(algo)} style={{cursor:"pointer",textAlign:"center",padding:28,borderColor:COLORS.green+"40"}}>
+{algo.gaps.length>0 && <Card onClick={()=>startGaps(algo)} style={{cursor:"pointer",textAlign:"center",padding:28,borderColor:COLORS.green+"40",display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center"}}>
 <div style={{fontSize:40,marginBottom:10}}> </div>
 <h3 style={{fontSize:17,fontWeight:700,color:COLORS.green}}>Lücken füllen</h3>
 <p style={{color:COLORS.textMuted,fontSize:12,marginTop:6}}>{algo.gaps.length} Lücken ausfüllen</p>
@@ -1350,26 +1350,26 @@ if(mode==="select") return (
 <h2 style={{fontSize:22,fontWeight:700,marginBottom:8}}> Fälle</h2>
 <p style={{color:COLORS.textMuted,fontSize:13,marginBottom:24}}>Wählen Sie den Modus:</p>
 <div className="card-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:16}}>
-<Card onClick={()=>setMode("training")} style={{cursor:"pointer",borderColor:COLORS.orange+"40",textAlign:"center",padding:32}}>
+<Card onClick={()=>setMode("training")} style={{cursor:"pointer",borderColor:COLORS.orange+"40",textAlign:"center",padding:32,display:"flex",flexDirection:"column",alignItems:"center"}}>
 <div style={{fontSize:48,marginBottom:12}}> </div>
 <h3 style={{fontSize:20,fontWeight:700,color:COLORS.orange,marginBottom:8}}>Trainingsfälle</h3>
 <p style={{color:COLORS.textMuted,fontSize:13,lineHeight:1.6}}>Alle {CASES.length} Fälle mit <strong>sichtbarem Krankheitsbild</strong>. Ideal zum Lernen und Üben der Behandlungsschritte.</p>
-<Badge color={COLORS.orange} style={{marginTop:12}}>{CASES.length} Fälle · {categories.length} Krankheitsbilder</Badge>
-<div style={{marginTop:14}}><Button size="sm" onClick={(e)=>{e.stopPropagation();setMode("training");setCaseIdx(Math.floor(Math.random()*CASES.length));setStep(0);setSelected(null);setCaseScore(0);setCaseDone(false);}} style={{background:COLORS.orange,fontSize:12,padding:"6px 16px"}}> Zufälliger Fall</Button></div>
+<div style={{marginTop:"auto",paddingTop:12}}><Badge color={COLORS.orange}>{CASES.length} Fälle · {categories.length} Krankheitsbilder</Badge>
+<div style={{marginTop:14}}><Button size="sm" onClick={(e)=>{e.stopPropagation();setMode("training");setCaseIdx(Math.floor(Math.random()*CASES.length));setStep(0);setSelected(null);setCaseScore(0);setCaseDone(false);}} style={{background:COLORS.orange,fontSize:12,padding:"6px 16px"}}> Zufälliger Fall</Button></div></div>
 </Card>
-<Card onClick={()=>setMode("exam")} style={{cursor:"pointer",borderColor:COLORS.purple+"40",textAlign:"center",padding:32}}>
+<Card onClick={()=>setMode("exam")} style={{cursor:"pointer",borderColor:COLORS.purple+"40",textAlign:"center",padding:32,display:"flex",flexDirection:"column",alignItems:"center"}}>
 <div style={{fontSize:48,marginBottom:12}}> </div>
 <h3 style={{fontSize:20,fontWeight:700,color:COLORS.purple,marginBottom:8}}>Prüfungsfälle</h3>
 <p style={{color:COLORS.textMuted,fontSize:13,lineHeight:1.6}}>Nur die <strong>Einsatzmeldung</strong>. Erkunden Sie systematisch, stellen Sie die Diagnose, dann behandeln Sie.</p>
-<Badge color={COLORS.purple} style={{marginTop:12}}>{EXAM_CASES.length} Fälle · xABCDE + Schemata</Badge>
-<div style={{marginTop:14}}><Button size="sm" onClick={(e)=>{e.stopPropagation();setMode("exam_random");}} style={{background:COLORS.purple,fontSize:12,padding:"6px 16px"}}> Zufälliger Fall</Button></div>
+<div style={{marginTop:"auto",paddingTop:12}}><Badge color={COLORS.purple}>{EXAM_CASES.length} Fälle · xABCDE + Schemata</Badge>
+<div style={{marginTop:14}}><Button size="sm" onClick={(e)=>{e.stopPropagation();setMode("exam_random");}} style={{background:COLORS.purple,fontSize:12,padding:"6px 16px"}}> Zufälliger Fall</Button></div></div>
 </Card>
-<Card onClick={()=>setMode("algo")} style={{cursor:"pointer",borderColor:COLORS.green+"40",textAlign:"center",padding:32}}>
+<Card onClick={()=>setMode("algo")} style={{cursor:"pointer",borderColor:COLORS.green+"40",textAlign:"center",padding:32,display:"flex",flexDirection:"column",alignItems:"center"}}>
 <div style={{fontSize:48,marginBottom:12}}> </div>
 <h3 style={{fontSize:20,fontWeight:700,color:COLORS.green,marginBottom:8}}>Algorithmen-Trainer</h3>
 <p style={{color:COLORS.textMuted,fontSize:13,lineHeight:1.6}}>BPR-Algorithmen trainieren: <strong>Schritte ordnen</strong>, <strong>Entscheidungen treffen</strong>, <strong>Lücken füllen</strong>.</p>
-<Badge color={COLORS.green} style={{marginTop:12}}>{ALGORITHM_DATA.length} Algorithmen · 3 Übungsformen</Badge>
-<div style={{marginTop:14}}><Button size="sm" onClick={(e)=>{e.stopPropagation();setMode("algo_random");}} style={{background:COLORS.green,fontSize:12,padding:"6px 16px"}}> Zufälliger Algorithmus</Button></div>
+<div style={{marginTop:"auto",paddingTop:12}}><Badge color={COLORS.green}>{ALGORITHM_DATA.length} Algorithmen · 3 Übungsformen</Badge>
+<div style={{marginTop:14}}><Button size="sm" onClick={(e)=>{e.stopPropagation();setMode("algo_random");}} style={{background:COLORS.green,fontSize:12,padding:"6px 16px"}}> Zufälliger Algorithmus</Button></div></div>
 </Card>
 </div>
 </div>
@@ -1402,14 +1402,14 @@ Alle ({CASES.length})
 {filteredCases.map((c,i)=>{
 const globalIdx = CASES.indexOf(c);
 return (
-<Card key={globalIdx} onClick={()=>{setCaseIdx(globalIdx);setStep(0);setSelected(null);setCaseScore(0);setCaseDone(false);}}>
+<Card key={globalIdx} onClick={()=>{setCaseIdx(globalIdx);setStep(0);setSelected(null);setCaseScore(0);setCaseDone(false);}} style={{display:"flex",flexDirection:"column"}}>
 <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:8}}>
 <Badge color={COLORS.orange}>Fall {globalIdx+1}</Badge>
 <Badge color={COLORS.blue} bg={COLORS.blue+"10"}>{bprNames[c.bpr]||c.bpr}</Badge>
 </div>
 <h3 style={{fontSize:15,fontWeight:700,margin:"6px 0 6px"}}>{c.title}</h3>
 <p style={{fontSize:12,color:COLORS.textMuted,lineHeight:1.5}}>{c.scenario.substring(0,100)}...</p>
-<div style={{fontSize:11,color:COLORS.textDim,marginTop:8}}>{c.steps.length} Entscheidungen</div>
+<div style={{fontSize:11,color:COLORS.textDim,marginTop:"auto",paddingTop:8}}>{c.steps.length} Entscheidungen</div>
 </Card>
 );
 })}
@@ -3403,34 +3403,34 @@ return (
 </div>
 <div className="card-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:12}}>
 {tab==="meds" && filteredMeds.map(m=>(
-<Card key={m.id} onClick={()=>setDetail(m.id)} style={{padding:16}}>
+<Card key={m.id} onClick={()=>setDetail(m.id)} style={{padding:16,display:"flex",flexDirection:"column"}}>
 <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>{m.name}</div>
 <div style={{fontSize:12,color:COLORS.textDim}}>{m.gruppe}</div>
-<div style={{fontSize:12,color:COLORS.textMuted,marginTop:6}}>{m.indikationen[0]}</div>
+<div style={{fontSize:12,color:COLORS.textMuted,marginTop:"auto",paddingTop:6}}>{m.indikationen[0]}</div>
 </Card>
 ))}
 {tab==="meds" && filteredMeds.length===0 && <EmptyState sub={debouncedSearch?`Keine Medikamente für "${debouncedSearch}" gefunden.`:"Keine Einträge in dieser Kategorie."}/>}
 {tab==="invasive" && filteredInv.map(m=>(
-<Card key={m.id} onClick={()=>setDetail(m.id)} style={{padding:16}}>
+<Card key={m.id} onClick={()=>setDetail(m.id)} style={{padding:16,display:"flex",flexDirection:"column"}}>
 <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>{m.name}</div>
-<div style={{fontSize:12,color:COLORS.textMuted,marginTop:4}}>{m.indikationen[0]}</div>
+<div style={{fontSize:12,color:COLORS.textMuted,marginTop:"auto",paddingTop:4}}>{m.indikationen[0]}</div>
 </Card>
 ))}
 {tab==="invasive" && filteredInv.length===0 && <EmptyState sub={debouncedSearch?`Keine Maßnahmen für "${debouncedSearch}" gefunden.`:"Keine Einträge in dieser Kategorie."}/>}
-{tab==="leitsymptome" && filteredLeit.map(l=>(<Card key={l.id} onClick={()=>{setDetail(l.id);window.scrollTo({top:0,behavior:'smooth'});}} style={{padding:16}}>
+{tab==="leitsymptome" && filteredLeit.map(l=>(<Card key={l.id} onClick={()=>{setDetail(l.id);window.scrollTo({top:0,behavior:'smooth'});}} style={{padding:16,display:"flex",flexDirection:"column"}}>
 <Badge color={COLORS.orange} bg={COLORS.orange+"10"}>Leitsymptom</Badge>
 <div style={{fontSize:15,fontWeight:700,margin:"8px 0 4px"}}>{l.name}</div>
-<div style={{fontSize:12,color:COLORS.textMuted,marginBottom:8}}>{l.schritte.length} Schritte · {l.medikamente.length>0?l.medikamente.join(", "):"Algorithmus"}</div>
+<div style={{fontSize:12,color:COLORS.textMuted,marginTop:"auto",paddingTop:4,marginBottom:LS_FLOWS[l.id]?8:0}}>{l.schritte.length} Schritte · {l.medikamente.length>0?l.medikamente.join(", "):"Algorithmus"}</div>
 {LS_FLOWS[l.id] && <div style={{display:"flex",alignItems:"center",gap:6,fontSize:11,color:LS_FLOWS[l.id].color}}>
 <svg width="16" height="16" viewBox="0 0 16 16"><rect x="3" y="1" width="10" height="4" rx="1" fill={LS_FLOWS[l.id].color} opacity="0.6"/><polygon points="8,7 12,9.5 8,12 4,9.5" fill={LS_FLOWS[l.id].color} opacity="0.4"/><rect x="3" y="13" width="10" height="2" rx="1" fill={LS_FLOWS[l.id].color} opacity="0.3"/><line x1="8" y1="5" x2="8" y2="7" stroke={LS_FLOWS[l.id].color} strokeWidth="0.8"/><line x1="8" y1="12" x2="8" y2="13" stroke={LS_FLOWS[l.id].color} strokeWidth="0.8"/></svg>
 Ablaufdiagramm verfügbar
 </div>}
 </Card>))}
 {tab==="leitsymptome" && filteredLeit.length===0 && <EmptyState sub={debouncedSearch?`Keine Leitsymptome für "${debouncedSearch}" gefunden.`:"Keine Einträge in dieser Kategorie."}/>}
-{tab==="bpr" && filteredBpr.map(b=>(<Card key={b.id} onClick={()=>{setDetail(b.id);window.scrollTo({top:0,behavior:'smooth'});}} style={{padding:16}}>
+{tab==="bpr" && filteredBpr.map(b=>(<Card key={b.id} onClick={()=>{setDetail(b.id);window.scrollTo({top:0,behavior:'smooth'});}} style={{padding:16,display:"flex",flexDirection:"column"}}>
 <Badge color={COLORS.green} bg={COLORS.green+"10"}>{b.kategorie}</Badge>
 <div style={{fontSize:15,fontWeight:700,margin:"8px 0 4px"}}>{b.name}</div>
-<div style={{fontSize:12,color:COLORS.textMuted,marginBottom:BPR_FLOWS[b.id]?8:0}}>{b.schritte.length} Schritte · {b.medikamente.length>0?b.medikamente.join(", "):"Algorithmus"}</div>
+<div style={{fontSize:12,color:COLORS.textMuted,marginTop:"auto",paddingTop:4,marginBottom:BPR_FLOWS[b.id]?8:0}}>{b.schritte.length} Schritte · {b.medikamente.length>0?b.medikamente.join(", "):"Algorithmus"}</div>
 {BPR_FLOWS[b.id] && <div style={{display:"flex",alignItems:"center",gap:6,fontSize:11,color:BPR_FLOWS[b.id].color}}>
 <svg width="16" height="16" viewBox="0 0 16 16"><rect x="3" y="1" width="10" height="4" rx="1" fill={BPR_FLOWS[b.id].color} opacity="0.6"/><polygon points="8,7 12,9.5 8,12 4,9.5" fill={BPR_FLOWS[b.id].color} opacity="0.4"/><rect x="3" y="13" width="10" height="2" rx="1" fill={BPR_FLOWS[b.id].color} opacity="0.3"/><line x1="8" y1="5" x2="8" y2="7" stroke={BPR_FLOWS[b.id].color} strokeWidth="0.8"/><line x1="8" y1="12" x2="8" y2="13" stroke={BPR_FLOWS[b.id].color} strokeWidth="0.8"/></svg>
 Ablaufdiagramm verfügbar
@@ -3438,11 +3438,11 @@ Ablaufdiagramm verfügbar
 </Card>))}
 {tab==="bpr" && filteredBpr.length===0 && <EmptyState sub={debouncedSearch?`Keine Behandlungspfade für "${debouncedSearch}" gefunden.`:"Keine Einträge in dieser Kategorie."}/>}
 {tab==="ekg" && filteredEkg.map(e=>(
-<Card key={e.id} onClick={()=>setDetail(e.id)} style={{padding:16}}>
+<Card key={e.id} onClick={()=>setDetail(e.id)} style={{padding:16,display:"flex",flexDirection:"column"}}>
 <Badge color={"#e11d48"} bg={"#e11d4810"}>{e.kategorie}</Badge>
 <div style={{fontSize:15,fontWeight:700,margin:"8px 0 4px"}}>{e.name}</div>
 <div style={{margin:"8px 0",opacity:0.85}}><EcgDiagram ekgId={e.id} compact={true}/></div>
-<div style={{fontSize:12,color:COLORS.textMuted}}>{e.merkmale[0]}</div>
+<div style={{fontSize:12,color:COLORS.textMuted,marginTop:"auto"}}>{e.merkmale[0]}</div>
 {e.images && e.images.length>0 && <div style={{fontSize:11,color:"#e11d48",marginTop:6}}>{e.images.length} Original-EKG{e.images.length>1?"s":""}</div>}
 </Card>
 ))}
@@ -3850,19 +3850,19 @@ return (
 </div>
 <div className="card-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:12}}>
 {tab==="scores" && SCORES_DATA.map(s=>(
-<Card key={s.id} onClick={()=>setDetail(s.id)} style={{padding:16,cursor:"pointer"}}>
+<Card key={s.id} onClick={()=>setDetail(s.id)} style={{padding:16,cursor:"pointer",display:"flex",flexDirection:"column"}}>
 <Badge color={COLORS.purple} bg={COLORS.purple+"10"}>{s.kategorie}</Badge>
 <div style={{fontSize:15,fontWeight:700,margin:"8px 0 4px"}}>{s.name}</div>
-<div style={{fontSize:12,color:COLORS.textMuted}}>{s.items.length} Kriterien</div>
+<div style={{fontSize:12,color:COLORS.textMuted,marginTop:"auto"}}>{s.items.length} Kriterien</div>
 </Card>
 ))}
 {tab==="checklisten" && CHECKLISTS_DATA.map(cl=>{
 const prog = getChecklistProgress(cl.id);
 return (
-<Card key={cl.id} onClick={()=>setDetail(cl.id)} style={{padding:16,cursor:"pointer"}}>
+<Card key={cl.id} onClick={()=>setDetail(cl.id)} style={{padding:16,cursor:"pointer",display:"flex",flexDirection:"column"}}>
 <div style={{fontSize:24,marginBottom:4}}><Icon name={cl.iconName} size={18} color={cl.color}/></div>
 <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>{cl.name}</div>
-<div style={{fontSize:12,color:COLORS.textMuted,marginBottom:6}}>{cl.kategorie}</div>
+<div style={{fontSize:12,color:COLORS.textMuted,marginTop:"auto",paddingTop:4,marginBottom:prog.done>0?6:0}}>{cl.kategorie}</div>
 {prog.done>0 && <ProgressBar value={prog.done} max={prog.total} color={COLORS.green} h={4}/>}
 </Card>
 );
