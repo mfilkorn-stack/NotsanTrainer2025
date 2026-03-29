@@ -443,13 +443,23 @@ return(
 // ═══════════════════════════════════════════════════════
 function Dashboard({stats,navigate}) {
 const pct = stats.quizTotal>0?Math.round(stats.quizCorrect/stats.quizTotal*100):0;
-const modules = [
-{iconName:"book",title:"Lexikon",desc:`${MEDICATIONS.length+INVASIVE.length+LEITSYMPTOME.length+BPR.length+EKG_DATA.length+SINNHAFT_DATA.length+SCORES_DATA.length+CHECKLISTS_DATA.length+ABCDE_DATA.length} Einträge in 8 Kategorien`,color:COLORS.blue,glow:COLORS.blueGlow,view:"reference"},
-{iconName:"brain",title:"Quiz",desc:`${QUIZ_QUESTIONS.length} Fragen in ${[...new Set(QUIZ_QUESTIONS.map(q=>q.cat))].length} Kategorien inkl. Recht & Aufklärung`,color:COLORS.green,glow:COLORS.greenGlow,view:"quiz"},
-{iconName:"folder",title:"Fälle",desc:`${CASES.length} Trainingsfälle · ${EXAM_CASES.length} Prüfungsfälle · Algorithmus-Trainer`,color:COLORS.orange,glow:"rgba(249,115,22,0.12)",view:"cases"},
-{iconName:"graduationCap",title:"Prüfung",desc:"25 Fragen + 1 Prüfungsfall · 40 min",color:COLORS.accent,glow:COLORS.accentGlow,view:"exam"},
-{iconName:"chart",title:"Statistik",desc:"Lernfortschritt & Analyse",color:COLORS.yellow,glow:COLORS.yellowGlow,view:"stats"},
+const bestExam = stats.examScores&&stats.examScores.length>0?Math.max(...stats.examScores.map(e=>e.pct)):null;
+const lastExam = stats.examScores&&stats.examScores.length>0?stats.examScores[stats.examScores.length-1]:null;
+const caseCategories = [...new Set(CASES.map(c=>c.bpr))];
+const lexCats = [
+{label:"Medikamente",count:MEDICATIONS.length,iconName:"pill",color:COLORS.accent},
+{label:"Invasive",count:INVASIVE.length,iconName:"syringe",color:COLORS.blue},
+{label:"Leitsymptome",count:LEITSYMPTOME.length,iconName:"stethoscope",color:COLORS.orange},
+{label:"Krankheitsbilder",count:BPR.length,iconName:"heartPulse",color:COLORS.green},
+{label:"EKG",count:EKG_DATA.length,iconName:"activity",color:"#e11d48"},
+{label:"Übergabe",count:SINNHAFT_DATA.length,iconName:"megaphone",color:"#8b5cf6"},
+{label:"Werkzeuge",count:SCORES_DATA.length+CHECKLISTS_DATA.length,iconName:"wrench",color:"#14b8a6"},
+{label:"Recht",count:BPR.filter(b=>b.kategorie==="Rechtliche Grundlagen").length,iconName:"shield",color:"#f59e0b"},
 ];
+const totalLex = lexCats.reduce((s,c)=>s+c.count,0)+ABCDE_DATA.length;
+const quizCatIcons = {Medikamente:"pill","Invasive Maßnahmen":"syringe",Leitsymptome:"stethoscope",Behandlungspfade:"heartPulse","EKG-Befunde":"activity","Übergabe":"megaphone",Werkzeuge:"wrench","Recht & Aufklärung":"shield"};
+const quizCatColors = {Medikamente:COLORS.accent,"Invasive Maßnahmen":COLORS.blue,Leitsymptome:COLORS.orange,Behandlungspfade:COLORS.green,"EKG-Befunde":"#e11d48","Übergabe":"#8b5cf6",Werkzeuge:"#14b8a6","Recht & Aufklärung":"#f59e0b"};
+const DashIcon = ({name,color,size}) => <div style={{width:size||44,height:size||44,borderRadius:12,background:`linear-gradient(135deg,${color}20,${color}08)`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:`1px solid ${color}20`}}><Icon name={name} size={(size||44)*0.48} color={color}/></div>;
 return (
 <div className="fade-in">
 <Card style={{marginBottom:20,background:`linear-gradient(135deg,${COLORS.card},#131b35)`,border:`1px solid ${COLORS.border}`}}>
@@ -470,21 +480,126 @@ return (
 <div style={{marginTop:16}}><ProgressBar value={stats.quizTotal>0?pct:0} max={100} color={pct>=70?COLORS.green:pct>=40?COLORS.yellow:COLORS.accent} h={6}/></div>
 </Card>
 <div className="card-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:16}}>
-{modules.map((m,i)=>(
-<Card key={i} onClick={()=>navigate(m.view)} glow={m.glow} style={{animationDelay:`${i*70}ms`,display:"flex",flexDirection:"column",justifyContent:"flex-start",minHeight:140}} className="fade-in">
-<div style={{position:"absolute",top:-20,right:-20,width:80,height:80,borderRadius:"50%",background:m.color+"08",filter:"blur(20px)"}}/>
-<div style={{display:"flex",alignItems:"flex-start",gap:16,position:"relative",flex:1}}>
-<div style={{width:50,height:50,borderRadius:14,background:`linear-gradient(135deg,${m.color}20,${m.color}08)`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:`1px solid ${m.color}20`}}>
-<Icon name={m.iconName} size={24} color={m.color}/>
-</div>
-<div style={{flex:1,minWidth:0}}>
-<h3 style={{fontSize:16,fontWeight:700,marginBottom:5,color:m.color}}>{m.title}</h3>
-<p style={{fontSize:13,color:COLORS.textMuted,lineHeight:1.6,fontWeight:400,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical"}}>{m.desc}</p>
+{/* ── LEXIKON ── */}
+<Card onClick={()=>navigate("reference")} glow={COLORS.blueGlow} style={{animationDelay:"0ms",display:"flex",flexDirection:"column",cursor:"pointer"}} className="fade-in">
+<div style={{position:"absolute",top:-20,right:-20,width:80,height:80,borderRadius:"50%",background:COLORS.blue+"08",filter:"blur(20px)"}}/>
+<div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14,position:"relative"}}>
+<DashIcon name="book" color={COLORS.blue}/>
+<div>
+<h3 style={{fontSize:17,fontWeight:700,color:COLORS.blue}}>Lexikon</h3>
+<p style={{fontSize:12,color:COLORS.textMuted,marginTop:2}}>{totalLex} Einträge nachschlagen</p>
 </div>
 </div>
-
-</Card>
+<div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+{lexCats.map(c=>(
+<div key={c.label} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"4px 8px",borderRadius:8,background:c.color+"10",border:`1px solid ${c.color}15`,fontSize:11,color:c.color,fontWeight:600}}>
+<Icon name={c.iconName} size={11} color={c.color}/>{c.label} <span style={{opacity:.6}}>{c.count}</span>
+</div>
 ))}
+</div>
+</Card>
+{/* ── QUIZ ── */}
+<Card onClick={()=>navigate("quiz")} glow={COLORS.greenGlow} style={{animationDelay:"70ms",display:"flex",flexDirection:"column",cursor:"pointer"}} className="fade-in">
+<div style={{position:"absolute",top:-20,right:-20,width:80,height:80,borderRadius:"50%",background:COLORS.green+"08",filter:"blur(20px)"}}/>
+<div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14,position:"relative"}}>
+<DashIcon name="brain" color={COLORS.green}/>
+<div style={{flex:1}}>
+<h3 style={{fontSize:17,fontWeight:700,color:COLORS.green}}>Quiz</h3>
+{stats.quizTotal>0?<div style={{display:"flex",alignItems:"center",gap:8,marginTop:4}}>
+<div style={{flex:1,height:5,borderRadius:3,background:COLORS.bg,overflow:"hidden"}}><div style={{width:`${pct}%`,height:"100%",borderRadius:3,background:pct>=70?COLORS.green:pct>=40?COLORS.yellow:COLORS.accent,transition:"width .6s"}}/></div>
+<span style={{fontSize:12,fontWeight:700,color:pct>=70?COLORS.green:pct>=40?COLORS.yellow:COLORS.accent}}>{pct}%</span>
+</div>:<p style={{fontSize:12,color:COLORS.textMuted,marginTop:2}}>Teste dein Wissen</p>}
+</div>
+</div>
+<div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:stats.wrongQuestions&&stats.wrongQuestions.length>0?10:0}}>
+{Object.entries(quizCatIcons).slice(0,6).map(([cat,icon])=>{const cnt=QUIZ_QUESTIONS.filter(q=>q.cat===cat).length;return(
+<div key={cat} style={{display:"inline-flex",alignItems:"center",gap:3,padding:"3px 7px",borderRadius:7,background:(quizCatColors[cat]||COLORS.green)+"10",fontSize:10,color:quizCatColors[cat]||COLORS.green,fontWeight:600}}>
+<Icon name={icon} size={10} color={quizCatColors[cat]||COLORS.green}/>{cnt}
+</div>);})}
+<div style={{display:"inline-flex",alignItems:"center",gap:3,padding:"3px 7px",borderRadius:7,background:COLORS.textDim+"20",fontSize:10,color:COLORS.textMuted,fontWeight:600}}>+{QUIZ_QUESTIONS.length} Fragen</div>
+</div>
+{stats.wrongQuestions&&stats.wrongQuestions.length>0&&<div style={{display:"flex",alignItems:"center",gap:6,padding:"6px 10px",borderRadius:8,background:COLORS.accent+"10",border:`1px solid ${COLORS.accent}20`,marginTop:"auto"}}>
+<Icon name="target" size={13} color={COLORS.accent}/>
+<span style={{fontSize:12,color:COLORS.accent,fontWeight:600}}>{stats.wrongQuestions.length} Schwachstelle{stats.wrongQuestions.length>1?"n":""}</span>
+<span style={{fontSize:11,color:COLORS.textMuted,marginLeft:"auto"}}>gezielt trainieren</span>
+</div>}
+</Card>
+{/* ── FÄLLE ── */}
+<Card onClick={()=>navigate("cases")} glow={"rgba(249,115,22,0.12)"} style={{animationDelay:"140ms",display:"flex",flexDirection:"column",cursor:"pointer"}} className="fade-in">
+<div style={{position:"absolute",top:-20,right:-20,width:80,height:80,borderRadius:"50%",background:COLORS.orange+"08",filter:"blur(20px)"}}/>
+<div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14,position:"relative"}}>
+<DashIcon name="folder" color={COLORS.orange}/>
+<div>
+<h3 style={{fontSize:17,fontWeight:700,color:COLORS.orange}}>Fälle</h3>
+<p style={{fontSize:12,color:COLORS.textMuted,marginTop:2}}>Fallsimulationen & Algorithmen</p>
+</div>
+</div>
+<div style={{display:"flex",flexDirection:"column",gap:8}}>
+{[{icon:"folder",label:"Trainingsfälle",detail:`${CASES.length} Fälle · ${caseCategories.length} Krankheitsbilder`,color:COLORS.orange},
+{icon:"graduationCap",label:"Prüfungsfälle",detail:`${EXAM_CASES.length} Fälle · xABCDE + Schemata`,color:COLORS.purple},
+{icon:"zap",label:"Algorithmen-Trainer",detail:`${ALGORITHM_DATA.length} Algorithmen · 3 Übungsformen`,color:COLORS.green}
+].map(r=>(
+<div key={r.label} style={{display:"flex",alignItems:"center",gap:10,padding:"7px 10px",borderRadius:10,background:r.color+"08",border:`1px solid ${r.color}10`}}>
+<Icon name={r.icon} size={14} color={r.color}/>
+<div style={{flex:1,minWidth:0}}>
+<div style={{fontSize:12,fontWeight:600,color:r.color}}>{r.label}</div>
+<div style={{fontSize:11,color:COLORS.textMuted}}>{r.detail}</div>
+</div>
+</div>
+))}
+</div>
+{stats.casesCompleted>0&&<div style={{fontSize:11,color:COLORS.textDim,marginTop:"auto",paddingTop:10}}><Icon name="check" size={11} color={COLORS.green} style={{marginRight:4}}/>{stats.casesCompleted} Fälle abgeschlossen</div>}
+</Card>
+{/* ── PRÜFUNG ── */}
+<Card onClick={()=>navigate("exam")} glow={COLORS.accentGlow} style={{animationDelay:"210ms",display:"flex",flexDirection:"column",cursor:"pointer"}} className="fade-in">
+<div style={{position:"absolute",top:-20,right:-20,width:80,height:80,borderRadius:"50%",background:COLORS.accent+"08",filter:"blur(20px)"}}/>
+<div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14,position:"relative"}}>
+<DashIcon name="graduationCap" color={COLORS.accent}/>
+<div>
+<h3 style={{fontSize:17,fontWeight:700,color:COLORS.accent}}>Prüfung</h3>
+<p style={{fontSize:12,color:COLORS.textMuted,marginTop:2}}>Simuliere die Prüfungssituation</p>
+</div>
+</div>
+<div style={{display:"flex",gap:8,marginBottom:lastExam?12:0}}>
+{[{icon:"clock",label:"40 min"},{icon:"brain",label:"25 Fragen"},{icon:"folder",label:"1 Fall"}].map(c=>(
+<div key={c.label} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",borderRadius:8,background:COLORS.accent+"08",border:`1px solid ${COLORS.accent}12`,fontSize:12,color:COLORS.textMuted,fontWeight:500}}>
+<Icon name={c.icon} size={12} color={COLORS.accent}/>{c.label}
+</div>
+))}
+</div>
+{lastExam?<div style={{display:"flex",gap:12,alignItems:"center",padding:"8px 12px",borderRadius:10,background:`linear-gradient(135deg,${COLORS.card},${COLORS.accent}06)`,border:`1px solid ${COLORS.border}`,marginTop:"auto"}}>
+<div><div style={{fontSize:11,color:COLORS.textDim,marginBottom:2}}>Letztes Ergebnis</div><div style={{fontSize:16,fontWeight:700,color:lastExam.pct>=70?COLORS.green:lastExam.pct>=40?COLORS.yellow:COLORS.accent}}>{lastExam.pct}%</div></div>
+{bestExam!==null&&bestExam!==lastExam.pct&&<div style={{marginLeft:"auto"}}><div style={{fontSize:11,color:COLORS.textDim,marginBottom:2}}>Bestleistung</div><div style={{fontSize:16,fontWeight:700,color:bestExam>=70?COLORS.green:bestExam>=40?COLORS.yellow:COLORS.accent}}>{bestExam}%</div></div>}
+</div>:<div style={{padding:"8px 12px",borderRadius:10,background:COLORS.accent+"06",border:`1px solid ${COLORS.accent}10`,marginTop:"auto"}}>
+<div style={{fontSize:12,color:COLORS.textMuted}}>Noch nicht gestartet</div>
+<div style={{fontSize:11,color:COLORS.textDim,marginTop:2}}>Starte deine erste Prüfungssimulation</div>
+</div>}
+</Card>
+{/* ── STATISTIK ── */}
+<Card onClick={()=>navigate("stats")} glow={COLORS.yellowGlow} style={{animationDelay:"280ms",display:"flex",flexDirection:"column",cursor:"pointer"}} className="fade-in">
+<div style={{position:"absolute",top:-20,right:-20,width:80,height:80,borderRadius:"50%",background:COLORS.yellow+"08",filter:"blur(20px)"}}/>
+<div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14,position:"relative"}}>
+<DashIcon name="chart" color={COLORS.yellow}/>
+<div>
+<h3 style={{fontSize:17,fontWeight:700,color:COLORS.yellow}}>Statistik</h3>
+<p style={{fontSize:12,color:COLORS.textMuted,marginTop:2}}>Lernfortschritt & Analyse</p>
+</div>
+</div>
+{stats.quizTotal>0?<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+{[{label:"Quiz beantwortet",value:stats.quizTotal,icon:"brain",color:COLORS.green},
+{label:"Erfolgsquote",value:`${pct}%`,icon:"check",color:pct>=70?COLORS.green:pct>=40?COLORS.yellow:COLORS.accent},
+{label:"Fälle gelöst",value:stats.casesCompleted,icon:"folder",color:COLORS.orange},
+{label:"Prüfungen",value:stats.examScores?stats.examScores.length:0,icon:"graduationCap",color:COLORS.accent}
+].map(m=>(
+<div key={m.label} style={{padding:"8px 10px",borderRadius:8,background:m.color+"08",border:`1px solid ${m.color}10`}}>
+<div style={{fontSize:18,fontWeight:700,color:m.color}}>{m.value}</div>
+<div style={{fontSize:10,color:COLORS.textDim,fontWeight:500,marginTop:2}}>{m.label}</div>
+</div>
+))}
+</div>:<div style={{padding:"12px 14px",borderRadius:10,background:COLORS.yellow+"06",border:`1px solid ${COLORS.yellow}10`}}>
+<div style={{fontSize:12,color:COLORS.textMuted,lineHeight:1.6}}>Starte mit Quiz oder Fällen, um deine persönliche Statistik aufzubauen.</div>
+</div>}
+</Card>
 </div>
 <Card style={{marginTop:28,background:`linear-gradient(135deg,${COLORS.accent}06,${COLORS.card})`}}>
 <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
