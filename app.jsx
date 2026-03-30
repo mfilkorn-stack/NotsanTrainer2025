@@ -3576,14 +3576,14 @@ return (
 <Card key={m.id} onClick={()=>setDetail(m.id)} style={{padding:16,display:"flex",flexDirection:"column"}}>
 <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>{m.name}</div>
 <div style={{fontSize:12,color:COLORS.textDim}}>{m.gruppe}</div>
-<div style={{fontSize:12,color:COLORS.textMuted,marginTop:"auto",paddingTop:6}}>{m.indikationen[0]}</div>
+<div style={{fontSize:12,color:COLORS.textMuted,marginTop:"auto",paddingTop:6,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden",lineHeight:1.4}}>{m.indikationen.join(" · ")}</div>
 </Card>
 ))}
 {tab==="meds" && filteredMeds.length===0 && <EmptyState sub={debouncedSearch?`Keine Medikamente für "${debouncedSearch}" gefunden.`:"Keine Einträge in dieser Kategorie."}/>}
 {tab==="invasive" && filteredInv.map(m=>(
 <Card key={m.id} onClick={()=>setDetail(m.id)} style={{padding:16,display:"flex",flexDirection:"column"}}>
 <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>{m.name}</div>
-<div style={{fontSize:12,color:COLORS.textMuted,marginTop:"auto",paddingTop:4}}>{m.indikationen[0]}</div>
+<div style={{fontSize:12,color:COLORS.textMuted,marginTop:"auto",paddingTop:4,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden",lineHeight:1.4}}>{m.indikationen.join(" · ")}</div>
 </Card>
 ))}
 {tab==="invasive" && filteredInv.length===0 && <EmptyState sub={debouncedSearch?`Keine Maßnahmen für "${debouncedSearch}" gefunden.`:"Keine Einträge in dieser Kategorie."}/>}
