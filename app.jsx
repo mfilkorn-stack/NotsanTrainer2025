@@ -1872,6 +1872,60 @@ redflags:["Hypothermie < 35°C → aktive Maßnahmen!","Unentdeckte Blutungsquel
 // 12-KANAL-EKG SVG KOMPONENTE
 // ═══════════════════════════════════════════════════════
 // ═══════════════════════════════════════════════════════
+// RECHT & AUFKLÄRUNG - ABLAUFDIAGRAMME (SVG)
+// ═══════════════════════════════════════════════════════
+const RECHT_FLOWS = {
+aufklaerung:{title:"Aufklärung",color:"#f59e0b",nodes:[
+{id:"start",type:"start",lines:["AUFKLÄRUNG"],x:190,y:10},
+{id:"ind",type:"action",lines:["Notwendigkeit invasive","Maßnahme / Medikament","Indikation / KI prüfen"],x:190,y:70},
+{id:"durch",type:"action",lines:["Durchführbarkeit geprüft","(Beherrschen, techn./","örtl./zeitl. umsetzbar)"],x:190,y:160},
+{id:"q1",type:"decision",lines:["Einwilligungs-/","Entscheidungs-","fähigkeit?"],x:190,y:255},
+{id:"mutm",type:"action",lines:["Versorgung nach","mutmaßl. Pat.-Willen","gemäß SAA / BPR"],x:10,y:255},
+{id:"aufkl",type:"action",lines:["Situationsgerechte","Aufklärung","(Nutzen / Risiken /","Alternativen)"],x:190,y:360},
+{id:"q2",type:"decision",lines:["Einwilligung","in Maßnahme?"],x:190,y:465},
+{id:"na",type:"action",lines:["NA-Alarmierung","/ Kontakt TNA"],x:10,y:465},
+{id:"durch2",type:"action",lines:["Durchführung","gemäß SAA / BPR"],x:350,y:465},
+{id:"doku",type:"action",lines:["Weitere Versorgung","+ Dokumentation"],x:190,y:560},
+{id:"end",type:"result",lines:["Transport"],x:190,y:640}
+],edges:[
+["start","ind"],["ind","durch"],["durch","q1"],
+["q1","mutm","Nein"],["q1","aufkl","Ja"],
+["mutm","doku"],["aufkl","q2"],
+["q2","na","Nein"],["q2","durch2","Ja"],
+["na","doku"],["durch2","doku"],
+["doku","end"]
+]},
+transportverweigerung:{title:"Behandlungs-/Transportverweigerung",color:"#f59e0b",nodes:[
+{id:"start",type:"start",lines:["BEHANDLUNGS-/","TRANSPORTVERW."],x:190,y:10},
+{id:"pflicht",type:"decision",lines:["Behandlungs-","pflichtigkeit?"],x:190,y:90},
+{id:"hoch",type:"action",lines:["HOCH","(ABCDE-Problematik)"],x:60,y:185},
+{id:"niedrig",type:"action",lines:["NIEDRIG","(alle anderen Fälle)"],x:320,y:185},
+{id:"q1h",type:"decision",lines:["Einwilligungs-","fähig?"],x:60,y:275},
+{id:"q1n",type:"decision",lines:["Einwilligungs-","fähig?"],x:320,y:275},
+{id:"na_h",type:"action",lines:["NA hinzuziehen","gesetzl. Vertreter","erreichbar?"],x:0,y:370},
+{id:"aufkl_h",type:"action",lines:["Verschärfte","Aufklärung","+ NA hinzuziehen"],x:120,y:370},
+{id:"aufkl_n",type:"action",lines:["Verschärfte","Aufklärung","Angehörige einbez."],x:260,y:370},
+{id:"na_n",type:"action",lines:["NA / TNA","gesetzl. Vertreter","einbeziehen"],x:380,y:370},
+{id:"zwang",type:"action",lines:["Behandlung nach","gesetzl. Grundlagen","(ggf. Zwang)"],x:0,y:475},
+{id:"q2h",type:"decision",lines:["Zustimmung?"],x:120,y:475},
+{id:"q2n",type:"decision",lines:["Zustimmung?"],x:320,y:475},
+{id:"beh",type:"action",lines:["Behandlung","+ Transport"],x:120,y:560},
+{id:"form",type:"action",lines:["Formblatt ausfüllen","Zeugen + Unterschrift","Kopie beim Pat."],x:320,y:560},
+{id:"hilfe",type:"result",lines:["Hilfe sicherstellen","112 / 116 117 / HA"],x:190,y:650}
+],edges:[
+["start","pflicht"],
+["pflicht","hoch","Hoch"],["pflicht","niedrig","Niedrig"],
+["hoch","q1h"],["niedrig","q1n"],
+["q1h","na_h","Nein"],["q1h","aufkl_h","Ja"],
+["q1n","aufkl_n","Ja"],["q1n","na_n","Nein"],
+["na_h","zwang"],["aufkl_h","q2h"],
+["aufkl_n","q2n"],["na_n","q2n"],
+["q2h","beh","Ja"],["q2h","form","Nein"],
+["q2n","form","Nein"],["q2n","beh","Ja"],
+["zwang","hilfe"],["beh","hilfe"],["form","hilfe"]
+]}
+};
+// ═══════════════════════════════════════════════════════
 // LEITSYMPTOM-ABLAUFDIAGRAMME (SVG)
 // ═══════════════════════════════════════════════════════
 const LS_FLOWS = {
@@ -3283,6 +3337,10 @@ return (
 <Card>
 <Badge color="#f59e0b">{b.kategorie}</Badge>
 <h2 style={{fontSize:22,fontWeight:700,margin:"12px 0"}}>{b.name}</h2>
+{RECHT_FLOWS[b.id] && <div style={{marginBottom:20,textAlign:"center"}}>
+<h4 style={{fontSize:13,fontWeight:700,color:"#f59e0b",marginBottom:10,textTransform:"uppercase"}}>Ablaufdiagramm</h4>
+<FlowDiagram flowId={b.id} flowSource={RECHT_FLOWS}/>
+</div>}
 <div style={{marginBottom:16}}>
 <h4 style={{fontSize:13,fontWeight:700,color:"#f59e0b",marginBottom:12,textTransform:"uppercase"}}>Ablauf / Schritte</h4>
 {b.schritte.map((s,i)=>(
@@ -3626,7 +3684,11 @@ return (
 {tab==="recht" && filteredRecht.map(b=>(<Card key={b.id} onClick={()=>{setDetail(b.id);window.scrollTo({top:0,behavior:'smooth'});}} style={{padding:16}}>
 <Badge color="#f59e0b" bg="#f59e0b10">{b.kategorie}</Badge>
 <div style={{fontSize:15,fontWeight:700,margin:"8px 0 4px"}}>{b.name}</div>
-<div style={{fontSize:12,color:COLORS.textMuted}}>{b.schritte.length} Schritte</div>
+<div style={{fontSize:12,color:COLORS.textMuted,marginBottom:RECHT_FLOWS[b.id]?8:0}}>{b.schritte.length} Schritte</div>
+{RECHT_FLOWS[b.id] && <div style={{display:"flex",alignItems:"center",gap:6,fontSize:11,color:RECHT_FLOWS[b.id].color}}>
+<svg width="16" height="16" viewBox="0 0 16 16"><rect x="3" y="1" width="10" height="4" rx="1" fill={RECHT_FLOWS[b.id].color} opacity="0.6"/><polygon points="8,7 12,9.5 8,12 4,9.5" fill={RECHT_FLOWS[b.id].color} opacity="0.4"/><rect x="3" y="13" width="10" height="2" rx="1" fill={RECHT_FLOWS[b.id].color} opacity="0.3"/><line x1="8" y1="5" x2="8" y2="7" stroke={RECHT_FLOWS[b.id].color} strokeWidth="0.8"/><line x1="8" y1="12" x2="8" y2="13" stroke={RECHT_FLOWS[b.id].color} strokeWidth="0.8"/></svg>
+Ablaufdiagramm verfügbar
+</div>}
 </Card>))}
 {tab==="recht" && filteredRecht.length===0 && <EmptyState sub={debouncedSearch?`Keine Rechtsgrundlagen für "${debouncedSearch}" gefunden.`:"Keine Einträge in dieser Kategorie."}/>}
 </div>
