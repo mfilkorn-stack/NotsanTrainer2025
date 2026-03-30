@@ -362,11 +362,15 @@ const [view, setView] = useState("dashboard");
 const [subView, setSubView] = useState(null);
 const [stats, setStats] = useState({quizCorrect:0,quizTotal:0,casesCompleted:0,examScores:[],wrongQuestions:[]});
 const [loaded, setLoaded] = useState(false);
+const [swUpdate, setSwUpdate] = useState(null);
 useEffect(()=>{
 (async()=>{
 try{var r=localStorage.getItem("notsan-stats");if(r)setStats(JSON.parse(r));}catch(e){}
 setLoaded(true);
 })();
+const onSwUpdate = (e) => setSwUpdate(e.detail.registration);
+window.addEventListener('swUpdate', onSwUpdate);
+return () => window.removeEventListener('swUpdate', onSwUpdate);
 },[]);
 useEffect(()=>{
 if(loaded){try{localStorage.setItem("notsan-stats",JSON.stringify(stats));}catch(e){}}
@@ -375,6 +379,10 @@ const navigate = (v,sub=null)=>{setView(v);setSubView(sub);window.scrollTo({top:
 return (
 <div style={{minHeight:"100vh",background:COLORS.bg}}>
 <style>{css}</style>
+{swUpdate && <div style={{position:"fixed",bottom:80,left:"50%",transform:"translateX(-50%)",zIndex:9999,background:"linear-gradient(135deg,#3b82f6,#2563eb)",color:"#fff",padding:"12px 20px",borderRadius:12,display:"flex",alignItems:"center",gap:12,boxShadow:"0 8px 32px rgba(59,130,246,0.4)",fontSize:14,fontFamily:"'Outfit',sans-serif",fontWeight:500}}>
+<span>Neue Version verfügbar</span>
+<button onClick={()=>{swUpdate.waiting.postMessage('skipWaiting');window.location.reload();}} style={{background:"rgba(255,255,255,0.2)",border:"none",color:"#fff",padding:"6px 14px",borderRadius:8,cursor:"pointer",fontWeight:600,fontSize:13,fontFamily:"inherit"}}>Aktualisieren</button>
+</div>}
 <Header navigate={navigate} current={view}/>
 <main style={{maxWidth:1100,margin:"0 auto",padding:"20px 16px 100px"}}>
 {view==="dashboard" && <Dashboard stats={stats} navigate={navigate}/>}

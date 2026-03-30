@@ -27,7 +27,10 @@
     <link rel="canonical" href="https://mfilkorn-stack.github.io/NotsanTrainer2025/">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23ef4444'/%3E%3Cg transform='translate(50,50)'%3E%3Crect x='-5' y='-30' width='10' height='60' rx='3' fill='white' /%3E%3Crect x='-5' y='-30' width='10' height='60' rx='3' fill='white' transform='rotate(60)' /%3E%3Crect x='-5' y='-30' width='10' height='60' rx='3' fill='white' transform='rotate(120)' /%3E%3Ccircle r='12' fill='%23ef4444' stroke='white' stroke-width='2.5'/%3E%3Cpolyline points='-8,0 -4,0 -2,-6 2,6 4,0 8,0' fill='none' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3C/g%3E%3C/svg%3E">
+    <meta name="apple-mobile-web-app-title" content="NotSanTrainer">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
 
     <!-- Loading Screen Styles -->
     <style>
@@ -131,6 +134,23 @@
             const ls = document.getElementById('loading-screen');
             if (ls) { ls.classList.add('fade-out'); setTimeout(() => ls.remove(), 400); }
         }, 15000);
+    </script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js').then((reg) => {
+                reg.addEventListener('updatefound', () => {
+                    const newWorker = reg.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // New version available — dispatch event for app.jsx to show update banner
+                            window.dispatchEvent(new CustomEvent('swUpdate', { detail: { registration: reg } }));
+                        }
+                    });
+                });
+            });
+        }
     </script>
 </body>
 </html>
