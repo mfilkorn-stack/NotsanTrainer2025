@@ -6046,8 +6046,21 @@ gaps:[
 // ═══════════════════════════════════════════════════════
 // VERSION HISTORY
 // ═══════════════════════════════════════════════════════
-var APP_VERSION = "0.9";
+var APP_VERSION = "0.9.1";
 var VERSION_HISTORY = [
+{version:"0.9.1",date:"2026-03-30",changes:[
+"67 neue Medikamenten-Fragen für vollständige Datenblatt-Abdeckung",
+"56 neue Invasive-Maßnahmen-Fragen für vollständige Datenblatt-Abdeckung",
+"Graphische Ablaufschemata für Recht & Aufklärung hinzugefügt",
+"Kategorienamen zwischen Lexikon und Quiz vereinheitlichen",
+"Cache-Busting für Script-Tags um neue Fragen-Anzahl korrekt anzuzeigen",
+"Dashboard Redesign mit Rich Preview Cards",
+"Quiz-Kategorien Pills und Redundanzen optimiert",
+"Kartenausrichtung in allen Grid-Layouts vereinheitlicht",
+"PWA-Unterstützung: Manifest, Service Worker, App-Icons, Update-Banner",
+"Automated Test Suite mit GitHub Actions CI hinzugefügt",
+"Coverage Analysis Script für Quiz-Abdeckungslücken"
+]},
 {version:"0.9",date:"2026-03-13",changes:[
 "UX: Leere Zustände, Suchverzögerung, Timer-Warnungen, Bestätigungsdialoge, sanftes Scrollen",
 "Gleichmäßige Kachelhöhen in allen Grid-Layouts (iPad-optimiert)",
