@@ -448,17 +448,18 @@ const lastExam = stats.examScores&&stats.examScores.length>0?stats.examScores[st
 const caseCategories = [...new Set(CASES.map(c=>c.bpr))];
 const lexCats = [
 {label:"Medikamente",count:MEDICATIONS.length,iconName:"pill",color:COLORS.accent},
-{label:"Invasive",count:INVASIVE.length,iconName:"syringe",color:COLORS.blue},
+{label:"Invasive Maßnahmen",count:INVASIVE.length,iconName:"syringe",color:COLORS.blue},
 {label:"Leitsymptome",count:LEITSYMPTOME.length,iconName:"stethoscope",color:COLORS.orange},
 {label:"Krankheitsbilder",count:BPR.length,iconName:"heartPulse",color:COLORS.green},
-{label:"EKG",count:EKG_DATA.length,iconName:"activity",color:"#e11d48"},
+{label:"EKG-Befunde",count:EKG_DATA.length,iconName:"activity",color:"#e11d48"},
 {label:"Übergabe",count:SINNHAFT_DATA.length,iconName:"megaphone",color:"#8b5cf6"},
 {label:"Werkzeuge",count:SCORES_DATA.length+CHECKLISTS_DATA.length,iconName:"wrench",color:"#14b8a6"},
-{label:"Recht",count:BPR.filter(b=>b.kategorie==="Rechtliche Grundlagen").length,iconName:"shield",color:"#f59e0b"},
+{label:"Recht & Aufklärung",count:BPR.filter(b=>b.kategorie==="Rechtliche Grundlagen").length,iconName:"shield",color:"#f59e0b"},
 ];
 const totalLex = lexCats.reduce((s,c)=>s+c.count,0)+ABCDE_DATA.length;
 const quizCatIcons = {Medikamente:"pill","Invasive Maßnahmen":"syringe",Leitsymptome:"stethoscope",Behandlungspfade:"heartPulse","EKG-Befunde":"activity","Übergabe":"megaphone",Werkzeuge:"wrench","Recht & Aufklärung":"shield"};
 const quizCatColors = {Medikamente:COLORS.accent,"Invasive Maßnahmen":COLORS.blue,Leitsymptome:COLORS.orange,Behandlungspfade:COLORS.green,"EKG-Befunde":"#e11d48","Übergabe":"#8b5cf6",Werkzeuge:"#14b8a6","Recht & Aufklärung":"#f59e0b"};
+const quizCatLabels = {Behandlungspfade:"Krankheitsbilder"};
 const DashIcon = ({name,color,size}) => <div style={{width:size||44,height:size||44,borderRadius:12,background:`linear-gradient(135deg,${color}20,${color}08)`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:`1px solid ${color}20`}}><Icon name={name} size={(size||44)*0.48} color={color}/></div>;
 return (
 <div className="fade-in">
@@ -511,7 +512,7 @@ return (
 <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:stats.wrongQuestions&&stats.wrongQuestions.length>0?10:0}}>
 {Object.entries(quizCatIcons).map(([cat,icon])=>{const cnt=QUIZ_QUESTIONS.filter(q=>q.cat===cat).length;return(
 <div key={cat} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"4px 8px",borderRadius:8,background:(quizCatColors[cat]||COLORS.green)+"10",border:`1px solid ${(quizCatColors[cat]||COLORS.green)}15`,fontSize:11,color:quizCatColors[cat]||COLORS.green,fontWeight:600}}>
-<Icon name={icon} size={11} color={quizCatColors[cat]||COLORS.green}/>{cat} <span style={{opacity:.6}}>{cnt}</span>
+<Icon name={icon} size={11} color={quizCatColors[cat]||COLORS.green}/>{quizCatLabels[cat]||cat} <span style={{opacity:.6}}>{cnt}</span>
 </div>);})}
 </div>
 {stats.wrongQuestions&&stats.wrongQuestions.length>0&&<div style={{display:"flex",alignItems:"center",gap:6,padding:"6px 10px",borderRadius:8,background:COLORS.accent+"10",border:`1px solid ${COLORS.accent}20`,marginTop:"auto"}}>
