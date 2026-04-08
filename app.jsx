@@ -333,6 +333,82 @@ const EmptyState = ({text="Keine Ergebnisse",sub="Versuchen Sie einen anderen Su
 <div style={{fontSize:13}}>{sub}</div>
 </div>
 );
+function WrongAnswersReview({items, color, labelFn}) {
+const [expanded, setExpanded] = React.useState(false);
+if(!items || items.length===0) return null;
+return (
+<div style={{marginTop:24,textAlign:"left"}}>
+<button onClick={()=>setExpanded(e=>!e)} style={{width:"100%",background:color+"18",border:`1px solid ${color}40`,borderRadius:12,padding:"12px 16px",display:"flex",alignItems:"center",gap:8,cursor:"pointer",color,fontWeight:700,fontSize:14,fontFamily:"'Outfit',sans-serif"}}>
+<Icon name="alertTriangle" size={14} color={color}/>
+<span style={{flex:1}}>Falsch beantwortet ({items.length})</span>
+<Icon name="chevronRight" size={14} color={color} style={{transform:expanded?"rotate(90deg)":"rotate(0deg)",transition:"transform .2s"}}/>
+</button>
+{expanded && (
+<div style={{marginTop:8,display:"flex",flexDirection:"column",gap:12}}>
+{items.map((item,idx)=>(
+<Card key={idx} style={{padding:16,borderColor:color+"30",background:COLORS.bg}}>
+<Badge color={color}>{labelFn?labelFn(item,idx):`#${idx+1}`}</Badge>
+<p style={{fontSize:14,fontWeight:600,margin:"10px 0 12px",lineHeight:1.5}}>{item.q}</p>
+<div style={{display:"flex",flexDirection:"column",gap:6}}>
+{item.opts.map((o,i)=>{
+const isCorrect=i===item.correct;
+const isChosen=i===item.chosen;
+return(
+<div key={i} style={{padding:"9px 14px",borderRadius:10,border:`2px solid ${isCorrect?COLORS.green:isChosen?COLORS.accent:COLORS.border}`,background:isCorrect?COLORS.green+"18":isChosen?COLORS.accent+"18":"transparent",color:isCorrect?COLORS.green:isChosen?COLORS.accent:COLORS.textMuted,fontSize:13,display:"flex",alignItems:"center",gap:8}}>
+<span style={{fontWeight:700,opacity:.5}}>{String.fromCharCode(65+i)}</span>
+<span style={{flex:1}}>{o}</span>
+{isCorrect&&<span style={{fontSize:11,fontWeight:700}}>✓ Richtig</span>}
+{isChosen&&!isCorrect&&<span style={{fontSize:11,fontWeight:700}}>✗ Gewählt</span>}
+</div>
+);
+})}
+</div>
+{item.explanation&&(
+<div style={{marginTop:10,padding:"10px 14px",borderRadius:10,background:COLORS.blue+"10",borderLeft:`3px solid ${COLORS.blue}`}}>
+<span style={{fontSize:12,fontWeight:700,color:COLORS.blue}}>Erläuterung: </span>
+<span style={{fontSize:12,color:COLORS.textMuted,lineHeight:1.6}}>{item.explanation}</span>
+</div>
+)}
+</Card>
+))}
+</div>
+)}
+</div>
+);
+}
+function GapsWrongReview({items}) {
+const [expanded, setExpanded] = React.useState(false);
+if(!items || items.length===0) return null;
+return (
+<div style={{marginTop:20,textAlign:"left"}}>
+<button onClick={()=>setExpanded(e=>!e)} style={{width:"100%",background:COLORS.orange+"18",border:`1px solid ${COLORS.orange}40`,borderRadius:12,padding:"12px 16px",display:"flex",alignItems:"center",gap:8,cursor:"pointer",color:COLORS.orange,fontWeight:700,fontSize:14,fontFamily:"'Outfit',sans-serif"}}>
+<Icon name="alertTriangle" size={14} color={COLORS.orange}/>
+<span style={{flex:1}}>Falsch beantwortet ({items.length})</span>
+<Icon name="chevronRight" size={14} color={COLORS.orange} style={{transform:expanded?"rotate(90deg)":"rotate(0deg)",transition:"transform .2s"}}/>
+</button>
+{expanded&&(
+<div style={{marginTop:8,display:"flex",flexDirection:"column",gap:12}}>
+{items.map((g,idx)=>(
+<Card key={idx} style={{padding:16,borderColor:COLORS.orange+"30",background:COLORS.bg}}>
+<Badge color={COLORS.orange}>Lücke {g.gapNum}</Badge>
+<div style={{fontSize:13,lineHeight:2,margin:"12px 0 8px"}}>
+{g.text.split("___").map((part,pi)=>(
+<span key={pi}>{part}{pi<g.userInputs.length&&(
+<span style={{display:"inline-flex",alignItems:"center",gap:6,margin:"0 4px"}}>
+<span style={{padding:"2px 10px",borderRadius:6,fontWeight:700,fontSize:13,background:COLORS.accent+"18",color:COLORS.accent,border:`1px solid ${COLORS.accent}40`}}>{g.userInputs[pi]||"—"}</span>
+<span style={{fontSize:12,color:COLORS.textDim}}>→</span>
+<span style={{padding:"2px 10px",borderRadius:6,fontWeight:700,fontSize:13,background:COLORS.green+"18",color:COLORS.green,border:`1px solid ${COLORS.green}40`}}>{g.answers[pi]}</span>
+</span>
+)}</span>
+))}
+</div>
+</Card>
+))}
+</div>
+)}
+</div>
+);
+}
 function ConfirmModal({open,title,message,onConfirm,onCancel,confirmLabel="Zurücksetzen"}) {
 if(!open) return null;
 return (
@@ -627,6 +703,7 @@ const [qi, setQi] = useState(0);
 const [selected, setSelected] = useState(null);
 const [score, setScore] = useState(0);
 const [done, setDone] = useState(false);
+const [sessionWrong, setSessionWrong] = useState([]);
 const autoStarted = React.useRef(false);
 const isSchwach = (cat) => cat==="schwachstellen"||cat?.startsWith("schwach_");
 const startQuiz = (cat) => {
@@ -635,7 +712,7 @@ if(cat==="schwachstellen") filtered=QUIZ_QUESTIONS.filter(q=>stats.wrongQuestion
 else if(cat?.startsWith("schwach_")) {const rc=cat.replace("schwach_","");filtered=QUIZ_QUESTIONS.filter(q=>stats.wrongQuestions.includes(q.id)&&q.cat===rc);}
 else filtered=cat==="all"?QUIZ_QUESTIONS:QUIZ_QUESTIONS.filter(q=>q.cat===cat);
 const shuffled = [...filtered].sort(()=>Math.random()-.5).slice(0,Math.min(15,filtered.length));
-setQuestions(shuffled);setQi(0);setSelected(null);setScore(0);setDone(false);setCategory(cat);
+setQuestions(shuffled);setQi(0);setSelected(null);setScore(0);setDone(false);setSessionWrong([]);setCategory(cat);
 };
 React.useEffect(()=>{if(subView&&isSchwach(subView)&&!autoStarted.current){autoStarted.current=true;startQuiz(subView);}},[]);
 const answer = (idx) => {
@@ -643,7 +720,7 @@ if(selected!==null) return;
 setSelected(idx);
 const correct = idx===questions[qi].correct;
 if(correct) {setScore(s=>s+1);haptic("success");}
-else haptic("error");
+else {haptic("error");setSessionWrong(prev=>[...prev,{q:questions[qi].q,opts:questions[qi].opts,correct:questions[qi].correct,chosen:idx,explanation:questions[qi].explanation,qi}]);}
 setStats(s=>{
 const wrong = correct?s.wrongQuestions.filter(id=>id!==questions[qi].id):([...s.wrongQuestions,questions[qi].id]);
 return{...s,quizCorrect:s.quizCorrect+(correct?1:0),quizTotal:s.quizTotal+1,wrongQuestions:[...new Set(wrong)]};
@@ -695,6 +772,7 @@ return (
 <Button onClick={()=>setCategory(null)} variant="secondary">Kategorien</Button>
 {schwachMode && remaining>0 ? <Button onClick={()=>startQuiz(category)}>Weiter trainieren</Button> : <Button onClick={()=>startQuiz(category)}>Nochmal</Button>}
 </div>
+<WrongAnswersReview items={sessionWrong} color={COLORS.accent} labelFn={(item)=>`Frage ${item.qi+1}`}/>
 </div>
 );
 }
@@ -764,6 +842,7 @@ const [treatStep, setTreatStep] = useState(0);
 const [treatSelected, setTreatSelected] = useState(null);
 const [treatScore, setTreatScore] = useState(0);
 const [diagScore, setDiagScore] = useState(0);
+const [treatWrong, setTreatWrong] = useState([]);
 const [catFilter, setCatFilter] = useState("all");
 const [caseSearch, setCaseSearch] = useState("");
 const [algoExercise, setAlgoExercise] = useState(null);
@@ -786,7 +865,7 @@ const debouncedCaseSearch = useDebounce(caseSearch, 250);
 const filteredCases = (catFilter==="all" ? EXAM_CASES : EXAM_CASES.filter(c=>c.bpr===catFilter)).filter(c=>{if(!debouncedCaseSearch) return true;const s=debouncedCaseSearch.toLowerCase();return (c.meldung||"").toLowerCase().includes(s)||(bprNames[c.bpr]||"").toLowerCase().includes(s)||(c.ankunft||"").toLowerCase().includes(s);});
 const startCase = (idx)=>{
 setCaseIdx(idx);setPhase("explore");setRevealed({});setDiagSelected(null);setDiagCorrect(null);
-setTreatStep(0);setTreatSelected(null);setTreatScore(0);setDiagScore(0);
+setTreatStep(0);setTreatSelected(null);setTreatScore(0);setDiagScore(0);setTreatWrong([]);
 };
 // ─── CASE LIST ───
 if(caseIdx===null) return (
@@ -986,7 +1065,7 @@ const answerTreat = (idx)=>{
 if(treatSelected!==null) return;
 setTreatSelected(idx);
 if(idx===ts.correct) {setTreatScore(s=>s+1);haptic("success");}
-else haptic("error");
+else{haptic("error");setTreatWrong(prev=>[...prev,{q:ts.q,opts:ts.opts,correct:ts.correct,chosen:idx,explanation:ts.explanation,stepNum:treatStep+1}]);}
 };
 const nextTreat = ()=>{
 if(treatStep+1>=treatSteps.length){
@@ -1072,6 +1151,15 @@ return (
 <Button onClick={()=>setCaseIdx(null)} variant="secondary">Alle Prüfungsfälle</Button>
 <Button onClick={()=>startCase(caseIdx)}>Nochmal</Button>
 </div>
+{!diagScore && diagSelected!==null && (
+<Card style={{marginTop:16,padding:14,textAlign:"left",borderColor:COLORS.accent+"30",maxWidth:480,margin:"16px auto 0"}}>
+<Badge color={COLORS.accent}>Diagnose verfehlt</Badge>
+<p style={{fontSize:13,color:COLORS.textMuted,margin:"8px 0 4px"}}>Deine Wahl: <span style={{color:COLORS.accent}}>{ec.diagnoseOptionen[diagSelected]}</span></p>
+<p style={{fontSize:13,color:COLORS.textMuted,marginBottom:6}}>Richtig: <span style={{color:COLORS.green,fontWeight:700}}>{ec.diagnoseOptionen[ec.correctDiagnose]}</span></p>
+{ec.diagnoseErklaerung&&<p style={{fontSize:12,color:COLORS.textDim,lineHeight:1.6,marginTop:4}}>{ec.diagnoseErklaerung}</p>}
+</Card>
+)}
+{treatWrong.length>0&&<div style={{textAlign:"left"}}><WrongAnswersReview items={treatWrong} color={COLORS.purple} labelFn={(item)=>`Behandlung Schritt ${item.stepNum}`}/></div>}
 {examAlgo && (
 <Card style={{marginTop:28,padding:20,textAlign:"left",borderColor:COLORS.green+"40",background:COLORS.green+"08"}}>
 <h4 style={{fontSize:14,fontWeight:700,marginBottom:4,color:COLORS.green}}> Algorithmus vertiefen: {examAlgo.name}</h4>
@@ -1104,12 +1192,14 @@ const [treeStep, setTreeStep] = useState(0);
 const [treeAnswered, setTreeAnswered] = useState(null);
 const [treeScore, setTreeScore] = useState(0);
 const [treeDone, setTreeDone] = useState(false);
+const [treeWrong, setTreeWrong] = useState([]);
 // Gap state
 const [gapIdx, setGapIdx] = useState(0);
 const [gapInputs, setGapInputs] = useState({});
 const [gapChecked, setGapChecked] = useState(false);
 const [gapScore, setGapScore] = useState(0);
 const [gapsDone, setGapsDone] = useState(false);
+const [gapsWrong, setGapsWrong] = useState([]);
 const embedded = !!initialAlgo;
 const categories = useMemo(()=>{
 const cats = {};
@@ -1129,11 +1219,11 @@ setSelectedAlgo(algo);
 setExerciseType("order");
 };
 const startTree = (algo) => {
-setTreeStep(0);setTreeAnswered(null);setTreeScore(0);setTreeDone(false);
+setTreeStep(0);setTreeAnswered(null);setTreeScore(0);setTreeDone(false);setTreeWrong([]);
 setSelectedAlgo(algo);setExerciseType("tree");
 };
 const startGaps = (algo) => {
-setGapIdx(0);setGapInputs({});setGapChecked(false);setGapScore(0);setGapsDone(false);
+setGapIdx(0);setGapInputs({});setGapChecked(false);setGapScore(0);setGapsDone(false);setGapsWrong([]);
 setSelectedAlgo(algo);setExerciseType("gaps");
 };
 const backToSelect = () => {
@@ -1289,6 +1379,7 @@ if(treeDone) return (
 <Button size="sm" variant="ghost" onClick={()=>startOrder(algo)}> Schritte ordnen</Button>
 <Button size="sm" variant="ghost" onClick={()=>startGaps(algo)}> Lücken</Button>
 </div>
+<WrongAnswersReview items={treeWrong} color={COLORS.purple} labelFn={(item)=>`Entscheidung ${item.stepNum}`}/>
 </Card>
 </div>
 );
@@ -1319,7 +1410,7 @@ return (
 if(answered) return;
 setTreeAnswered(oi);
 if(oi===d.correct) {setTreeScore(s=>s+1);haptic("success");}
-else haptic("error");
+else{haptic("error");setTreeWrong(prev=>[...prev,{q:d.q,opts:d.opts,correct:d.correct,chosen:oi,explanation:d.feedback,stepNum:treeStep+1}]);}
 }} className={answered?(isCorrect?"correct-pop":(isSelected?"shake-anim":"")):""}
 style={{padding:"12px 16px",borderRadius:10,background:bg,border:`1px solid ${border}`,cursor:answered?"default":"pointer",transition:"all .2s",fontSize:13}}>
 {opt}
@@ -1365,6 +1456,7 @@ if(gapsDone) return (
 <Button size="sm" variant="ghost" onClick={()=>startOrder(algo)}> Ordnen</Button>
 <Button size="sm" variant="ghost" onClick={()=>startTree(algo)}> Baum</Button>
 </div>
+<GapsWrongReview items={gapsWrong}/>
 </Card>
 </div>
 );
@@ -1379,6 +1471,7 @@ for(let i=0;i<inputCount;i++){
 if(!gapMatch(gapInputs[`${gapIdx}-${i}`], answers[i])) correct = false;
 }
 if(correct) setGapScore(s=>s+1);
+else setGapsWrong(prev=>[...prev,{text:gap.text,answers,userInputs:Array.from({length:inputCount},(_,i)=>gapInputs[`${gapIdx}-${i}`]||""),gapNum:gapIdx+1}]);
 setGapChecked(true);
 };
 return (
@@ -1444,6 +1537,7 @@ const [step, setStep] = useState(0);
 const [selected, setSelected] = useState(null);
 const [caseScore, setCaseScore] = useState(0);
 const [caseDone, setCaseDone] = useState(false);
+const [sessionWrong, setSessionWrong] = useState([]);
 const [catFilter, setCatFilter] = useState("all");
 const [caseSearch, setCaseSearch] = useState("");
 const [algoExercise, setAlgoExercise] = useState(null); // {algo, type} for inline algo trainer
@@ -1475,7 +1569,7 @@ if(mode==="select") return (
 <h3 style={{fontSize:20,fontWeight:700,color:COLORS.orange,marginBottom:8}}>Trainingsfälle</h3>
 <p style={{color:COLORS.textMuted,fontSize:13,lineHeight:1.6}}>Alle {CASES.length} Fälle mit <strong>sichtbarem Krankheitsbild</strong>. Ideal zum Lernen und Üben der Behandlungsschritte.</p>
 <div style={{marginTop:"auto",paddingTop:12}}><Badge color={COLORS.orange}>{CASES.length} Fälle · {categories.length} Krankheitsbilder</Badge>
-<div style={{marginTop:14}}><Button size="sm" onClick={(e)=>{e.stopPropagation();setMode("training");setCaseIdx(Math.floor(Math.random()*CASES.length));setStep(0);setSelected(null);setCaseScore(0);setCaseDone(false);}} style={{background:COLORS.orange,fontSize:12,padding:"6px 16px"}}> Zufälliger Fall</Button></div></div>
+<div style={{marginTop:14}}><Button size="sm" onClick={(e)=>{e.stopPropagation();setMode("training");setCaseIdx(Math.floor(Math.random()*CASES.length));setStep(0);setSelected(null);setCaseScore(0);setCaseDone(false);setSessionWrong([]);}} style={{background:COLORS.orange,fontSize:12,padding:"6px 16px"}}> Zufälliger Fall</Button></div></div>
 </Card>
 <Card onClick={()=>setMode("exam")} style={{cursor:"pointer",borderColor:COLORS.purple+"40",textAlign:"center",padding:32,display:"flex",flexDirection:"column",alignItems:"center"}}>
 <div style={{fontSize:48,marginBottom:12}}> </div>
@@ -1505,7 +1599,7 @@ if(caseIdx===null) return (
 <h2 style={{fontSize:22,fontWeight:700,marginBottom:8}}> Trainingsfälle</h2>
 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,marginBottom:16}}>
 <p style={{color:COLORS.textMuted,fontSize:13,margin:0}}>{filteredCases.length} von {CASES.length} Fällen{debouncedCaseSearch?` für „${debouncedCaseSearch}"`:""}</p>
-<Button size="sm" onClick={()=>{const r=Math.floor(Math.random()*CASES.length);setCaseIdx(r);setStep(0);setSelected(null);setCaseScore(0);setCaseDone(false);}} style={{background:COLORS.orange,fontSize:12,padding:"6px 14px"}}> Zufälliger Fall</Button>
+<Button size="sm" onClick={()=>{const r=Math.floor(Math.random()*CASES.length);setCaseIdx(r);setStep(0);setSelected(null);setCaseScore(0);setCaseDone(false);setSessionWrong([]);}} style={{background:COLORS.orange,fontSize:12,padding:"6px 14px"}}> Zufälliger Fall</Button>
 </div>
 <input value={caseSearch} onChange={e=>setCaseSearch(e.target.value)} placeholder="Fall suchen (Titel, Szenario, Krankheitsbild)..." style={{width:"100%",padding:"10px 14px",borderRadius:12,border:`1px solid ${COLORS.border}`,background:COLORS.card,color:COLORS.text,fontSize:13,marginBottom:12,outline:"none",boxSizing:"border-box"}}/>
 <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:20}}>
@@ -1522,7 +1616,7 @@ Alle ({CASES.length})
 {filteredCases.map((c,i)=>{
 const globalIdx = CASES.indexOf(c);
 return (
-<Card key={globalIdx} onClick={()=>{setCaseIdx(globalIdx);setStep(0);setSelected(null);setCaseScore(0);setCaseDone(false);}} style={{display:"flex",flexDirection:"column"}}>
+<Card key={globalIdx} onClick={()=>{setCaseIdx(globalIdx);setStep(0);setSelected(null);setCaseScore(0);setCaseDone(false);setSessionWrong([]);}} style={{display:"flex",flexDirection:"column"}}>
 <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:8}}>
 <Badge color={COLORS.orange}>Fall {globalIdx+1}</Badge>
 <Badge color={COLORS.blue} bg={COLORS.blue+"10"}>{bprNames[c.bpr]||c.bpr}</Badge>
@@ -1554,8 +1648,9 @@ return (
 <p style={{color:COLORS.textMuted}}>{caseScore} von {c.steps.length} Schritten korrekt</p>
 <div style={{display:"flex",justifyContent:"center",gap:12,marginTop:24}}>
 <Button onClick={()=>setCaseIdx(null)} variant="secondary">Alle Fälle</Button>
-<Button onClick={()=>{setStep(0);setSelected(null);setCaseScore(0);setCaseDone(false);}}>Nochmal</Button>
+<Button onClick={()=>{setStep(0);setSelected(null);setCaseScore(0);setCaseDone(false);setSessionWrong([]);}}>Nochmal</Button>
 </div>
+<WrongAnswersReview items={sessionWrong} color={COLORS.orange} labelFn={(item)=>`Schritt ${item.stepNum}`}/>
 {matchingAlgo && (
 <Card style={{marginTop:28,padding:20,textAlign:"left",borderColor:COLORS.green+"40",background:COLORS.green+"08"}}>
 <h4 style={{fontSize:14,fontWeight:700,marginBottom:4,color:COLORS.green}}> Algorithmus vertiefen: {matchingAlgo.name}</h4>
@@ -1575,7 +1670,7 @@ const answer = (idx)=>{
 if(selected!==null) return;
 setSelected(idx);
 if(idx===s.correct){setCaseScore(sc=>sc+1);setStats(st=>({...st,quizCorrect:st.quizCorrect+1,quizTotal:st.quizTotal+1}));}
-else setStats(st=>({...st,quizTotal:st.quizTotal+1}));
+else{setStats(st=>({...st,quizTotal:st.quizTotal+1}));setSessionWrong(prev=>[...prev,{q:s.q,opts:s.opts,correct:s.correct,chosen:idx,explanation:s.explanation,stepNum:step+1}]);}
 };
 const nextStep = ()=>{
 if(step+1>=c.steps.length){setCaseDone(true);setStats(st=>({...st,casesCompleted:st.casesCompleted+1}));return;}
