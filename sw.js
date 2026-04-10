@@ -1,17 +1,20 @@
-const CACHE_VERSION = 'notsantrainer-v0.9.0';
+const CACHE_VERSION = 'notsantrainer-v0.9.1';
 
 const APP_SHELL = [
   './',
   './index.html',
+  './landing.html',
   './app.jsx',
   './data.js',
   './utils.js',
   './entities.js',
   './manifest.json',
+  './robots.txt',
   './og-image.png',
   './icons/icon.svg',
   './icons/icon-192.png',
   './icons/icon-512.png',
+  './icons/icon-maskable-512.png',
   // EKG images
   './ekg/asystolie_1.jpg',
   './ekg/asystolie_2.jpg',

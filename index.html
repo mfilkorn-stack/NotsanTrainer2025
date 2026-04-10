@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NotSanTrainer 2025 – SAA/BPR Trainingsapp</title>
     <meta name="description" content="Trainingsapp für Notfallsanitäter – SAA und BPR 2025 – 6-Länder-Arbeitsgruppe">
     <meta name="theme-color" content="#06080f">
@@ -100,22 +100,32 @@
     <!-- App Root -->
     <div id="root"></div>
 
-    <!-- React (Production) -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- No-JS fallback -->
+    <noscript>
+      <style>#loading-screen{display:none!important;}</style>
+      <div style="position:fixed;inset:0;background:#06080f;color:#f1f5f9;font-family:system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;">
+        <div style="font-size:48px;font-weight:800;color:#ef4444;margin-bottom:16px;">!</div>
+        <h1 style="font-size:22px;font-weight:700;margin-bottom:12px;">JavaScript erforderlich</h1>
+        <p style="color:#94a3b8;max-width:400px;line-height:1.6;">NotSanTrainer benötigt JavaScript. Bitte aktiviere JavaScript in deinen Browser-Einstellungen und lade die Seite neu.</p>
+      </div>
+    </noscript>
 
-    <!-- Babel Standalone for JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- React (Production) — pinned to exact version -->
+    <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+
+    <!-- Babel Standalone for JSX — pinned to exact version -->
+    <script src="https://unpkg.com/@babel/standalone@7.27.4/babel.min.js"></script>
 
     <!-- Data (pure JS, no transpilation needed) -->
-    <script src="data.js?v=5"></script>
+    <script src="data.js?v=6"></script>
     <!-- Shared Utilities -->
-    <script src="utils.js?v=5"></script>
+    <script src="utils.js?v=6"></script>
     <!-- Entity-Linking -->
-    <script src="entities.js?v=5"></script>
+    <script src="entities.js?v=6"></script>
 
     <!-- App Components (JSX, transpiled by Babel) -->
-    <script type="text/babel" src="app.jsx?v=5"></script>
+    <script type="text/babel" src="app.jsx?v=6"></script>
 
     <!-- Hide loading screen after app mounts -->
     <script>
