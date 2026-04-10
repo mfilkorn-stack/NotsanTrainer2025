@@ -6046,8 +6046,17 @@ gaps:[
 // ═══════════════════════════════════════════════════════
 // VERSION HISTORY
 // ═══════════════════════════════════════════════════════
-var APP_VERSION = "0.9.1";
+var APP_VERSION = "0.9.2";
 var VERSION_HISTORY = [
+{version:"0.9.2",date:"2026-04-10",changes:[
+"Feature-Gating: Free / Plus Lizenzmodell (19,99 € einmalig)",
+"Plus-Plan: Alle 1.223 Quizfragen, 306 Fälle, Prüfungssimulation, vollständige Statistik",
+"Free-Plan: Lexikon, Algorithmen-Trainer, 3 Quiz-Kategorien, 10 Trainingsfälle",
+"Landing Page: Preissektion mit 3 Segmenten (B2C / Schulen / HiOrg)",
+"Rechtstexte: Impressum & Datenschutzerklärung als strukturierte Templates",
+"a11y: Filter-Chips als native <button>-Elemente",
+"PWA: Service Worker auf v0.9.2 aktualisiert, neue Seiten gecacht"
+]},
 {version:"0.9.1",date:"2026-03-30",changes:[
 "67 neue Medikamenten-Fragen für vollständige Datenblatt-Abdeckung",
 "56 neue Invasive-Maßnahmen-Fragen für vollständige Datenblatt-Abdeckung",

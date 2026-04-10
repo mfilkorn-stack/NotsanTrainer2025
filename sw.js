@@ -1,9 +1,11 @@
-const CACHE_VERSION = 'notsantrainer-v0.9.1';
+const CACHE_VERSION = 'notsantrainer-v0.9.2';
 
 const APP_SHELL = [
   './',
   './index.html',
   './landing.html',
+  './impressum.html',
+  './datenschutz.html',
   './app.jsx',
   './data.js',
   './utils.js',
