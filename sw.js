@@ -69,12 +69,6 @@ const APP_SHELL = [
   './ekg/vt_2.jpg'
 ];
 
-const CDN_URLS = [
-  'https://unpkg.com/react@18/umd/react.production.min.js',
-  'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
-  'https://unpkg.com/@babel/standalone/babel.min.js'
-];
-
 // Install: cache app shell
 self.addEventListener('install', (event) => {
   event.waitUntil(

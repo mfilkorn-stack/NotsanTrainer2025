@@ -215,7 +215,6 @@ border: "#1a2236",
 borderLight: "#243049",
 };
 const css = `
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:${COLORS.bg};color:${COLORS.text};font-family:'Outfit',system-ui,sans-serif;}
 ::-webkit-scrollbar{width:5px;}
@@ -244,6 +243,7 @@ body{background:${COLORS.bg};color:${COLORS.text};font-family:'Outfit',system-ui
 .glass{background:rgba(15,21,37,0.7);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}
 @media(min-width:769px){.bottom-nav{display:none!important;}.desktop-nav{display:flex!important;}}
 @media(max-width:768px){.desktop-nav{display:none!important;}.bottom-nav{display:flex!important;}.header-logo-text{font-size:15px!important;}}
+@media(prefers-reduced-motion:reduce){.fade-in,.slide-in,.shake-anim,.correct-pop,.wrong-flash{animation:none!important;}*{transition-duration:.01ms!important;}}
 `;
 // ═══════════════════════════════════════════════════════
 // HAPTIC FEEDBACK & MICRO-ANIMATIONS
@@ -937,7 +937,7 @@ render:()=><LinkedText text={ec.findings.palpation} navigate={navigate} style={{
 ];
 if(ec.spezial && phase !== "explore") {
 exploreCategories.push({key:"spezial",iconName:"star",label:ec.spezial.name,color:"#eab308",
-render:()=><pre style={{fontSize:13,lineHeight:1.8,color:COLORS.text,fontFamily:"'DM Sans',sans-serif",whiteSpace:"pre-wrap"}}>{ec.spezial.result}</pre>});
+render:()=><pre style={{fontSize:13,lineHeight:1.8,color:COLORS.text,fontFamily:"'Outfit',system-ui,sans-serif",whiteSpace:"pre-wrap"}}>{ec.spezial.result}</pre>});
 }
 const revealedCount = Object.keys(revealed).length;
 const totalCategories = exploreCategories.length;
@@ -4458,7 +4458,7 @@ render:()=><LinkedText text={ec.findings.palpation} navigate={navigate} style={{
 ];
 if(ec.spezial && casePhase !== "explore") {
 exploreCategories.push({key:"spezial",iconName:"star",label:ec.spezial.name,color:"#eab308",
-render:()=><pre style={{fontSize:13,lineHeight:1.8,color:COLORS.text,fontFamily:"'DM Sans',sans-serif",whiteSpace:"pre-wrap"}}>{ec.spezial.result}</pre>});
+render:()=><pre style={{fontSize:13,lineHeight:1.8,color:COLORS.text,fontFamily:"'Outfit',system-ui,sans-serif",whiteSpace:"pre-wrap"}}>{ec.spezial.result}</pre>});
 }
 const revealedCount = Object.keys(caseRevealed).length;
 return (
