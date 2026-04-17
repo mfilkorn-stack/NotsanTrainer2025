@@ -114,6 +114,17 @@ describe('QUIZ_QUESTIONS', () => {
       }
     }
   });
+
+  test('keine doppelten Antwortoptionen innerhalb einer Frage', () => {
+    const dups = QUIZ_QUESTIONS.filter(q => {
+      const lower = q.opts.map(o => o.trim().toLowerCase());
+      return lower.length !== new Set(lower).size;
+    });
+    if (dups.length > 0) {
+      console.error('Doppelte Quiz-Optionen in Fragen mit IDs:', dups.map(q => q.id));
+    }
+    expect(dups).toHaveLength(0);
+  });
 });
 
 // ═══════════════════════════════════════════════════════
@@ -156,6 +167,20 @@ describe('CASES', () => {
   test('Fall-IDs sind eindeutig', () => {
     const ids = CASES.map(c => c.id);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  test('keine doppelten Antwortoptionen in Trainingsfall-Steps', () => {
+    const dups = [];
+    CASES.forEach(c => {
+      c.steps.forEach((s, si) => {
+        const lower = s.opts.map(o => o.trim().toLowerCase());
+        if (lower.length !== new Set(lower).size) {
+          dups.push({ caseId: c.id, step: si + 1, opts: s.opts });
+        }
+      });
+    });
+    if (dups.length > 0) console.error('Doppelte Optionen in Trainingsfall-Steps:', dups);
+    expect(dups).toHaveLength(0);
   });
 });
 
@@ -201,6 +226,15 @@ describe('EXAM_CASES', () => {
   test('Prüfungsfall-IDs sind eindeutig', () => {
     const ids = EXAM_CASES.map(ec => ec.id);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  test('keine doppelten Diagnose-Optionen', () => {
+    const dups = EXAM_CASES.filter(ec => {
+      const lower = ec.diagnoseOptionen.map(o => o.trim().toLowerCase());
+      return lower.length !== new Set(lower).size;
+    });
+    if (dups.length > 0) console.error('Doppelte Diagnose-Optionen in EXAM_CASES IDs:', dups.map(e => e.id));
+    expect(dups).toHaveLength(0);
   });
 });
 

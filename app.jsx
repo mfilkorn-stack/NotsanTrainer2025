@@ -215,7 +215,6 @@ border: "#1a2236",
 borderLight: "#243049",
 };
 const css = `
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:${COLORS.bg};color:${COLORS.text};font-family:'Outfit',system-ui,sans-serif;}
 ::-webkit-scrollbar{width:5px;}
@@ -244,6 +243,7 @@ body{background:${COLORS.bg};color:${COLORS.text};font-family:'Outfit',system-ui
 .glass{background:rgba(15,21,37,0.7);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}
 @media(min-width:769px){.bottom-nav{display:none!important;}.desktop-nav{display:flex!important;}}
 @media(max-width:768px){.desktop-nav{display:none!important;}.bottom-nav{display:flex!important;}.header-logo-text{font-size:15px!important;}}
+@media(prefers-reduced-motion:reduce){.fade-in,.slide-in,.shake-anim,.correct-pop,.wrong-flash{animation:none!important;}*{transition-duration:.01ms!important;}}
 `;
 // ═══════════════════════════════════════════════════════
 // HAPTIC FEEDBACK & MICRO-ANIMATIONS
@@ -409,6 +409,107 @@ return (
 </div>
 );
 }
+// ═══════════════════════════════════════════════════════
+// LICENSE & FEATURE-GATING — Etappe 2
+// Free:  Lexikon (alles), Algorithmen-Trainer, 3 Quiz-Kategorien, 10 Trainingsfälle
+// Plus:  Alle 1.223 Quizfragen, alle 306 Fälle, Prüfung, Statistik & Schwachstellen
+// ═══════════════════════════════════════════════════════
+const PLUS_QUIZ_CATS = ['Medikamente','Invasive Maßnahmen','Behandlungspfade','EKG-Befunde','Übergabe'];
+const FREE_CASE_LIMIT = 10;
+// TODO Etappe 3: Durch Ed25519-Signaturprüfung ersetzen
+function verifyLicenseKey(key) {
+  if(!key || typeof key !== 'string') return false;
+  const k = key.trim().toUpperCase().replace(/[\s\-]/g,'');
+  return k.startsWith('NST') && k.length >= 12;
+}
+function LicenseModal({open,onClose,onUnlock}) {
+  const [key, setKey] = React.useState('');
+  const [error, setError] = React.useState('');
+  const [busy, setBusy] = React.useState(false);
+  if(!open) return null;
+  const tryUnlock = () => {
+    setBusy(true);setError('');
+    setTimeout(()=>{
+      if(verifyLicenseKey(key)){onUnlock(key.trim());onClose();setKey('');}
+      else setError('Ungültiger Schlüssel. Prüfe deine Bestätigungs-E-Mail oder wende dich an matthias@madformed.de');
+      setBusy(false);
+    },400);
+  };
+  return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,zIndex:10000,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.7)",backdropFilter:"blur(6px)"}}>
+      <div className="fade-in" onClick={e=>e.stopPropagation()} style={{background:COLORS.card,border:`1px solid ${COLORS.border}`,borderRadius:20,padding:32,maxWidth:420,width:"90%",textAlign:"center"}}>
+        <div style={{fontSize:32,marginBottom:12}}>🔑</div>
+        <h3 style={{fontSize:20,fontWeight:700,marginBottom:8}}>Lizenzschlüssel eingeben</h3>
+        <p style={{color:COLORS.textMuted,fontSize:13,lineHeight:1.7,marginBottom:20}}>
+          Du hast nach dem Kauf einen Lizenzschlüssel per E-Mail erhalten.<br/>Gib ihn hier ein, um Plus dauerhaft freizuschalten.
+        </p>
+        <input
+          value={key} onChange={e=>setKey(e.target.value)}
+          onKeyDown={e=>{if(e.key==='Enter')tryUnlock();}}
+          placeholder="NST-XXXX-XXXX-XXXX"
+          style={{width:"100%",padding:"12px 16px",borderRadius:12,border:`1px solid ${error?COLORS.accent:COLORS.border}`,background:COLORS.bg,color:COLORS.text,fontSize:14,fontFamily:"'JetBrains Mono',monospace",outline:"none",boxSizing:"border-box",letterSpacing:1,marginBottom:8}}
+        />
+        {error && <p style={{color:COLORS.accent,fontSize:12,marginBottom:12,lineHeight:1.5}}>{error}</p>}
+        <div style={{display:"flex",gap:10,justifyContent:"center",marginTop:16}}>
+          <Button onClick={onClose} variant="ghost" size="sm">Abbrechen</Button>
+          <Button onClick={tryUnlock} disabled={busy||!key.trim()} size="md">{busy?"Prüfe…":"Freischalten"}</Button>
+        </div>
+        <p style={{color:COLORS.textDim,fontSize:11,marginTop:16,lineHeight:1.6}}>
+          Noch kein Schlüssel? <a href="mailto:matthias@madformed.de" style={{color:COLORS.blue,textDecoration:"none"}}>matthias@madformed.de</a>
+        </p>
+      </div>
+    </div>
+  );
+}
+function PlusGate({onUnlock,navigate,feature}) {
+  const [showModal, setShowModal] = React.useState(false);
+  const features = [
+    {icon:"brain",label:"Alle 1.223 Quizfragen",detail:"8 Kategorien inkl. Medikamente & Invasive Maßnahmen"},
+    {icon:"folder",label:"Alle 306 Fallsimulationen",detail:"153 Trainingsfälle + 153 Prüfungsfälle"},
+    {icon:"graduationCap",label:"Prüfungssimulation",detail:"40 min · 25 Fragen + 1 Fall · Zeitlimit · Bestehensquote"},
+    {icon:"chart",label:"Statistik & Schwachstellen",detail:"Detaillierte Analyse · gezieltes Nachtrainieren"},
+    {icon:"activity",label:"Alle EKG-Befunde & Übergabe-Quiz",detail:"26 EKG-Typen mit echten Streifen"},
+  ];
+  return (
+    <div className="fade-in" style={{maxWidth:560,margin:"40px auto",textAlign:"center"}}>
+      <LicenseModal open={showModal} onClose={()=>setShowModal(false)} onUnlock={onUnlock}/>
+      <div style={{background:`linear-gradient(135deg,${COLORS.accent}18,${COLORS.purple}12)`,border:`1px solid ${COLORS.accent}30`,borderRadius:24,padding:"40px 32px"}}>
+        <div style={{display:"inline-flex",alignItems:"center",gap:6,background:COLORS.accent+"15",border:`1px solid ${COLORS.accent}30`,borderRadius:99,padding:"5px 14px",fontSize:12,fontWeight:700,color:COLORS.accent,letterSpacing:.5,marginBottom:20}}>
+          <Icon name="star" size={12} color={COLORS.accent}/> PLUS-FEATURE
+        </div>
+        <h2 style={{fontSize:26,fontWeight:800,marginBottom:10}}>Vollzugang freischalten</h2>
+        <p style={{color:COLORS.textMuted,fontSize:14,lineHeight:1.7,marginBottom:28}}>
+          {feature||"Dieses Feature"} ist im Plus-Tarif enthalten.<br/>
+          Einmalig <strong style={{color:COLORS.text}}>19,99 €</strong> — keine Abo-Falle, lifetime Updates inklusive.
+        </p>
+        <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:28,textAlign:"left"}}>
+          {features.map((f,i)=>(
+            <div key={i} style={{display:"flex",alignItems:"center",gap:12,background:"rgba(255,255,255,0.03)",border:`1px solid ${COLORS.border}`,borderRadius:12,padding:"10px 14px"}}>
+              <div style={{width:32,height:32,borderRadius:8,background:COLORS.accent+"15",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                <Icon name={f.icon} size={15} color={COLORS.accent}/>
+              </div>
+              <div>
+                <div style={{fontSize:13,fontWeight:600,color:COLORS.text}}>{f.label}</div>
+                <div style={{fontSize:11,color:COLORS.textDim,marginTop:1}}>{f.detail}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <Button onClick={()=>setShowModal(true)} size="lg" style={{width:"100%",marginBottom:12,background:`linear-gradient(135deg,${COLORS.accent},${COLORS.purple})`}}>
+          <Icon name="zap" size={16}/> Lizenzschlüssel eingeben
+        </Button>
+        <p style={{color:COLORS.textDim,fontSize:12,marginBottom:16}}>
+          Schlüssel nach Kauf per E-Mail erhalten
+        </p>
+        <div style={{background:COLORS.bg,border:`1px solid ${COLORS.border}`,borderRadius:12,padding:"12px 16px",fontSize:12,color:COLORS.textMuted}}>
+          Kaufen: <a href="mailto:matthias@madformed.de?subject=NotSanTrainer Plus kaufen" style={{color:COLORS.blue,textDecoration:"none",fontWeight:600}}>matthias@madformed.de</a>
+          &nbsp;·&nbsp; demnächst direkt per Kreditkarte
+        </div>
+      </div>
+      {navigate && <Button onClick={()=>navigate("dashboard")} variant="ghost" size="sm" style={{marginTop:16}}><Icon name="arrowLeft" size={13}/> Zurück zum Dashboard</Button>}
+    </div>
+  );
+}
 function ConfirmModal({open,title,message,onConfirm,onCancel,confirmLabel="Zurücksetzen"}) {
 if(!open) return null;
 return (
@@ -439,9 +540,11 @@ const [subView, setSubView] = useState(null);
 const [stats, setStats] = useState({quizCorrect:0,quizTotal:0,casesCompleted:0,examScores:[],wrongQuestions:[]});
 const [loaded, setLoaded] = useState(false);
 const [swUpdate, setSwUpdate] = useState(null);
+const [license, setLicense] = useState('free'); // 'free' | 'plus'
 useEffect(()=>{
 (async()=>{
 try{var r=localStorage.getItem("notsan-stats");if(r)setStats(JSON.parse(r));}catch(e){}
+try{var lic=localStorage.getItem("notsan-license");if(lic&&verifyLicenseKey(lic))setLicense('plus');}catch(e){}
 setLoaded(true);
 })();
 const onSwUpdate = (e) => setSwUpdate(e.detail.registration);
@@ -452,6 +555,7 @@ useEffect(()=>{
 if(loaded){try{localStorage.setItem("notsan-stats",JSON.stringify(stats));}catch(e){}}
 },[stats,loaded]);
 const navigate = (v,sub=null)=>{setView(v);setSubView(sub);window.scrollTo({top:0,behavior:'smooth'});};
+const unlockPlus = (key) => {try{localStorage.setItem("notsan-license",key);}catch(e){}setLicense('plus');};
 return (
 <div style={{minHeight:"100vh",background:COLORS.bg}}>
 <style>{css}</style>
@@ -459,14 +563,14 @@ return (
 <span>Neue Version verfügbar</span>
 <button onClick={()=>{swUpdate.waiting.postMessage('skipWaiting');window.location.reload();}} style={{background:"rgba(255,255,255,0.2)",border:"none",color:"#fff",padding:"6px 14px",borderRadius:8,cursor:"pointer",fontWeight:600,fontSize:13,fontFamily:"inherit"}}>Aktualisieren</button>
 </div>}
-<Header navigate={navigate} current={view}/>
-<main style={{maxWidth:1100,margin:"0 auto",padding:"20px 16px 100px"}}>
-{view==="dashboard" && <Dashboard stats={stats} navigate={navigate}/>}
-{view==="quiz" && <Quiz subView={subView} navigate={navigate} stats={stats} setStats={setStats}/>}
-{view==="cases" && <CaseSimulation navigate={navigate} stats={stats} setStats={setStats}/>}
+<Header navigate={navigate} current={view} license={license}/>
+<main id="main-content" style={{maxWidth:1100,margin:"0 auto",padding:"20px 16px 100px"}}>
+{view==="dashboard" && <Dashboard stats={stats} navigate={navigate} license={license}/>}
+{view==="quiz" && <Quiz subView={subView} navigate={navigate} stats={stats} setStats={setStats} license={license} unlockPlus={unlockPlus}/>}
+{view==="cases" && <CaseSimulation navigate={navigate} stats={stats} setStats={setStats} license={license} unlockPlus={unlockPlus}/>}
 {view==="reference" && <Reference subView={subView} navigate={navigate}/>}
-{view==="exam" && <Exam navigate={navigate} stats={stats} setStats={setStats}/>}
-{view==="stats" && <Statistics stats={stats} setStats={setStats} navigate={navigate}/>}
+{view==="exam" && <Exam navigate={navigate} stats={stats} setStats={setStats} license={license} unlockPlus={unlockPlus}/>}
+{view==="stats" && <Statistics stats={stats} setStats={setStats} navigate={navigate} license={license} unlockPlus={unlockPlus}/>}
 </main>
 </div>
 );
@@ -474,7 +578,7 @@ return (
 // ═══════════════════════════════════════════════════════
 // HEADER
 // ═══════════════════════════════════════════════════════
-function Header({navigate,current}) {
+function Header({navigate,current,license}) {
 const items=[
 {id:"dashboard",label:"Dashboard",iconName:"home"},
 {id:"reference",label:"Lexikon",iconName:"book"},
@@ -485,6 +589,7 @@ const items=[
 ];
 return(
 <React.Fragment>
+<a href="#main-content" style={{position:"absolute",left:-9999,top:"auto",width:1,height:1,overflow:"hidden",zIndex:10001}} onFocus={e=>{e.target.style.cssText="position:fixed;top:8px;left:8px;width:auto;height:auto;padding:8px 16px;background:"+COLORS.accent+";color:#fff;border-radius:8px;font-weight:700;font-size:13px;z-index:10001;text-decoration:none;";}}>Zum Inhalt springen</a>
 <header style={{background:"linear-gradient(180deg,rgba(15,21,37,0.95) 0%,rgba(6,8,15,0.98) 100%)",borderBottom:`1px solid ${COLORS.border}`,position:"sticky",top:0,zIndex:100,backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)"}}>
 <div style={{maxWidth:1100,margin:"0 auto",padding:"14px 16px"}}>
 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
@@ -492,7 +597,7 @@ return(
 <Logo size={38}/>
 <div>
 <div className="header-logo-text" style={{fontSize:17,fontWeight:700,letterSpacing:-.5,lineHeight:1.1}}>NotSan<span style={{color:COLORS.accent}}>Trainer</span></div>
-<div style={{fontSize:10,color:COLORS.textDim,letterSpacing:1,fontWeight:500,textTransform:"uppercase"}}>v{APP_VERSION} · SAA / BPR 2025</div>
+<div style={{fontSize:10,color:COLORS.textDim,letterSpacing:1,fontWeight:500,textTransform:"uppercase"}}>v{APP_VERSION} · SAA / BPR 2025{license==='plus'&&<span style={{color:COLORS.green,marginLeft:6,background:COLORS.green+"18",borderRadius:4,padding:"1px 6px"}}>PLUS</span>}</div>
 </div>
 </div>
 <nav className="desktop-nav" style={{display:"flex",gap:2,flexWrap:"wrap"}}>
@@ -696,7 +801,7 @@ return (
 // ═══════════════════════════════════════════════════════
 // FLASHCARDS
 // ═══════════════════════════════════════════════════════
-function Quiz({subView,navigate,stats,setStats}) {
+function Quiz({subView,navigate,stats,setStats,license,unlockPlus}) {
 const [category, setCategory] = useState(subView||null);
 const [questions, setQuestions] = useState([]);
 const [qi, setQi] = useState(0);
@@ -704,7 +809,9 @@ const [selected, setSelected] = useState(null);
 const [score, setScore] = useState(0);
 const [done, setDone] = useState(false);
 const [sessionWrong, setSessionWrong] = useState([]);
+const [showGate, setShowGate] = React.useState(false);
 const autoStarted = React.useRef(false);
+const isLockedCat = (catId) => license !== 'plus' && (PLUS_QUIZ_CATS.includes(catId) || catId === 'all');
 const isSchwach = (cat) => cat==="schwachstellen"||cat?.startsWith("schwach_");
 const startQuiz = (cat) => {
 let filtered;
@@ -730,10 +837,13 @@ const nextQ = ()=>{
 if(qi+1>=questions.length){setDone(true);return;}
 setQi(qi+1);setSelected(null);
 };
-if(!category) return (
+if(!category) {
+if(showGate) return <PlusGate onUnlock={(k)=>{unlockPlus(k);setShowGate(false);}} navigate={navigate} feature="Alle Quiz-Kategorien"/>;
+return (
 <div className="fade-in">
 <Button onClick={()=>navigate("dashboard")} variant="ghost" size="sm" style={{marginBottom:20}}><Icon name="arrowLeft" size={14}/> Zurück</Button>
 <h2 style={{fontSize:22,fontWeight:700,marginBottom:20}}> Quiz</h2>
+{license!=='plus'&&<div style={{fontSize:13,color:COLORS.textMuted,marginBottom:16,padding:"8px 14px",borderRadius:10,background:COLORS.accent+"08",border:`1px solid ${COLORS.accent}15`}}><Icon name="zap" size={12} color={COLORS.accent}/> <strong style={{color:COLORS.accent}}>PLUS:</strong> Medikamente, Invasive Maßnahmen, Krankheitsbilder, EKG-Befunde, Übergabe und alle Kategorien zusammen.</div>}
 <div className="card-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:16}}>
 {[{id:"Medikamente",label:"Medikamente",count:QUIZ_QUESTIONS.filter(q=>q.cat==="Medikamente").length,color:COLORS.accent,iconName:"pill"},
 {id:"Invasive Maßnahmen",label:"Invasive Maßnahmen",count:QUIZ_QUESTIONS.filter(q=>q.cat==="Invasive Maßnahmen").length,color:COLORS.blue,iconName:"syringe"},
@@ -745,10 +855,11 @@ if(!category) return (
 {id:"Recht & Aufklärung",label:"Recht & Aufklärung",count:QUIZ_QUESTIONS.filter(q=>q.cat==="Recht & Aufklärung").length,color:"#f59e0b",iconName:"shield"},
 {id:"all",label:"Alle Kategorien",count:QUIZ_QUESTIONS.length,color:COLORS.purple,iconName:"layers"},
 ].concat(stats.wrongQuestions.length>0?[{id:"schwachstellen",label:"Schwachstellen trainieren",count:stats.wrongQuestions.length,color:COLORS.accent,iconName:"target"}]:[]).map(c=>(
-<Card key={c.id} onClick={()=>startQuiz(c.id)} style={{display:"flex",flexDirection:"column",justifyContent:"center"}}>
+<Card key={c.id} onClick={()=>isLockedCat(c.id)?setShowGate(true):startQuiz(c.id)} style={{display:"flex",flexDirection:"column",justifyContent:"center",position:"relative",opacity:isLockedCat(c.id)?.88:1}}>
+{isLockedCat(c.id)&&<div style={{position:"absolute",top:8,right:8,background:COLORS.accent+"20",border:`1px solid ${COLORS.accent}40`,borderRadius:6,padding:"2px 7px",fontSize:10,fontWeight:700,color:COLORS.accent,letterSpacing:.5}}>PLUS</div>}
 <div style={{textAlign:"center"}}>
-<div style={{fontSize:36,marginBottom:8}}><Icon name={c.iconName} size={18} color={c.color}/></div>
-<h3 style={{color:c.color,fontWeight:700}}>{c.label}</h3>
+<div style={{fontSize:36,marginBottom:8}}><Icon name={c.iconName} size={18} color={isLockedCat(c.id)?"#475569":c.color}/></div>
+<h3 style={{color:isLockedCat(c.id)?"#475569":c.color,fontWeight:700}}>{c.label}</h3>
 <p style={{color:COLORS.textMuted,fontSize:13}}>{c.count} Fragen</p>
 </div>
 </Card>
@@ -756,6 +867,7 @@ if(!category) return (
 </div>
 </div>
 );
+}
 if(done) {
 const pct = Math.round(score/questions.length*100);
 const schwachMode = isSchwach(category);
@@ -878,13 +990,13 @@ if(caseIdx===null) return (
 </div>
 <input value={caseSearch} onChange={e=>setCaseSearch(e.target.value)} placeholder="Fall suchen (Meldung, Krankheitsbild)..." style={{width:"100%",padding:"10px 14px",borderRadius:12,border:`1px solid ${COLORS.border}`,background:COLORS.card,color:COLORS.text,fontSize:13,marginBottom:12,outline:"none",boxSizing:"border-box"}}/>
 <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:20}}>
-<div onClick={()=>setCatFilter("all")} style={{padding:"6px 12px",borderRadius:20,fontSize:12,fontWeight:600,cursor:"pointer",background:catFilter==="all"?COLORS.purple:COLORS.bg,color:catFilter==="all"?"#fff":COLORS.textMuted,border:`1px solid ${catFilter==="all"?COLORS.purple:COLORS.border}`,transition:"all .2s"}}>
+<button type="button" onClick={()=>setCatFilter("all")} style={{padding:"6px 12px",borderRadius:20,fontSize:12,fontWeight:600,cursor:"pointer",background:catFilter==="all"?COLORS.purple:COLORS.bg,color:catFilter==="all"?"#fff":COLORS.textMuted,border:`1px solid ${catFilter==="all"?COLORS.purple:COLORS.border}`,transition:"all .2s",fontFamily:"'Outfit',system-ui,sans-serif"}}>
 Alle ({EXAM_CASES.length})
-</div>
+</button>
 {categories.map(cat=>(
-<div key={cat.id} onClick={()=>setCatFilter(cat.id)} style={{padding:"6px 12px",borderRadius:20,fontSize:11,fontWeight:600,cursor:"pointer",background:catFilter===cat.id?COLORS.purple:COLORS.bg,color:catFilter===cat.id?"#fff":COLORS.textMuted,border:`1px solid ${catFilter===cat.id?COLORS.purple:COLORS.border}`,transition:"all .2s",whiteSpace:"nowrap"}}>
+<button type="button" key={cat.id} onClick={()=>setCatFilter(cat.id)} style={{padding:"6px 12px",borderRadius:20,fontSize:11,fontWeight:600,cursor:"pointer",background:catFilter===cat.id?COLORS.purple:COLORS.bg,color:catFilter===cat.id?"#fff":COLORS.textMuted,border:`1px solid ${catFilter===cat.id?COLORS.purple:COLORS.border}`,transition:"all .2s",whiteSpace:"nowrap",fontFamily:"'Outfit',system-ui,sans-serif"}}>
 {cat.name}
-</div>
+</button>
 ))}
 </div>
 <div className="card-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:12}}>
@@ -937,7 +1049,7 @@ render:()=><LinkedText text={ec.findings.palpation} navigate={navigate} style={{
 ];
 if(ec.spezial && phase !== "explore") {
 exploreCategories.push({key:"spezial",iconName:"star",label:ec.spezial.name,color:"#eab308",
-render:()=><pre style={{fontSize:13,lineHeight:1.8,color:COLORS.text,fontFamily:"'DM Sans',sans-serif",whiteSpace:"pre-wrap"}}>{ec.spezial.result}</pre>});
+render:()=><pre style={{fontSize:13,lineHeight:1.8,color:COLORS.text,fontFamily:"'Outfit',system-ui,sans-serif",whiteSpace:"pre-wrap"}}>{ec.spezial.result}</pre>});
 }
 const revealedCount = Object.keys(revealed).length;
 const totalCategories = exploreCategories.length;
@@ -1247,9 +1359,9 @@ if(!selectedAlgo) return (
 <Button size="sm" onClick={()=>{const ra=ALGORITHM_DATA[Math.floor(Math.random()*ALGORITHM_DATA.length)];setSelectedAlgo(ra);}} style={{background:COLORS.green,fontSize:12,padding:"6px 14px"}}> Zufälliger Algorithmus</Button>
 </div>
 <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:20}}>
-<div onClick={()=>setCatFilter("all")} style={{padding:"6px 12px",borderRadius:20,fontSize:12,fontWeight:600,cursor:"pointer",background:catFilter==="all"?COLORS.green:COLORS.bg,color:catFilter==="all"?"#fff":COLORS.textMuted,border:`1px solid ${catFilter==="all"?COLORS.green:COLORS.border}`,transition:"all .2s"}}>Alle ({ALGORITHM_DATA.length})</div>
+<button type="button" onClick={()=>setCatFilter("all")} style={{padding:"6px 12px",borderRadius:20,fontSize:12,fontWeight:600,cursor:"pointer",background:catFilter==="all"?COLORS.green:COLORS.bg,color:catFilter==="all"?"#fff":COLORS.textMuted,border:`1px solid ${catFilter==="all"?COLORS.green:COLORS.border}`,transition:"all .2s",fontFamily:"'Outfit',system-ui,sans-serif"}}>Alle ({ALGORITHM_DATA.length})</button>
 {categories.map(c=>(
-<div key={c.name} onClick={()=>setCatFilter(c.name)} style={{padding:"6px 12px",borderRadius:20,fontSize:11,fontWeight:600,cursor:"pointer",background:catFilter===c.name?COLORS.green:COLORS.bg,color:catFilter===c.name?"#fff":COLORS.textMuted,border:`1px solid ${catFilter===c.name?COLORS.green:COLORS.border}`,transition:"all .2s",whiteSpace:"nowrap"}}>{c.name} ({c.count})</div>
+<button type="button" key={c.name} onClick={()=>setCatFilter(c.name)} style={{padding:"6px 12px",borderRadius:20,fontSize:11,fontWeight:600,cursor:"pointer",background:catFilter===c.name?COLORS.green:COLORS.bg,color:catFilter===c.name?"#fff":COLORS.textMuted,border:`1px solid ${catFilter===c.name?COLORS.green:COLORS.border}`,transition:"all .2s",whiteSpace:"nowrap",fontFamily:"'Outfit',system-ui,sans-serif"}}>{c.name} ({c.count})</button>
 ))}
 </div>
 <div className="card-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:12}}>
@@ -1530,7 +1642,7 @@ else {setGapIdx(g=>g+1);setGapChecked(false);}
 }
 return null;
 }
-function CaseSimulation({navigate,stats,setStats}) {
+function CaseSimulation({navigate,stats,setStats,license,unlockPlus}) {
 const [mode, setMode] = useState("select"); // select, training, exam, algo
 const [caseIdx, setCaseIdx] = useState(null);
 const [step, setStep] = useState(0);
@@ -1541,6 +1653,7 @@ const [sessionWrong, setSessionWrong] = useState([]);
 const [catFilter, setCatFilter] = useState("all");
 const [caseSearch, setCaseSearch] = useState("");
 const [algoExercise, setAlgoExercise] = useState(null); // {algo, type} for inline algo trainer
+const [showGate, setShowGate] = React.useState(false);
 const bprNames = useMemo(()=>{
 const map={};
 BPR.forEach(b=>map[b.id]=b.name);
@@ -1558,6 +1671,7 @@ return Object.values(cats).sort((a,b)=>a.name.localeCompare(b.name));
 const debouncedCaseSearch = useDebounce(caseSearch, 250);
 const filteredCases = (catFilter==="all" ? CASES : CASES.filter(c=>c.bpr===catFilter)).filter(c=>{if(!debouncedCaseSearch) return true;const s=debouncedCaseSearch.toLowerCase();return (c.title||"").toLowerCase().includes(s)||(c.scenario||"").toLowerCase().includes(s)||(bprNames[c.bpr]||"").toLowerCase().includes(s);});
 // ─── MODE SELECT ───
+if(showGate) return <PlusGate onUnlock={(k)=>{unlockPlus(k);setShowGate(false);}} navigate={navigate} feature="Prüfungsfälle & alle Trainingsfälle"/>;
 if(mode==="select") return (
 <div className="fade-in">
 <Button onClick={()=>navigate("dashboard")} variant="ghost" size="sm" style={{marginBottom:20}}><Icon name="arrowLeft" size={14}/> Zurück</Button>
@@ -1567,16 +1681,17 @@ if(mode==="select") return (
 <Card onClick={()=>setMode("training")} style={{cursor:"pointer",borderColor:COLORS.orange+"40",textAlign:"center",padding:32,display:"flex",flexDirection:"column",alignItems:"center"}}>
 <div style={{fontSize:48,marginBottom:12}}> </div>
 <h3 style={{fontSize:20,fontWeight:700,color:COLORS.orange,marginBottom:8}}>Trainingsfälle</h3>
-<p style={{color:COLORS.textMuted,fontSize:13,lineHeight:1.6}}>Alle {CASES.length} Fälle mit <strong>sichtbarem Krankheitsbild</strong>. Ideal zum Lernen und Üben der Behandlungsschritte.</p>
-<div style={{marginTop:"auto",paddingTop:12}}><Badge color={COLORS.orange}>{CASES.length} Fälle · {categories.length} Krankheitsbilder</Badge>
-<div style={{marginTop:14}}><Button size="sm" onClick={(e)=>{e.stopPropagation();setMode("training");setCaseIdx(Math.floor(Math.random()*CASES.length));setStep(0);setSelected(null);setCaseScore(0);setCaseDone(false);setSessionWrong([]);}} style={{background:COLORS.orange,fontSize:12,padding:"6px 16px"}}> Zufälliger Fall</Button></div></div>
+<p style={{color:COLORS.textMuted,fontSize:13,lineHeight:1.6}}>{license==='plus'?`Alle ${CASES.length} Fälle`:`${FREE_CASE_LIMIT} von ${CASES.length} Fällen`} mit <strong>sichtbarem Krankheitsbild</strong>. Ideal zum Lernen und Üben der Behandlungsschritte.</p>
+<div style={{marginTop:"auto",paddingTop:12}}><Badge color={COLORS.orange}>{license==='plus'?CASES.length:FREE_CASE_LIMIT} Fälle · {categories.length} Krankheitsbilder</Badge>
+<div style={{marginTop:14}}><Button size="sm" onClick={(e)=>{e.stopPropagation();setMode("training");setCaseIdx(Math.floor(Math.random()*(license==='plus'?CASES.length:FREE_CASE_LIMIT)));setStep(0);setSelected(null);setCaseScore(0);setCaseDone(false);setSessionWrong([]);}} style={{background:COLORS.orange,fontSize:12,padding:"6px 16px"}}> Zufälliger Fall</Button></div></div>
 </Card>
-<Card onClick={()=>setMode("exam")} style={{cursor:"pointer",borderColor:COLORS.purple+"40",textAlign:"center",padding:32,display:"flex",flexDirection:"column",alignItems:"center"}}>
+<Card onClick={()=>license!=='plus'?setShowGate(true):setMode("exam")} style={{cursor:"pointer",borderColor:COLORS.purple+"40",textAlign:"center",padding:32,display:"flex",flexDirection:"column",alignItems:"center",position:"relative",opacity:license!=='plus'?.88:1}}>
+{license!=='plus'&&<div style={{position:"absolute",top:8,right:8,background:COLORS.accent+"20",border:`1px solid ${COLORS.accent}40`,borderRadius:6,padding:"2px 7px",fontSize:10,fontWeight:700,color:COLORS.accent,letterSpacing:.5}}>PLUS</div>}
 <div style={{fontSize:48,marginBottom:12}}> </div>
 <h3 style={{fontSize:20,fontWeight:700,color:COLORS.purple,marginBottom:8}}>Prüfungsfälle</h3>
 <p style={{color:COLORS.textMuted,fontSize:13,lineHeight:1.6}}>Nur die <strong>Einsatzmeldung</strong>. Erkunden Sie systematisch, stellen Sie die Diagnose, dann behandeln Sie.</p>
 <div style={{marginTop:"auto",paddingTop:12}}><Badge color={COLORS.purple}>{EXAM_CASES.length} Fälle · xABCDE + Schemata</Badge>
-<div style={{marginTop:14}}><Button size="sm" onClick={(e)=>{e.stopPropagation();setMode("exam_random");}} style={{background:COLORS.purple,fontSize:12,padding:"6px 16px"}}> Zufälliger Fall</Button></div></div>
+<div style={{marginTop:14}}><Button size="sm" onClick={(e)=>{e.stopPropagation();license!=='plus'?setShowGate(true):setMode("exam_random");}} style={{background:COLORS.purple,fontSize:12,padding:"6px 16px"}}> Zufälliger Fall</Button></div></div>
 </Card>
 <Card onClick={()=>setMode("algo")} style={{cursor:"pointer",borderColor:COLORS.green+"40",textAlign:"center",padding:32,display:"flex",flexDirection:"column",alignItems:"center"}}>
 <div style={{fontSize:48,marginBottom:12}}> </div>
@@ -1603,20 +1718,21 @@ if(caseIdx===null) return (
 </div>
 <input value={caseSearch} onChange={e=>setCaseSearch(e.target.value)} placeholder="Fall suchen (Titel, Szenario, Krankheitsbild)..." style={{width:"100%",padding:"10px 14px",borderRadius:12,border:`1px solid ${COLORS.border}`,background:COLORS.card,color:COLORS.text,fontSize:13,marginBottom:12,outline:"none",boxSizing:"border-box"}}/>
 <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:20}}>
-<div onClick={()=>setCatFilter("all")} style={{padding:"6px 12px",borderRadius:20,fontSize:12,fontWeight:600,cursor:"pointer",background:catFilter==="all"?COLORS.orange:COLORS.bg,color:catFilter==="all"?"#fff":COLORS.textMuted,border:`1px solid ${catFilter==="all"?COLORS.orange:COLORS.border}`,transition:"all .2s"}}>
+<button type="button" onClick={()=>setCatFilter("all")} style={{padding:"6px 12px",borderRadius:20,fontSize:12,fontWeight:600,cursor:"pointer",background:catFilter==="all"?COLORS.orange:COLORS.bg,color:catFilter==="all"?"#fff":COLORS.textMuted,border:`1px solid ${catFilter==="all"?COLORS.orange:COLORS.border}`,transition:"all .2s",fontFamily:"'Outfit',system-ui,sans-serif"}}>
 Alle ({CASES.length})
-</div>
+</button>
 {categories.map(cat=>(
-<div key={cat.id} onClick={()=>setCatFilter(cat.id)} style={{padding:"6px 12px",borderRadius:20,fontSize:11,fontWeight:600,cursor:"pointer",background:catFilter===cat.id?COLORS.orange:COLORS.bg,color:catFilter===cat.id?"#fff":COLORS.textMuted,border:`1px solid ${catFilter===cat.id?COLORS.orange:COLORS.border}`,transition:"all .2s",whiteSpace:"nowrap"}}>
+<button type="button" key={cat.id} onClick={()=>setCatFilter(cat.id)} style={{padding:"6px 12px",borderRadius:20,fontSize:11,fontWeight:600,cursor:"pointer",background:catFilter===cat.id?COLORS.orange:COLORS.bg,color:catFilter===cat.id?"#fff":COLORS.textMuted,border:`1px solid ${catFilter===cat.id?COLORS.orange:COLORS.border}`,transition:"all .2s",whiteSpace:"nowrap",fontFamily:"'Outfit',system-ui,sans-serif"}}>
 {cat.name} ({cat.count})
-</div>
+</button>
 ))}
 </div>
 <div className="card-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:12}}>
 {filteredCases.map((c,i)=>{
 const globalIdx = CASES.indexOf(c);
 return (
-<Card key={globalIdx} onClick={()=>{setCaseIdx(globalIdx);setStep(0);setSelected(null);setCaseScore(0);setCaseDone(false);setSessionWrong([]);}} style={{display:"flex",flexDirection:"column"}}>
+<Card key={globalIdx} onClick={()=>{if(globalIdx>=FREE_CASE_LIMIT&&license!=='plus'){setShowGate(true);return;}setCaseIdx(globalIdx);setStep(0);setSelected(null);setCaseScore(0);setCaseDone(false);setSessionWrong([]);}} style={{display:"flex",flexDirection:"column",position:"relative",opacity:globalIdx>=FREE_CASE_LIMIT&&license!=='plus'?.85:1}}>
+{globalIdx>=FREE_CASE_LIMIT&&license!=='plus'&&<div style={{position:"absolute",top:8,right:8,background:COLORS.accent+"20",border:`1px solid ${COLORS.accent}40`,borderRadius:6,padding:"2px 7px",fontSize:10,fontWeight:700,color:COLORS.accent,letterSpacing:.5}}>PLUS</div>}
 <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:8}}>
 <Badge color={COLORS.orange}>Fall {globalIdx+1}</Badge>
 <Badge color={COLORS.blue} bg={COLORS.blue+"10"}>{bprNames[c.bpr]||c.bpr}</Badge>
@@ -4247,7 +4363,7 @@ style={{padding:"4px 10px",borderRadius:6,border:"1px solid "+(assigned===l.id?l
 // ═══════════════════════════════════════════════════════
 // GESAMTPRÜFUNG
 // ═══════════════════════════════════════════════════════
-function Exam({navigate,stats,setStats}) {
+function Exam({navigate,stats,setStats,license,unlockPlus}) {
 const [started, setStarted] = useState(false);
 const [questions, setQuestions] = useState([]);
 const [qi, setQi] = useState(0);
@@ -4334,6 +4450,7 @@ const timerToast = timerWarning ? (
 </div>
 ) : null;
 // ─── START SCREEN ───
+if(license !== 'plus') return <PlusGate onUnlock={unlockPlus} navigate={navigate} feature="Die Prüfungssimulation"/>;
 if(!started) {
 const bprNames = {};
 BPR.forEach(b=>bprNames[b.id]=b.name);
@@ -4458,7 +4575,7 @@ render:()=><LinkedText text={ec.findings.palpation} navigate={navigate} style={{
 ];
 if(ec.spezial && casePhase !== "explore") {
 exploreCategories.push({key:"spezial",iconName:"star",label:ec.spezial.name,color:"#eab308",
-render:()=><pre style={{fontSize:13,lineHeight:1.8,color:COLORS.text,fontFamily:"'DM Sans',sans-serif",whiteSpace:"pre-wrap"}}>{ec.spezial.result}</pre>});
+render:()=><pre style={{fontSize:13,lineHeight:1.8,color:COLORS.text,fontFamily:"'Outfit',system-ui,sans-serif",whiteSpace:"pre-wrap"}}>{ec.spezial.result}</pre>});
 }
 const revealedCount = Object.keys(caseRevealed).length;
 return (
@@ -4680,8 +4797,9 @@ return(
 // ═══════════════════════════════════════════════════════
 // STATISTICS
 // ═══════════════════════════════════════════════════════
-function Statistics({stats,setStats,navigate}) {
+function Statistics({stats,setStats,navigate,license,unlockPlus}) {
 const [confirmOpen, setConfirmOpen] = useState(false);
+const [showGate, setShowGate] = React.useState(false);
 const pct = stats.quizTotal>0?Math.round(stats.quizCorrect/stats.quizTotal*100):0;
 const weakMeds = QUIZ_QUESTIONS.filter(q=>stats.wrongQuestions.includes(q.id)&&q.cat==="Medikamente");
 const weakInv = QUIZ_QUESTIONS.filter(q=>stats.wrongQuestions.includes(q.id)&&q.cat==="Invasive Maßnahmen");
@@ -4709,7 +4827,16 @@ return (
 </Card>
 ))}
 </div>
-{stats.examScores.length>0 && (
+{showGate ? <PlusGate onUnlock={(k)=>{unlockPlus(k);setShowGate(false);}} navigate={navigate} feature="Prüfungssimulation & vollständige Statistik"/> : license!=='plus' ? (
+<Card style={{marginBottom:24,padding:20,borderColor:COLORS.accent+"30",background:COLORS.accent+"06"}}>
+<div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+<Icon name="graduationCap" size={16} color={COLORS.accent}/>
+<h3 style={{fontSize:15,fontWeight:700,color:COLORS.accent,margin:0}}>Prüfungsergebnisse — PLUS</h3>
+</div>
+<p style={{color:COLORS.textMuted,fontSize:13,lineHeight:1.6,marginBottom:12}}>Die Prüfungssimulation inkl. Ergebnishistorie ist im Plus-Plan enthalten.</p>
+<Button size="sm" onClick={()=>setShowGate(true)}><Icon name="zap" size={12}/> Freischalten</Button>
+</Card>
+) : stats.examScores.length>0 && (
 <Card style={{marginBottom:24}}>
 <h3 style={{fontSize:16,fontWeight:700,marginBottom:16}}> Prüfungsergebnisse</h3>
 {stats.examScores.map((e,i)=>(
