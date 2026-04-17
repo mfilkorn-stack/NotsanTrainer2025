@@ -1,9 +1,11 @@
-const CACHE_VERSION = 'notsantrainer-v0.9.1';
+const CACHE_VERSION = 'notsantrainer-v0.9.2';
 
 const APP_SHELL = [
   './',
   './index.html',
   './landing.html',
+  './impressum.html',
+  './datenschutz.html',
   './app.jsx',
   './data.js',
   './utils.js',
@@ -67,12 +69,6 @@ const APP_SHELL = [
   './ekg/vhflattern_2.jpg',
   './ekg/vt_1.jpg',
   './ekg/vt_2.jpg'
-];
-
-const CDN_URLS = [
-  'https://unpkg.com/react@18/umd/react.production.min.js',
-  'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
-  'https://unpkg.com/@babel/standalone/babel.min.js'
 ];
 
 // Install: cache app shell
