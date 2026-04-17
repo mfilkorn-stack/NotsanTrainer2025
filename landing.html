@@ -207,12 +207,14 @@
       </p>
 
       <!-- Scroll hint -->
-      <div style="margin-top:1rem; display:flex; flex-direction:column; align-items:center; gap:.3rem; color:var(--text-dim); font-size:.8rem; letter-spacing:.08em; text-transform:uppercase;">
+      <a href="#zielgruppen" aria-label="Zum Abschnitt Zielgruppen scrollen"
+         style="margin-top:1rem; display:inline-flex; flex-direction:column; align-items:center; gap:.3rem; color:var(--text-dim); font-size:.8rem; letter-spacing:.08em; text-transform:uppercase; text-decoration:none; cursor:pointer; padding:.25rem .5rem; border-radius:8px; transition:color .2s;"
+         onmouseover="this.style.color='var(--text-muted)'" onmouseout="this.style.color='var(--text-dim)'">
         <span>Mehr erfahren</span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:bob .8s ease-in-out infinite alternate;">
           <polyline points="6 9 12 15 18 9"/>
         </svg>
-      </div>
+      </a>
 
     </div>
   </section>
@@ -687,6 +689,123 @@
         Alle Preise inkl. MwSt. &nbsp;·&nbsp; Keine versteckten Kosten &nbsp;·&nbsp; Keine Abo-Falle
       </p>
     </div>
+  </section>
+
+  <!-- ÄLRD / CRM-MODUL ─────────────────────────────── -->
+  <section id="aerzte">
+    <div class="container">
+
+      <div style="display:flex; align-items:center; gap:.65rem; margin-bottom:.6rem; flex-wrap:wrap;">
+        <div class="section-label" style="margin-bottom:0;">Für Ärztliche Leiter Rettungsdienst</div>
+        <span style="display:inline-flex; align-items:center; gap:.35rem; font-size:.7rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; background:rgba(167,139,250,.12); color:#a78bfa; border:1px solid rgba(167,139,250,.25); border-radius:99px; padding:.25rem .7rem;">Ausblick · in Entwicklung</span>
+      </div>
+      <h2>CRM-Modul: <span class="grad-text">Training an echten Fällen</span>, nicht an Folien.</h2>
+      <p class="section-intro">
+        Die dominanten Fehlermuster im Rettungsdienst sind keine Wissenslücken,
+        sondern Team-, Kommunikations- und Führungsfehler. Das neue CRM-Modul
+        ergänzt den NotSan Trainer um die zweite Kompetenzachse – trainierbar
+        an denselben Fällen, skalierbar über alle Wachen, dokumentiert pro
+        Mitarbeiter.
+      </p>
+
+      <!-- Zahl-Kasten + 3 Hebel -->
+      <div style="display:grid; grid-template-columns:minmax(260px, 1fr) 2fr; gap:1.25rem; margin-bottom:1.5rem;">
+
+        <!-- Belastbare Zahl -->
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.75rem 1.5rem; position:relative; overflow:hidden; display:flex; flex-direction:column; gap:.6rem;">
+          <div style="position:absolute; top:0; left:0; right:0; height:3px; background:var(--grad);"></div>
+          <div style="font-size:.72rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--primary);">Belastbare Zahl</div>
+          <div class="grad-text" style="font-size:clamp(2.6rem,6vw,3.6rem); font-weight:800; line-height:1; letter-spacing:-.03em;">bis&nbsp;80&nbsp;%</div>
+          <p style="font-size:.88rem; color:var(--text); font-weight:600; line-height:1.5;">
+            der schweren Behandlungsfehler haben Kommunikations- und Teamversagen als wesentliche Ursache.
+          </p>
+          <p style="font-size:.78rem; color:var(--text-muted); line-height:1.55;">
+            Quellen: Joint Commission Sentinel Event Data; CIRS-RD-Auswertungen Deutschland.
+          </p>
+        </div>
+
+        <!-- 3 Hebel -->
+        <div style="display:grid; grid-template-columns:1fr; gap:.75rem;">
+
+          <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.1rem 1.25rem; display:flex; gap:1rem; align-items:flex-start;">
+            <div style="flex-shrink:0; width:40px; height:40px; border-radius:10px; background:rgba(239,68,68,.12); display:flex; align-items:center; justify-content:center;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </div>
+            <div>
+              <div style="font-size:.7rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:.1em; font-weight:700; margin-bottom:.15rem;">01 · Nachweispflicht</div>
+              <h3 style="font-size:1rem; font-weight:700; margin-bottom:.25rem;">§5 NotSanG-konform &amp; dokumentiert</h3>
+              <p style="font-size:.88rem; color:var(--text-muted);">CRM-Fortbildung pro Mitarbeiter und pro Wache nachweisbar, exportfähig für QM.</p>
+            </div>
+          </div>
+
+          <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.1rem 1.25rem; display:flex; gap:1rem; align-items:flex-start;">
+            <div style="flex-shrink:0; width:40px; height:40px; border-radius:10px; background:rgba(96,165,250,.12); display:flex; align-items:center; justify-content:center;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div>
+              <div style="font-size:.7rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:.1em; font-weight:700; margin-bottom:.15rem;">02 · Patientensicherheit</div>
+              <h3 style="font-size:1rem; font-weight:700; margin-bottom:.25rem;">Weniger Kommunikations- und Teamfehler</h3>
+              <p style="font-size:.88rem; color:var(--text-muted);">Training an den dominanten CIRS-Mustern: Rollenklarheit, Closed Loop, Speaking Up, Fixierungsfehler.</p>
+            </div>
+          </div>
+
+          <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.1rem 1.25rem; display:flex; gap:1rem; align-items:flex-start;">
+            <div style="flex-shrink:0; width:40px; height:40px; border-radius:10px; background:rgba(16,185,129,.12); display:flex; align-items:center; justify-content:center;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>
+            </div>
+            <div>
+              <div style="font-size:.7rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:.1em; font-weight:700; margin-bottom:.15rem;">03 · Skalierung</div>
+              <h3 style="font-size:1rem; font-weight:700; margin-bottom:.25rem;">Szenariobasiert statt Frontalunterricht</h3>
+              <p style="font-size:.88rem; color:var(--text-muted);">Gleiche Fälle wie im Fach-Modus, anderer Layer. Jede Wache, jede Schicht, jederzeit.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- CTA zum Mockup -->
+      <div style="background:linear-gradient(135deg, rgba(239,68,68,.1), var(--bg-card) 65%); border:1px solid rgba(239,68,68,.3); border-radius:var(--radius-lg); padding:clamp(1.5rem,3vw,2rem); display:flex; flex-wrap:wrap; align-items:center; gap:1.5rem; justify-content:space-between;">
+        <div style="flex:1; min-width:260px;">
+          <div style="display:flex; align-items:center; gap:.5rem; margin-bottom:.4rem;">
+            <span style="width:8px; height:8px; border-radius:50%; background:var(--primary); box-shadow:0 0 12px var(--primary);"></span>
+            <span style="font-size:.72rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--primary);">Klickbares Modul-Mockup</span>
+          </div>
+          <h3 style="font-size:clamp(1.2rem,2.8vw,1.6rem); font-weight:800; line-height:1.25; margin-bottom:.4rem;">
+            In 2–3 Minuten durch alle 8 Screens.
+          </h3>
+          <p style="font-size:.95rem; color:var(--text-muted); line-height:1.55;">
+            Pitch-Einstieg, Hauptmenü mit neuer CRM-Kachel, Theorie-Karten,
+            Szenario-Training, Debrief und aggregiertes ÄLRD-Dashboard.
+            Eigenständig durchklickbar – auch im 15-Minuten-Termin.
+          </p>
+        </div>
+        <div style="display:flex; gap:.75rem; flex-wrap:wrap;">
+          <a href="crm-mockup/index.html"
+             style="display:inline-flex; align-items:center; gap:.5rem; background:var(--grad); color:white; font-weight:600; font-size:.95rem; padding:.8rem 1.5rem; border-radius:99px; text-decoration:none; box-shadow:0 8px 24px rgba(239,68,68,.25);">
+            Mockup öffnen
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+          </a>
+          <a href="crm-mockup.zip" download
+             style="display:inline-flex; align-items:center; gap:.5rem; background:transparent; color:var(--text-muted); font-weight:600; font-size:.9rem; padding:.8rem 1.25rem; border-radius:99px; text-decoration:none; border:1px solid var(--border-soft);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            ZIP laden
+          </a>
+        </div>
+      </div>
+
+      <p style="margin-top:1rem; font-size:.78rem; color:var(--text-dim); text-align:center;">
+        Konzeptstand April 2026 · Noch nicht Teil des produktiven NotSan Trainers ·
+        Begleitpapier <a href="crm_modul_konzept.md" style="color:var(--text-muted); text-decoration:underline;">crm_modul_konzept.md</a>
+      </p>
+
+    </div>
+    <style>
+      @media (max-width: 800px) {
+        #aerzte > .container > div:nth-of-type(2) {
+          grid-template-columns: 1fr !important;
+        }
+      }
+    </style>
   </section>
 
   <!-- TESTKUNDEN ──────────────────────────────────── -->
