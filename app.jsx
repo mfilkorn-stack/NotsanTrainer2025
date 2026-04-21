@@ -4382,15 +4382,30 @@ const [caseTreatStep, setCaseTreatStep] = useState(0);
 const [caseTreatSelected, setCaseTreatSelected] = useState(null);
 const [caseTreatScore, setCaseTreatScore] = useState(0);
 const [caseDiagScore, setCaseDiagScore] = useState(0);
-// Position where case appears (after question 15)
-const CASE_AFTER_Q = 15;
+// Reihenfolge: Fall zuerst → 15 fallbezogene Fragen → 15 allgemeine Fragen
+const CASE_Q_COUNT = 15;
+const GENERAL_Q_COUNT = 15;
 const startExam = ()=>{
-const shuffled = [...QUIZ_QUESTIONS].sort(()=>Math.random()-.5).slice(0,25);
 const rc = EXAM_CASES[Math.floor(Math.random()*EXAM_CASES.length)];
+const bprEntry = BPR.find(b=>b.id===rc.bpr);
+const caseCats = (bprEntry && BPR_CATEGORY_MAP[bprEntry.kategorie]) || DEFAULT_CASE_CATEGORIES;
+const casePool = QUIZ_QUESTIONS.filter(q=>caseCats.includes(q.cat));
+let caseQs = [...casePool].sort(()=>Math.random()-.5).slice(0,CASE_Q_COUNT);
+const usedIds = new Set(caseQs.map(q=>q.id));
+if(caseQs.length<CASE_Q_COUNT){
+const fill = QUIZ_QUESTIONS.filter(q=>!usedIds.has(q.id)).sort(()=>Math.random()-.5).slice(0,CASE_Q_COUNT-caseQs.length);
+caseQs = caseQs.concat(fill);
+fill.forEach(q=>usedIds.add(q.id));
+}
+const generalQs = QUIZ_QUESTIONS.filter(q=>!usedIds.has(q.id)).sort(()=>Math.random()-.5).slice(0,GENERAL_Q_COUNT);
+const tagged = [
+...caseQs.map(q=>({...q,_qType:"case"})),
+...generalQs.map(q=>({...q,_qType:"general"}))
+];
 setExamCase(rc);
-setQuestions(shuffled);setQi(0);setSelected(null);setScore(0);setDone(false);setAnswers([]);
+setQuestions(tagged);setQi(0);setSelected(null);setScore(0);setDone(false);setAnswers([]);
 setTimeLeft(40*60);setStarted(true);
-setCasePhase(null);setCaseRevealed({});setCaseDiagSelected(null);setCaseDiagCorrect(null);
+setCasePhase("explore");setCaseRevealed({});setCaseDiagSelected(null);setCaseDiagCorrect(null);
 setCaseTreatStep(0);setCaseTreatSelected(null);setCaseTreatScore(0);setCaseDiagScore(0);
 };
 const [timerWarning, setTimerWarning] = useState(null);
@@ -4418,14 +4433,9 @@ setSelected(idx);
 const correct = idx===questions[qi].correct;
 if(correct) {setScore(s=>s+1);haptic("success");}
 else haptic("error");
-setAnswers(a=>[...a,{qId:questions[qi].id,selected:idx,correct,type:"quiz"}]);
+setAnswers(a=>[...a,{qId:questions[qi].id,selected:idx,correct,type:"quiz",qType:questions[qi]._qType}]);
 };
 const nextQ = ()=>{
-// After question CASE_AFTER_Q, switch to case phase
-if(qi+1===CASE_AFTER_Q && casePhase===null) {
-setCasePhase("explore");
-return;
-}
 if(qi+1>=questions.length){
 finishExam();
 return;
@@ -4460,18 +4470,23 @@ return (
 <div style={{fontSize:64,marginBottom:16}}> </div>
 <h2 style={{fontSize:28,fontWeight:700}}>Prüfung</h2>
 <p style={{color:COLORS.textMuted,margin:"12px 0 24px",maxWidth:540,marginLeft:"auto",marginRight:"auto",lineHeight:1.7}}>
-25 Quiz-Fragen aus allen Kategorien + 1 Prüfungsfall mit Erkundung, Diagnosestellung und Behandlung. Zeitlimit: 40 Minuten. Bestehensgrenze: 70%.
+Zuerst 1 Prüfungsfall mit Erkundung, Diagnosestellung und Behandlung. Danach 15 fallbezogene + 15 allgemeine Quiz-Fragen. Zeitlimit: 40 Minuten. Bestehensgrenze: 70%.
 </p>
 <div style={{display:"flex",gap:16,justifyContent:"center",flexWrap:"wrap",marginBottom:24}}>
 <div style={{background:COLORS.card,border:`1px solid ${COLORS.border}`,borderRadius:12,padding:"14px 20px",textAlign:"center"}}>
 <div style={{fontSize:24,marginBottom:4}}> </div>
-<div style={{fontSize:13,fontWeight:700,color:COLORS.blue}}>25 Quiz-Fragen</div>
-<div style={{fontSize:11,color:COLORS.textDim}}>Alle Kategorien</div>
+<div style={{fontSize:13,fontWeight:700,color:COLORS.purple}}>1 Prüfungsfall</div>
+<div style={{fontSize:11,color:COLORS.textDim}}>Erkundung → Diagnose → Behandlung</div>
 </div>
 <div style={{background:COLORS.card,border:`1px solid ${COLORS.border}`,borderRadius:12,padding:"14px 20px",textAlign:"center"}}>
 <div style={{fontSize:24,marginBottom:4}}> </div>
-<div style={{fontSize:13,fontWeight:700,color:COLORS.purple}}>1 Prüfungsfall</div>
-<div style={{fontSize:11,color:COLORS.textDim}}>Erkundung → Diagnose → Behandlung</div>
+<div style={{fontSize:13,fontWeight:700,color:COLORS.purple}}>15 fallbezogen</div>
+<div style={{fontSize:11,color:COLORS.textDim}}>Passend zum Fall</div>
+</div>
+<div style={{background:COLORS.card,border:`1px solid ${COLORS.border}`,borderRadius:12,padding:"14px 20px",textAlign:"center"}}>
+<div style={{fontSize:24,marginBottom:4}}> </div>
+<div style={{fontSize:13,fontWeight:700,color:COLORS.blue}}>15 allgemein</div>
+<div style={{fontSize:11,color:COLORS.textDim}}>Alle Kategorien</div>
 </div>
 <div style={{background:COLORS.card,border:`1px solid ${COLORS.border}`,borderRadius:12,padding:"14px 20px",textAlign:"center"}}>
 <div style={{fontSize:24,marginBottom:4}}> </div>
@@ -4493,6 +4508,10 @@ const totalScore = score + caseDiagScore + caseTreatScore;
 const totalQuestions = questions.length + 1 + treatSteps;
 const pct = Math.round(totalScore/totalQuestions*100);
 const passed = pct >= 70;
+const caseQTotal = questions.filter(q=>q._qType==="case").length;
+const generalQTotal = questions.filter(q=>q._qType==="general").length;
+const caseQCorrect = answers.filter(a=>a.type==="quiz"&&a.qType==="case"&&a.correct).length;
+const generalQCorrect = answers.filter(a=>a.type==="quiz"&&a.qType==="general"&&a.correct).length;
 const bprNames = {};
 BPR.forEach(b=>bprNames[b.id]=b.name);
 LEITSYMPTOME.forEach(l=>bprNames[l.id]=l.name);
@@ -4503,10 +4522,6 @@ return (
 <p style={{color:COLORS.textMuted,marginTop:8}}>{totalScore} von {totalQuestions} richtig · Bestehensgrenze: 70%</p>
 <div style={{display:"flex",justifyContent:"center",gap:16,flexWrap:"wrap",margin:"16px 0"}}>
 <div style={{textAlign:"center",background:COLORS.card,border:`1px solid ${COLORS.border}`,borderRadius:12,padding:"12px 20px"}}>
-<div style={{fontSize:11,color:COLORS.textDim}}>Quiz-Fragen</div>
-<div style={{fontSize:20,fontWeight:700,color:COLORS.blue}}>{score}/{questions.length}</div>
-</div>
-<div style={{textAlign:"center",background:COLORS.card,border:`1px solid ${COLORS.border}`,borderRadius:12,padding:"12px 20px"}}>
 <div style={{fontSize:11,color:COLORS.textDim}}>Diagnose</div>
 <Badge color={caseDiagScore?COLORS.green:COLORS.accent}>{caseDiagScore?"✓ Korrekt":"✗ Falsch"}</Badge>
 </div>
@@ -4514,16 +4529,26 @@ return (
 <div style={{fontSize:11,color:COLORS.textDim}}>Behandlung</div>
 <div style={{fontSize:20,fontWeight:700,color:COLORS.purple}}>{caseTreatScore}/{treatSteps}</div>
 </div>
+<div style={{textAlign:"center",background:COLORS.card,border:`1px solid ${COLORS.border}`,borderRadius:12,padding:"12px 20px"}}>
+<div style={{fontSize:11,color:COLORS.textDim}}>Fallbezogene Fragen</div>
+<div style={{fontSize:20,fontWeight:700,color:COLORS.purple}}>{caseQCorrect}/{caseQTotal}</div>
+</div>
+<div style={{textAlign:"center",background:COLORS.card,border:`1px solid ${COLORS.border}`,borderRadius:12,padding:"12px 20px"}}>
+<div style={{fontSize:11,color:COLORS.textDim}}>Allgemeine Fragen</div>
+<div style={{fontSize:20,fontWeight:700,color:COLORS.blue}}>{generalQCorrect}/{generalQTotal}</div>
+</div>
 </div>
 <div style={{maxWidth:600,margin:"20px auto 0",textAlign:"left"}}>
 <h3 style={{fontSize:16,fontWeight:700,marginBottom:12}}>Ergebnisübersicht:</h3>
 {answers.map((a,i)=>{
 const isCase = a.type==="case";
 const label = isCase ? a.label : (questions.find(q2=>q2.id===a.qId)||{}).q;
+const tagLabel = isCase ? "FALL" : (a.qType==="case" ? "FALLBEZOGEN" : "ALLGEMEIN");
+const tagColor = isCase || a.qType==="case" ? COLORS.purple : COLORS.blue;
 return (
 <div key={i} style={{padding:"10px 14px",background:a.correct?COLORS.green+"10":COLORS.accent+"10",border:`1px solid ${a.correct?COLORS.green:COLORS.accent}20`,borderRadius:8,marginBottom:6,fontSize:13}}>
 <span style={{color:a.correct?COLORS.green:COLORS.accent,fontWeight:700}}>{a.correct?"✓":"✗"}</span>
-{isCase && <span style={{marginLeft:6,fontSize:10,fontWeight:700,color:COLORS.purple,background:COLORS.purple+"15",padding:"1px 6px",borderRadius:4}}>FALL</span>}
+<span style={{marginLeft:6,fontSize:10,fontWeight:700,color:tagColor,background:tagColor+"15",padding:"1px 6px",borderRadius:4}}>{tagLabel}</span>
 <span style={{marginLeft:8,color:COLORS.textMuted}}>{(label||"").substring(0,80)}{(label||"").length>80?"...":""}</span>
 </div>
 );
@@ -4680,7 +4705,7 @@ Weiter zur Behandlung →
 }
 // TREAT
 if(casePhase==="treat") {
-if(treatSteps.length===0) {setCasePhase(null);setQi(CASE_AFTER_Q);setSelected(null);return null;}
+if(treatSteps.length===0) {setCasePhase(null);setQi(0);setSelected(null);return null;}
 const ts = treatSteps[caseTreatStep];
 const answerTreat = (idx)=>{
 if(caseTreatSelected!==null) return;
@@ -4692,8 +4717,8 @@ setAnswers(a=>[...a,{type:"case",label:ts.q,selected:idx,correct}]);
 };
 const nextTreat = ()=>{
 if(caseTreatStep+1>=treatSteps.length){
-// Case done → back to quiz
-setCasePhase(null);setQi(CASE_AFTER_Q);setSelected(null);
+// Case done → start Quizfragen (fallbezogen → allgemein)
+setCasePhase(null);setQi(0);setSelected(null);
 return;
 }
 setCaseTreatStep(caseTreatStep+1);setCaseTreatSelected(null);
@@ -4745,21 +4770,23 @@ return(
 }
 // ─── QUIZ PHASE ───
 const q = questions[qi];
-const linkedCase = examCase ? CASES.find(c=>c.id===examCase.caseId) : null;
-const treatLen = linkedCase ? linkedCase.steps.length : 0;
-const totalItems = questions.length + 1 + treatLen;
-const currentItem = casePhase===null&&qi>=CASE_AFTER_Q ? CASE_AFTER_Q + 1 + treatLen + (qi - CASE_AFTER_Q + 1) : qi + 1;
+const isCaseQ = q._qType==="case";
+const totalItems = questions.length;
+const currentItem = qi + 1;
 return (
 <div className="fade-in">
 {timerToast}
 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:8}}>
+<div style={{display:"flex",alignItems:"center",gap:8}}>
 <Badge color={COLORS.blue}>Frage {qi+1}/{questions.length}</Badge>
+<Badge color={isCaseQ?COLORS.purple:COLORS.blue}>{isCaseQ?"Fallbezogen":"Allgemein"}</Badge>
+</div>
 <div style={{display:"flex",alignItems:"center",gap:8}}>
 <Badge color={COLORS.green}>{score} richtig</Badge>
 {timerBadge}
 </div>
 </div>
-<ProgressBar value={currentItem} max={totalItems} color={COLORS.blue} h={4}/>
+<ProgressBar value={currentItem} max={totalItems} color={isCaseQ?COLORS.purple:COLORS.blue} h={4}/>
 <Card style={{marginTop:16}}>
 <Badge color={COLORS.textMuted}>{q.cat}</Badge>
 <h3 style={{fontSize:17,fontWeight:600,margin:"14px 0 20px",lineHeight:1.5}}>{q.q}</h3>
@@ -4786,7 +4813,7 @@ return(
 </div>
 </Card>}
 <div style={{marginTop:12,textAlign:"right"}}>
-<Button onClick={nextQ}>{qi+1>=questions.length?"Ergebnis":(qi+1===CASE_AFTER_Q?" Weiter zum Prüfungsfall":"Weiter →")}</Button>
+<Button onClick={nextQ}>{qi+1>=questions.length?"Ergebnis":"Weiter →"}</Button>
 </div>
 </div>
 )}
