@@ -469,7 +469,7 @@ function PlusGate({onUnlock,navigate,feature}) {
   const features = [
     {icon:"brain",label:"Alle 1.318 Quizfragen",detail:"8 Kategorien inkl. Medikamente & Invasive Maßnahmen"},
     {icon:"folder",label:"Alle 306 Fallsimulationen",detail:"153 Trainingsfälle + 153 Prüfungsfälle"},
-    {icon:"graduationCap",label:"Prüfungssimulation",detail:"40 min · 25 Fragen + 1 Fall · Zeitlimit · Bestehensquote"},
+    {icon:"graduationCap",label:"Prüfungssimulation",detail:"40 min · 30 Fragen + 1 Fall · Zeitlimit · Bestehensquote"},
     {icon:"chart",label:"Statistik & Schwachstellen",detail:"Detaillierte Analyse · gezieltes Nachtrainieren"},
     {icon:"activity",label:"Alle EKG-Befunde & Übergabe-Quiz",detail:"26 EKG-Typen mit echten Streifen"},
   ];
@@ -751,7 +751,7 @@ return (
 </div>
 </div>
 <div style={{display:"flex",gap:8,marginBottom:lastExam?12:0}}>
-{[{icon:"clock",label:"40 min"},{icon:"brain",label:"25 Fragen"},{icon:"folder",label:"1 Fall"}].map(c=>(
+{[{icon:"clock",label:"40 min"},{icon:"brain",label:"30 Fragen"},{icon:"folder",label:"1 Fall"}].map(c=>(
 <div key={c.label} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 10px",borderRadius:8,background:COLORS.accent+"08",border:`1px solid ${COLORS.accent}12`,fontSize:12,color:COLORS.textMuted,fontWeight:500}}>
 <Icon name={c.icon} size={12} color={COLORS.accent}/>{c.label}
 </div>
