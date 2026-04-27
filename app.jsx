@@ -4418,7 +4418,7 @@ const GENERAL_Q_COUNT = 15;
 const startExam = ()=>{
 const rc = EXAM_CASES[Math.floor(Math.random()*EXAM_CASES.length)];
 const bprEntry = BPR.find(b=>b.id===rc.bpr);
-const caseCats = (bprEntry && BPR_CATEGORY_MAP[bprEntry.kategorie]) || DEFAULT_CASE_CATEGORIES;
+const caseCats = BPR_CATEGORY_MAP[rc.bpr] || (bprEntry && BPR_CATEGORY_MAP[bprEntry.kategorie]) || DEFAULT_CASE_CATEGORIES;
 const casePool = QUIZ_QUESTIONS.filter(q=>caseCats.includes(q.cat));
 let caseQs = [...casePool].sort(()=>Math.random()-.5).slice(0,CASE_Q_COUNT);
 const usedIds = new Set(caseQs.map(q=>q.id));
