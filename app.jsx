@@ -4418,9 +4418,18 @@ const GENERAL_Q_COUNT = 15;
 const startExam = ()=>{
 const rc = EXAM_CASES[Math.floor(Math.random()*EXAM_CASES.length)];
 const bprEntry = BPR.find(b=>b.id===rc.bpr);
-const caseCats = (bprEntry && BPR_CATEGORY_MAP[bprEntry.kategorie]) || DEFAULT_CASE_CATEGORIES;
+const caseCats = BPR_CATEGORY_MAP[rc.bpr] || (bprEntry && BPR_CATEGORY_MAP[bprEntry.kategorie]) || DEFAULT_CASE_CATEGORIES;
+const bprKeywords = [...(bprEntry?.medikamente||[]),...(bprEntry?.saas||[])].map(s=>s.toLowerCase());
 const casePool = QUIZ_QUESTIONS.filter(q=>caseCats.includes(q.cat));
-let caseQs = [...casePool].sort(()=>Math.random()-.5).slice(0,CASE_Q_COUNT);
+const relevantPool = bprKeywords.length>0
+  ? casePool.filter(q=>bprKeywords.some(kw=>(q.q+" "+(q.explanation||"")).toLowerCase().includes(kw)))
+  : [];
+const relevantIds = new Set(relevantPool.map(q=>q.id));
+const fallbackPool = casePool.filter(q=>!relevantIds.has(q.id));
+let caseQs = [
+  ...[...relevantPool].sort(()=>Math.random()-.5),
+  ...[...fallbackPool].sort(()=>Math.random()-.5)
+].slice(0,CASE_Q_COUNT);
 const usedIds = new Set(caseQs.map(q=>q.id));
 if(caseQs.length<CASE_Q_COUNT){
 const fill = QUIZ_QUESTIONS.filter(q=>!usedIds.has(q.id)).sort(()=>Math.random()-.5).slice(0,CASE_Q_COUNT-caseQs.length);
