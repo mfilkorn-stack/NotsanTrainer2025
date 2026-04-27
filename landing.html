@@ -164,8 +164,24 @@
 <body>
 
   <!-- HERO ─────────────────────────────────────────── -->
-  <section id="hero" style="border-top:none; padding: clamp(4rem,10vw,8rem) 0 clamp(3rem,7vw,6rem);">
-    <div class="container" style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:1.5rem;">
+  <section id="hero" style="border-top:none; padding: clamp(4rem,10vw,8rem) 0 clamp(3rem,7vw,6rem); position:relative; overflow:hidden;">
+    <!-- Hero background image -->
+    <div style="position:absolute; inset:0; z-index:0;
+                background-image: url('hero-bg.png');
+                background-size: cover;
+                background-position: center 30%;
+                background-repeat: no-repeat;">
+      <!-- dark overlay: gradient from near-black (bottom) to semi-transparent (top) -->
+      <div style="position:absolute; inset:0;
+                  background: linear-gradient(
+                    to bottom,
+                    rgba(6,8,15,0.72) 0%,
+                    rgba(6,8,15,0.55) 40%,
+                    rgba(6,8,15,0.82) 80%,
+                    rgba(6,8,15,1.00) 100%
+                  );"></div>
+    </div>
+    <div class="container" style="position:relative; z-index:1; text-align:center; display:flex; flex-direction:column; align-items:center; gap:1.5rem;">
 
       <!-- Logo -->
       <div style="width:72px; height:72px; filter: drop-shadow(0 0 24px rgba(239,68,68,.35));">
