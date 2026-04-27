@@ -3411,6 +3411,7 @@ const filteredScores = SCORES_DATA.filter(s=>s.name.toLowerCase().includes(debou
 const filteredChecklists = CHECKLISTS_DATA.filter(c=>c.name.toLowerCase().includes(debouncedSearch.toLowerCase())||(c.kategorie&&c.kategorie.toLowerCase().includes(debouncedSearch.toLowerCase())));
 const filteredAbcde = ABCDE_DATA.filter(a=>a.title.toLowerCase().includes(debouncedSearch.toLowerCase()));
 const filteredTools = [...filteredScores,...filteredChecklists,...filteredAbcde];
+const filteredGroups = DRUG_GROUPS.filter(g=>g.name.toLowerCase().includes(debouncedSearch.toLowerCase())||g.wirkprinzip.toLowerCase().includes(debouncedSearch.toLowerCase())||g.medikamente.some(mId=>{const med=MEDICATIONS.find(x=>x.id===mId);return med&&med.name.toLowerCase().includes(debouncedSearch.toLowerCase());}));
 if(detail) {
 if(tab==="meds") {
 const m = MEDICATIONS.find(x=>x.id===detail);
@@ -3779,7 +3780,7 @@ return (
 );
 }
 }
-const tabs = [{id:"meds",label:"Medikamente",iconName:"pill",color:COLORS.accent,count:filteredMeds.length},{id:"invasive",label:"Invasive Maßnahmen",iconName:"syringe",color:COLORS.blue,count:filteredInv.length},{id:"leitsymptome",label:"Leitsymptome",iconName:"stethoscope",color:COLORS.orange,count:filteredLeit.length},{id:"bpr",label:"Krankheitsbilder",iconName:"heartPulse",color:COLORS.green,count:filteredBpr.length},{id:"ekg",label:"EKG-Befunde",iconName:"activity",color:"#e11d48",count:filteredEkg.length},{id:"sinnhaft",label:"Übergabe",iconName:"megaphone",color:"#8b5cf6",count:filteredSinnhaft.length},{id:"werkzeuge",label:"Werkzeuge",iconName:"wrench",color:"#14b8a6",count:filteredTools.length},{id:"recht",label:"Recht & Aufklärung",iconName:"shield",color:"#f59e0b",count:filteredRecht.length}];
+const tabs = [{id:"meds",label:"Medikamente",iconName:"pill",color:COLORS.accent,count:filteredMeds.length},{id:"gruppen",label:"Wirkstoffgruppen",iconName:"brain",color:"#a855f7",count:filteredGroups.length},{id:"invasive",label:"Invasive Maßnahmen",iconName:"syringe",color:COLORS.blue,count:filteredInv.length},{id:"leitsymptome",label:"Leitsymptome",iconName:"stethoscope",color:COLORS.orange,count:filteredLeit.length},{id:"bpr",label:"Krankheitsbilder",iconName:"heartPulse",color:COLORS.green,count:filteredBpr.length},{id:"ekg",label:"EKG-Befunde",iconName:"activity",color:"#e11d48",count:filteredEkg.length},{id:"sinnhaft",label:"Übergabe",iconName:"megaphone",color:"#8b5cf6",count:filteredSinnhaft.length},{id:"werkzeuge",label:"Werkzeuge",iconName:"wrench",color:"#14b8a6",count:filteredTools.length},{id:"recht",label:"Recht & Aufklärung",iconName:"shield",color:"#f59e0b",count:filteredRecht.length}];
 return (
 <div className="fade-in">
 <Button onClick={()=>navigate("dashboard")} variant="ghost" size="sm" style={{marginBottom:16}}><Icon name="arrowLeft" size={14}/> Zurück</Button>
@@ -3802,6 +3803,31 @@ return (
 </Card>
 ))}
 {tab==="meds" && filteredMeds.length===0 && <EmptyState sub={debouncedSearch?`Keine Medikamente für "${debouncedSearch}" gefunden.`:"Keine Einträge in dieser Kategorie."}/>}
+{tab==="gruppen" && filteredGroups.map(g=>(
+<Card key={g.id} style={{padding:16,display:"flex",flexDirection:"column",gap:6}}>
+  <div style={{fontSize:15,fontWeight:700,color:COLORS.text,marginBottom:2}}>{g.name}</div>
+  <div style={{fontSize:11,fontWeight:600,color:"#a855f7",textTransform:"uppercase",letterSpacing:0.5,marginBottom:2}}>Rezeptor / Angriffspunkt</div>
+  <div style={{fontSize:12,color:COLORS.textMuted,lineHeight:1.5,marginBottom:6}}>{g.rezeptor}</div>
+  <div style={{fontSize:11,fontWeight:600,color:COLORS.green,textTransform:"uppercase",letterSpacing:0.5,marginBottom:2}}>Wirkprinzip</div>
+  <div style={{fontSize:12,color:COLORS.textMuted,lineHeight:1.5,marginBottom:6}}>{g.wirkprinzip}</div>
+  <div style={{fontSize:11,fontWeight:600,color:COLORS.accent,textTransform:"uppercase",letterSpacing:0.5,marginBottom:4}}>Typische UAW</div>
+  <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:6}}>
+    {g.typUAW.map((u,i)=><span key={i} style={{fontSize:11,background:COLORS.accent+"18",color:COLORS.accent,borderRadius:6,padding:"2px 8px"}}>{u}</span>)}
+  </div>
+  {g.typKontra&&g.typKontra.length>0&&<>
+    <div style={{fontSize:11,fontWeight:600,color:COLORS.orange,textTransform:"uppercase",letterSpacing:0.5,marginBottom:4}}>Typische KI</div>
+    <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:6}}>
+      {g.typKontra.map((k,i)=><span key={i} style={{fontSize:11,background:COLORS.orange+"18",color:COLORS.orange,borderRadius:6,padding:"2px 8px"}}>{k}</span>)}
+    </div>
+  </>}
+  <div style={{fontSize:11,fontWeight:600,color:COLORS.blue,textTransform:"uppercase",letterSpacing:0.5,marginBottom:4}}>Substanzen</div>
+  <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:6}}>
+    {g.medikamente.map(mId=>{const med=MEDICATIONS.find(x=>x.id===mId);return med?(<span key={mId} style={{fontSize:12,background:COLORS.blue+"18",color:COLORS.blue,borderRadius:6,padding:"3px 10px",cursor:"pointer",textDecoration:"underline",textDecorationStyle:"dotted",textDecorationColor:COLORS.blue+"80"}} onClick={()=>{setTab("meds");setDetail(mId);window.scrollTo({top:0,behavior:"smooth"});}}>{med.name.split(" (")[0]}</span>):null;})}
+  </div>
+  <div style={{fontSize:11,color:COLORS.textDim,fontStyle:"italic",borderTop:`1px solid ${COLORS.border}`,paddingTop:8,marginTop:2,lineHeight:1.5}}>{g.merksatz}</div>
+</Card>
+))}
+{tab==="gruppen" && filteredGroups.length===0 && <EmptyState sub={debouncedSearch?`Keine Wirkstoffgruppen für "${debouncedSearch}" gefunden.`:"Keine Einträge in dieser Kategorie."}/>}
 {tab==="invasive" && filteredInv.map(m=>(
 <Card key={m.id} onClick={()=>setDetail(m.id)} style={{padding:16,display:"flex",flexDirection:"column"}}>
 <div style={{fontSize:15,fontWeight:700,marginBottom:4}}>{m.name}</div>
