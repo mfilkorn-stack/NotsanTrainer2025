@@ -412,7 +412,7 @@ return (
 // ═══════════════════════════════════════════════════════
 // LICENSE & FEATURE-GATING — Etappe 2
 // Free:  Lexikon (alles), Algorithmen-Trainer, 3 Quiz-Kategorien, 10 Trainingsfälle
-// Plus:  Alle 1.223 Quizfragen, alle 306 Fälle, Prüfung, Statistik & Schwachstellen
+// Plus:  Alle 1.318 Quizfragen, alle 306 Fälle, Prüfung, Statistik & Schwachstellen
 // ═══════════════════════════════════════════════════════
 const PLUS_QUIZ_CATS = ['Medikamente','Invasive Maßnahmen','Behandlungspfade','EKG-Befunde','Übergabe'];
 const FREE_CASE_LIMIT = 10;
@@ -467,7 +467,7 @@ function LicenseModal({open,onClose,onUnlock}) {
 function PlusGate({onUnlock,navigate,feature}) {
   const [showModal, setShowModal] = React.useState(false);
   const features = [
-    {icon:"brain",label:"Alle 1.223 Quizfragen",detail:"8 Kategorien inkl. Medikamente & Invasive Maßnahmen"},
+    {icon:"brain",label:"Alle 1.318 Quizfragen",detail:"8 Kategorien inkl. Medikamente & Invasive Maßnahmen"},
     {icon:"folder",label:"Alle 306 Fallsimulationen",detail:"153 Trainingsfälle + 153 Prüfungsfälle"},
     {icon:"graduationCap",label:"Prüfungssimulation",detail:"40 min · 25 Fragen + 1 Fall · Zeitlimit · Bestehensquote"},
     {icon:"chart",label:"Statistik & Schwachstellen",detail:"Detaillierte Analyse · gezieltes Nachtrainieren"},
