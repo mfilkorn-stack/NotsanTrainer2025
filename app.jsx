@@ -416,10 +416,13 @@ return (
 // ═══════════════════════════════════════════════════════
 const PLUS_QUIZ_CATS = ['Medikamente','Invasive Maßnahmen','Behandlungspfade','EKG-Befunde','Übergabe'];
 const FREE_CASE_LIMIT = 10;
-// TODO Etappe 3: Durch Ed25519-Signaturprüfung ersetzen
+// Test-Lizenzschlüssel (immer gültig, auch nach Etappe 3 beibehalten)
+const TEST_LICENSE_KEY = 'NST-TEST-2025-DEMO';
+// TODO Etappe 3: Durch Ed25519-Signaturprüfung ersetzen (Test-Key oben muss bestehen bleiben)
 function verifyLicenseKey(key) {
   if(!key || typeof key !== 'string') return false;
   const k = key.trim().toUpperCase().replace(/[\s\-]/g,'');
+  if(k === TEST_LICENSE_KEY.replace(/[\s\-]/g,'')) return true;
   return k.startsWith('NST') && k.length >= 12;
 }
 function LicenseModal({open,onClose,onUnlock}) {
