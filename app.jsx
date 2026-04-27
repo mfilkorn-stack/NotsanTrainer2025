@@ -640,6 +640,7 @@ const lastExam = stats.examScores&&stats.examScores.length>0?stats.examScores[st
 const caseCategories = [...new Set(CASES.map(c=>c.bpr))];
 const lexCats = [
 {label:"Medikamente",count:MEDICATIONS.length,iconName:"pill",color:COLORS.accent},
+{label:"Wirkstoffgruppen",count:DRUG_GROUPS.length,iconName:"brain",color:"#a855f7"},
 {label:"Invasive Maßnahmen",count:INVASIVE.length,iconName:"syringe",color:COLORS.blue},
 {label:"Leitsymptome",count:LEITSYMPTOME.length,iconName:"stethoscope",color:COLORS.orange},
 {label:"Krankheitsbilder",count:BPR.length,iconName:"heartPulse",color:COLORS.green},
