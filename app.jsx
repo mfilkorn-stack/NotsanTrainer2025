@@ -574,6 +574,7 @@ return (
 {view==="reference" && <Reference subView={subView} navigate={navigate}/>}
 {view==="exam" && <Exam navigate={navigate} stats={stats} setStats={setStats} license={license} unlockPlus={unlockPlus}/>}
 {view==="stats" && <Statistics stats={stats} setStats={setStats} navigate={navigate} license={license} unlockPlus={unlockPlus}/>}
+{view==="lernen" && <LernModul navigate={navigate}/>}
 </main>
 </div>
 );
@@ -586,6 +587,7 @@ const items=[
 {id:"dashboard",label:"Dashboard",iconName:"home"},
 {id:"reference",label:"Lexikon",iconName:"book"},
 {id:"quiz",label:"Quiz",iconName:"brain"},
+{id:"lernen",label:"Lernen",iconName:"star"},
 {id:"cases",label:"Fälle",iconName:"folder"},
 {id:"exam",label:"Prüfung",iconName:"graduationCap"},
 {id:"stats",label:"Statistik",iconName:"chart"},
@@ -1645,6 +1647,312 @@ else {setGapIdx(g=>g+1);setGapChecked(false);}
 );
 }
 return null;
+}
+// ═══════════════════════════════════════════════════════
+// LERN-MODUL 2.0 – interaktive Formate (A–F) + Bloom/Niveau
+// Eigenständige, self-contained Renderer (AlgorithmTrainer bleibt unberührt)
+// ═══════════════════════════════════════════════════════
+const BLOOM_LABELS = {1:"Erinnern",2:"Verstehen",3:"Anwenden",4:"Analysieren",5:"Evaluieren",6:"Erschaffen"};
+const NIVEAU_COLORS = {Basis:COLORS.green,Fortgeschritten:COLORS.orange,"Prüfung":COLORS.accent};
+const FORMAT_LABELS = {single:"Single-Choice",multi:"Mehrfachauswahl",order:"Reihenfolge",match:"Zuordnen",gap:"Lückentext",vignette:"Fallvignette",error:"Fehler finden"};
+function LernMetaBadges({item}) {
+return (
+<div style={{display:"flex",flexWrap:"wrap",gap:8,alignItems:"center"}}>
+<Badge color={COLORS.textMuted}>{item.cat}</Badge>
+<Badge color={COLORS.purple}>Bloom {item.bloom} · {BLOOM_LABELS[item.bloom]}</Badge>
+<Badge color={NIVEAU_COLORS[item.niveau]||COLORS.blue}>{item.niveau}</Badge>
+<Badge color={COLORS.blue}>{FORMAT_LABELS[item.format]}</Badge>
+</div>
+);
+}
+// Generische Single-Choice-Liste (für single, vignette, error)
+function LernChoiceList({options,correctIdx,onResult}) {
+const [sel,setSel] = React.useState(null);
+const pick = (i) => {if(sel!==null) return;setSel(i);const ok=i===correctIdx;haptic(ok?"success":"error");onResult(ok);};
+return (
+<div style={{display:"flex",flexDirection:"column",gap:10}}>
+{options.map((o,i)=>{
+let bg=COLORS.bg,border=COLORS.border,color=COLORS.text,anim="";
+if(sel!==null){
+if(i===correctIdx){bg=COLORS.green+"20";border=COLORS.green;color=COLORS.green;anim="correct-pop";}
+else if(i===sel){bg=COLORS.accent+"20";border=COLORS.accent;color=COLORS.accent;anim="shake-anim";}
+}
+return (
+<div key={i} className={anim} onClick={()=>pick(i)} style={{padding:"12px 16px",background:bg,border:`2px solid ${border}`,borderRadius:12,cursor:sel===null?"pointer":"default",transition:"all .2s",color,fontWeight:sel!==null&&i===correctIdx?700:400}}
+onMouseEnter={e=>{if(sel===null)e.currentTarget.style.borderColor=COLORS.blue}}
+onMouseLeave={e=>{if(sel===null)e.currentTarget.style.borderColor=COLORS.border}}>
+<span style={{fontWeight:700,marginRight:10,opacity:.5}}>{String.fromCharCode(65+i)}</span>{o}
+</div>
+);
+})}
+</div>
+);
+}
+// Format A – Multi-Select (mehrere richtige; Auswertung = exakte Mengengleichheit)
+function LernMulti({item,onResult}) {
+const [picked,setPicked] = React.useState(()=>new Set());
+const [checked,setChecked] = React.useState(false);
+const toggle = (i) => {if(checked) return;setPicked(p=>{const n=new Set(p);n.has(i)?n.delete(i):n.add(i);return n;});};
+const check = () => {if(checked||picked.size===0) return;const correct=new Set(item.correct);const ok=picked.size===correct.size&&[...picked].every(i=>correct.has(i));setChecked(true);haptic(ok?"success":"error");onResult(ok);};
+return (
+<div>
+<div style={{display:"flex",flexDirection:"column",gap:10}}>
+{item.opts.map((o,i)=>{
+const isPicked=picked.has(i),isCorrect=item.correct.includes(i);
+let bg=COLORS.bg,border=isPicked?COLORS.blue:COLORS.border,color=COLORS.text;
+if(checked){
+if(isCorrect){bg=COLORS.green+"20";border=COLORS.green;color=COLORS.green;}
+else if(isPicked){bg=COLORS.accent+"20";border=COLORS.accent;color=COLORS.accent;}
+}
+return (
+<div key={i} onClick={()=>toggle(i)} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 16px",background:bg,border:`2px solid ${border}`,borderRadius:12,cursor:checked?"default":"pointer",transition:"all .2s",color}}>
+<span style={{width:20,height:20,borderRadius:5,border:`2px solid ${isPicked||(checked&&isCorrect)?(checked?border:COLORS.blue):COLORS.textDim}`,background:isPicked?(checked?border:COLORS.blue):"transparent",display:"inline-flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:13,color:"#fff",fontWeight:700}}>{isPicked?"✓":(checked&&isCorrect?"+":"")}</span>
+<span style={{flex:1}}>{o}</span>
+{checked&&isCorrect&&<span style={{color:COLORS.green,fontWeight:700,fontSize:12}}>richtig</span>}
+{checked&&isPicked&&!isCorrect&&<span style={{color:COLORS.accent,fontWeight:700,fontSize:12}}>falsch</span>}
+</div>
+);
+})}
+</div>
+{!checked&&<Button size="sm" onClick={check} disabled={picked.size===0} style={{marginTop:14}}>Auswerten ✓</Button>}
+</div>
+);
+}
+// Format B – Sortieren / Reihenfolge
+function LernOrder({item,onResult}) {
+const steps = item.steps;
+const [shuffled] = React.useState(()=>[...steps].sort(()=>Math.random()-.5));
+const [placed,setPlaced] = React.useState([]);
+const done = placed.length===steps.length;
+const remaining = shuffled.filter(s=>!placed.includes(s));
+const place = (s) => {const np=[...placed,s];setPlaced(np);if(np.length===steps.length){const cc=np.filter((x,i)=>x===steps[i]).length;haptic(cc===steps.length?"success":"error");onResult(cc===steps.length);}};
+return (
+<div>
+<div style={{fontSize:12,fontWeight:600,color:COLORS.textMuted,marginBottom:8}}>Ihre Reihenfolge:</div>
+{steps.map((correctStep,i)=>{
+const userStep=placed[i],isCorrect=userStep===correctStep;
+return (
+<div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:6,padding:"10px 12px",borderRadius:8,background:!userStep?COLORS.bg:done?(isCorrect?"#0d2818":"#2d1215"):COLORS.cardElevated,border:`1px solid ${!userStep?COLORS.border:done?(isCorrect?COLORS.green+"60":COLORS.accent+"60"):COLORS.blue+"40"}`,minHeight:38,transition:"all .3s"}}>
+<span style={{fontSize:12,fontWeight:700,color:COLORS.textMuted,minWidth:24}}>{i+1}.</span>
+{userStep?(
+<span style={{fontSize:13,color:done?(isCorrect?COLORS.green:COLORS.accent):COLORS.text}}>
+{done&&!isCorrect&&<span style={{textDecoration:"line-through",opacity:.6}}>{userStep}</span>}
+{done&&!isCorrect&&<span style={{marginLeft:8,color:COLORS.green}}>→ {correctStep}</span>}
+{(!done||isCorrect)&&userStep}
+{done&&isCorrect&&" ✓"}
+</span>
+):(<span style={{fontSize:12,color:COLORS.textDim,fontStyle:"italic"}}>—</span>)}
+</div>
+);
+})}
+{!done&&(
+<div style={{marginTop:12}}>
+<div style={{fontSize:12,fontWeight:600,color:COLORS.textMuted,marginBottom:8}}>Verfügbare Schritte (antippen):</div>
+<div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+{remaining.map((s,i)=>(
+<div key={i} onClick={()=>place(s)} style={{padding:"8px 14px",borderRadius:8,background:COLORS.accent+"15",border:`1px solid ${COLORS.accent}30`,color:COLORS.text,fontSize:12,cursor:"pointer",transition:"all .2s"}} onMouseOver={e=>e.currentTarget.style.background=COLORS.accent+"30"} onMouseOut={e=>e.currentTarget.style.background=COLORS.accent+"15"}>{s}</div>
+))}
+</div>
+{placed.length>0&&<Button onClick={()=>setPlaced(p=>p.slice(0,-1))} variant="ghost" size="sm" style={{marginTop:10,fontSize:11}}>↩ Letzten zurücknehmen</Button>}
+</div>
+)}
+</div>
+);
+}
+// Format C – Zuordnen / Matching (links antippen, rechts zuordnen)
+function LernMatch({item,onResult}) {
+const pairs = item.pairs;
+const [rights] = React.useState(()=>[...pairs.map(p=>p.right)].sort(()=>Math.random()-.5));
+const [assign,setAssign] = React.useState({});
+const [activeLeft,setActiveLeft] = React.useState(null);
+const [checked,setChecked] = React.useState(false);
+const usedRights = new Set(Object.values(assign));
+const allAssigned = pairs.every((p,i)=>assign[i]!==undefined);
+const clickLeft = (i) => {if(checked) return;setActiveLeft(i===activeLeft?null:i);};
+const clickRight = (rv) => {if(checked||activeLeft===null) return;setAssign(a=>{const n={...a};for(const k of Object.keys(n)) if(n[k]===rv) delete n[k];n[activeLeft]=rv;return n;});setActiveLeft(null);};
+const check = () => {if(checked||!allAssigned) return;const ok=pairs.every((p,i)=>assign[i]===p.right);setChecked(true);haptic(ok?"success":"error");onResult(ok);};
+return (
+<div>
+<div style={{fontSize:12,color:COLORS.textMuted,marginBottom:10}}>Links antippen, dann rechts die passende Zuordnung wählen.</div>
+<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+<div style={{display:"flex",flexDirection:"column",gap:8}}>
+{pairs.map((p,i)=>{
+const assigned=assign[i],isActive=activeLeft===i;
+let border=isActive?COLORS.blue:COLORS.border,bg=COLORS.bg;
+if(checked){const ok=assigned===p.right;border=ok?COLORS.green:COLORS.accent;bg=(ok?COLORS.green:COLORS.accent)+"15";}
+return (
+<div key={i} onClick={()=>clickLeft(i)} style={{padding:"10px 12px",borderRadius:10,border:`2px solid ${border}`,background:bg,cursor:checked?"default":"pointer",transition:"all .2s"}}>
+<div style={{fontSize:13,fontWeight:600,color:COLORS.text}}>{p.left}</div>
+<div style={{fontSize:12,marginTop:4,color:assigned?COLORS.blue:COLORS.textDim}}>{assigned||"— wählen —"}</div>
+{checked&&assigned!==p.right&&<div style={{fontSize:11,marginTop:2,color:COLORS.green}}>→ {p.right}</div>}
+</div>
+);
+})}
+</div>
+<div style={{display:"flex",flexDirection:"column",gap:8}}>
+{rights.map((rv,i)=>{
+const used=usedRights.has(rv);
+return (
+<div key={i} onClick={()=>clickRight(rv)} style={{padding:"10px 12px",borderRadius:10,border:`1px solid ${activeLeft!==null&&!used&&!checked?COLORS.blue+"60":COLORS.border}`,background:used?COLORS.bg:COLORS.cardElevated,color:used?COLORS.textDim:COLORS.text,fontSize:13,cursor:checked||activeLeft===null?"default":"pointer",opacity:used?.5:1,transition:"all .2s"}}>{rv}</div>
+);
+})}
+</div>
+</div>
+{!checked&&<Button size="sm" onClick={check} disabled={!allAssigned} style={{marginTop:14}}>Prüfen ✓</Button>}
+</div>
+);
+}
+// Format D – Lückentext (gapMatch aus utils.js)
+function LernGap({item,onResult}) {
+const answers = item.answer.split(";");
+const parts = item.text.split("___");
+const inputCount = parts.length-1;
+const [inputs,setInputs] = React.useState({});
+const [checked,setChecked] = React.useState(false);
+const check = () => {if(checked) return;let ok=true;for(let i=0;i<inputCount;i++){if(!gapMatch(inputs[i],answers[i])) ok=false;}setChecked(true);haptic(ok?"success":"error");onResult(ok);};
+return (
+<div>
+<div style={{fontSize:15,lineHeight:2.2}}>
+{parts.map((part,pi)=>(
+<span key={pi}>
+{part}
+{pi<inputCount&&(checked?(
+<span style={{display:"inline-block",padding:"2px 10px",borderRadius:6,fontWeight:700,fontSize:14,background:gapMatch(inputs[pi],answers[pi])?"#0d2818":"#2d1215",color:gapMatch(inputs[pi],answers[pi])?COLORS.green:COLORS.accent,border:`1px solid ${gapMatch(inputs[pi],answers[pi])?COLORS.green+"60":COLORS.accent+"60"}`}}>
+{inputs[pi]||"—"}
+{!gapMatch(inputs[pi],answers[pi])&&<span style={{color:COLORS.green,marginLeft:6}}>({answers[pi]})</span>}
+</span>
+):(
+<input type="text" value={inputs[pi]||""} onChange={e=>setInputs(g=>({...g,[pi]:e.target.value}))} onKeyDown={e=>{if(e.key==="Enter")check();}} placeholder="..." style={{display:"inline-block",width:Math.max(60,(answers[pi]?.length||6)*11),padding:"2px 8px",borderRadius:6,border:`1px solid ${COLORS.accent}50`,background:COLORS.bg,color:COLORS.text,fontSize:14,fontWeight:600,textAlign:"center",outline:"none"}} autoFocus={pi===0}/>
+))}
+</span>
+))}
+</div>
+{!checked&&<Button size="sm" onClick={check} style={{marginTop:14}}>Prüfen ✓</Button>}
+</div>
+);
+}
+const LERN_CAT_META = {
+"Medikamente":{c:COLORS.accent,icon:"pill"},
+"Invasive Maßnahmen":{c:COLORS.blue,icon:"syringe"},
+"Leitsymptome":{c:COLORS.orange,icon:"stethoscope"},
+"Behandlungspfade":{c:COLORS.green,icon:"heartPulse"},
+"EKG-Befunde":{c:"#e11d48",icon:"activity"},
+"Übergabe":{c:"#8b5cf6",icon:"megaphone"},
+"Werkzeuge":{c:"#14b8a6",icon:"wrench"},
+"Recht & Aufklärung":{c:"#f59e0b",icon:"shield"},
+};
+function LernModul({navigate}) {
+const [screen,setScreen] = React.useState("select"); // select, run, done
+const [cat,setCat] = React.useState(null);
+const [items,setItems] = React.useState([]);
+const [qi,setQi] = React.useState(0);
+const [answered,setAnswered] = React.useState(null); // null | bool
+const [score,setScore] = React.useState(0);
+const [wrong,setWrong] = React.useState([]);
+const cats = React.useMemo(()=>{
+const m={};LERN_QUESTIONS.forEach(q=>{m[q.cat]=(m[q.cat]||0)+1;});
+return Object.keys(m).map(c=>({id:c,count:m[c]}));
+},[]);
+const start = (c) => {
+const pool=LERN_QUESTIONS.filter(q=>c==="all"||q.cat===c);
+setItems([...pool].sort(()=>Math.random()-.5));setCat(c);setQi(0);setAnswered(null);setScore(0);setWrong([]);setScreen("run");
+};
+const onResult = (ok) => {
+if(answered!==null) return;
+setAnswered(ok);
+if(ok) setScore(s=>s+1); else setWrong(w=>[...w,items[qi]]);
+};
+const next = () => {if(qi+1>=items.length){setScreen("done");return;}setQi(qi+1);setAnswered(null);};
+React.useEffect(()=>{
+if(screen!=="done") return;
+try{const prev=JSON.parse(localStorage.getItem("notsan-lern-stats")||"{}");
+localStorage.setItem("notsan-lern-stats",JSON.stringify({lernCorrect:(prev.lernCorrect||0)+score,lernTotal:(prev.lernTotal||0)+items.length}));}catch(e){}
+},[screen]);
+const renderQuestion = (item) => {
+switch(item.format){
+case "multi": return <LernMulti item={item} onResult={onResult}/>;
+case "order": return <LernOrder item={item} onResult={onResult}/>;
+case "match": return <LernMatch item={item} onResult={onResult}/>;
+case "gap": return <LernGap item={item} onResult={onResult}/>;
+case "error": return <LernChoiceList options={item.statements} correctIdx={item.errorIndex} onResult={onResult}/>;
+default: return <LernChoiceList options={item.opts} correctIdx={item.correct} onResult={onResult}/>;
+}
+};
+if(screen==="select") return (
+<div className="fade-in">
+<Button onClick={()=>navigate("dashboard")} variant="ghost" size="sm" style={{marginBottom:20}}><Icon name="arrowLeft" size={14}/> Zurück</Button>
+<h2 style={{fontSize:22,fontWeight:700,marginBottom:6}}>Lernen 2.0</h2>
+<p style={{color:COLORS.textMuted,fontSize:13,marginBottom:20,lineHeight:1.6,maxWidth:640}}>Interaktive Aufgaben – Mehrfachauswahl, Zuordnen, Sortieren, Lückentext, Fallvignetten und Fehler-finden – auf höheren Bloom-Stufen, mit Begründung bei richtiger und falscher Antwort. Quelle: SAA/BPR 2025.</p>
+<div className="card-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:16}}>
+{cats.map(c=>{const m=LERN_CAT_META[c.id]||{c:COLORS.purple,icon:"layers"};return (
+<Card key={c.id} onClick={()=>start(c.id)} style={{display:"flex",flexDirection:"column",justifyContent:"center",textAlign:"center"}}>
+<div style={{marginBottom:8}}><Icon name={m.icon} size={20} color={m.c}/></div>
+<h3 style={{color:m.c,fontWeight:700}}>{c.id}</h3>
+<p style={{color:COLORS.textMuted,fontSize:13}}>{c.count} Aufgaben</p>
+</Card>
+);})}
+<Card onClick={()=>start("all")} style={{display:"flex",flexDirection:"column",justifyContent:"center",textAlign:"center"}}>
+<div style={{marginBottom:8}}><Icon name="layers" size={20} color={COLORS.purple}/></div>
+<h3 style={{color:COLORS.purple,fontWeight:700}}>Alle Kategorien</h3>
+<p style={{color:COLORS.textMuted,fontSize:13}}>{LERN_QUESTIONS.length} Aufgaben</p>
+</Card>
+</div>
+</div>
+);
+if(screen==="done") {
+const pct=items.length?Math.round(score/items.length*100):0;
+return (
+<div className="fade-in" style={{textAlign:"center",paddingTop:30}}>
+<ScoreCircle pct={pct} size={150}/>
+<h2 style={{fontSize:26,fontWeight:700,marginTop:18}}>Lerneinheit beendet!</h2>
+<p style={{color:COLORS.textMuted,marginTop:6}}>{score} von {items.length} richtig</p>
+<div style={{display:"flex",gap:12,justifyContent:"center",marginTop:20,flexWrap:"wrap"}}>
+<Button variant="secondary" onClick={()=>setScreen("select")}>Kategorien</Button>
+<Button onClick={()=>start(cat)}>Nochmal</Button>
+</div>
+{wrong.length>0&&<Card style={{marginTop:24,textAlign:"left"}}>
+<h3 style={{fontSize:15,fontWeight:700,marginBottom:10,color:COLORS.accent}}>Zur Wiederholung ({wrong.length})</h3>
+{wrong.map((w,i)=>(<div key={i} style={{padding:"10px 0",borderTop:i>0?`1px solid ${COLORS.border}`:"none"}}>
+<div style={{fontSize:13,fontWeight:600,color:COLORS.text,marginBottom:4}}>{w.q}</div>
+<div style={{fontSize:12,color:COLORS.textMuted,lineHeight:1.5}}>{w.fbRight}</div>
+</div>))}
+</Card>}
+</div>
+);
+}
+const item=items[qi];
+return (
+<div className="fade-in">
+<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:8}}>
+<Button onClick={()=>setScreen("select")} variant="ghost" size="sm"><Icon name="arrowLeft" size={14}/> Zurück</Button>
+<div style={{display:"flex",alignItems:"center",gap:10}}>
+<Badge color={COLORS.blue}>Aufgabe {qi+1}/{items.length}</Badge>
+<Badge color={COLORS.green}>{score} richtig</Badge>
+</div>
+</div>
+<ProgressBar value={qi+1} max={items.length} color={COLORS.blue} h={4}/>
+<Card style={{marginTop:20}}>
+<LernMetaBadges item={item}/>
+{item.format==="vignette"&&<Card style={{marginTop:12,background:COLORS.blue+"08",borderColor:COLORS.blue+"25"}}><div style={{fontSize:13,lineHeight:1.6,color:COLORS.textMuted}}><strong style={{color:COLORS.blue}}>Einsatz:</strong> {item.vignette}</div></Card>}
+<h3 style={{fontSize:17,fontWeight:600,margin:"14px 0 18px",lineHeight:1.5}}>{item.q}</h3>
+<div key={item.id}>{renderQuestion(item)}</div>
+{answered!==null&&(
+<div style={{marginTop:16}}>
+<Card style={{background:(answered?COLORS.green:COLORS.accent)+"10",borderColor:(answered?COLORS.green:COLORS.accent)+"30"}}>
+<div style={{fontSize:13,lineHeight:1.6,color:COLORS.text}}>
+<strong style={{color:answered?COLORS.green:COLORS.accent}}>{answered?"Richtig — ":"Nicht ganz — "}</strong>
+{answered?item.fbRight:item.fbWrong}
+{item.format==="error"&&item.correction&&<div style={{marginTop:8,color:COLORS.textMuted}}><strong>Richtigstellung:</strong> {item.correction}</div>}
+</div>
+</Card>
+<div style={{marginTop:12,display:"flex",justifyContent:"flex-end"}}>
+<Button onClick={next}>{qi+1>=items.length?"Ergebnis anzeigen":"Weiter →"}</Button>
+</div>
+</div>
+)}
+</Card>
+</div>
+);
 }
 function CaseSimulation({navigate,stats,setStats,license,unlockPlus}) {
 const [mode, setMode] = useState("select"); // select, training, exam, algo
