@@ -75,6 +75,19 @@ damit ist maschinell prüfbar, dass **alle 1.318 Fragen** abgedeckt sind.
 - Kein Treffer mehrfach im Satz, keine Klammer-Abkürzung direkt nach der
   Lücke (z. B. „___ (VF)" würde die Antwort verraten) → dann bleibt R7.
 - Antwortlänge 1–32 Zeichen; Prüfung gegen `gapMatch()` aus `utils.js`.
+- **Keine Negativfragen als Lückentext** („Welche ist KEINE relative
+  Kontraindikation …?"): die Lücke wäre nicht eindeutig beantwortbar, weil
+  beliebig viele sachlich richtige Antworten existieren → solche Fragen
+  gehören in R2 (Fehler-Identifikation/Odd-one-out).
+
+**Abgrenzung in R2 (Fehler-Identifikation):** R2 deckt zwei Aufgabentypen ab:
+klassische Aussagen-Prüfung („Welche Aussage ist FALSCH?") und
+**Odd-one-out-Auswahl** („Welche ist KEINE (relative) Kontraindikation?",
+„Welches Medikament darf NICHT gegeben werden?", „Bei welchem Rhythmus wird
+NICHT defibrilliert?"). Begründungs- und Grenzwertfragen mit Negation
+(„Warum wird Amiodaron NICHT verdünnt?", „Ab welchem Alter NICHT…?") sind
+bewusst KEIN R2 – ihre Antwort ist eine Begründung bzw. ein Wert, kein
+auszusortierendes Element.
 
 **Absorption:** Wird eine Quizfrage von R1–R3 umgeformt, ersetzt die neue
 Aufgabe die alte 1:1 (`src` = 1 Frage). R4–R6 sind verdichtende Aufgaben aus
@@ -125,20 +138,21 @@ tests/lern.test.js: Invarianten für ALLE Aufgaben + Coverage-Beweis (src ⊇ 1.
 
 **1.606 Aufgaben** = 26 handkuratierte Showcase-Aufgaben (Lernen 2.0,
 unverändert) + 1.580 generierte Aufgaben. **Alle 1.318 Quizfragen sind
-abgedeckt** (maschinell geprüft, jede Frage genau einmal).
+abgedeckt** (maschinell geprüft, jede Frage genau einmal). **543 Aufgaben
+(34 %) in interaktiven Formaten** (Zahlen inkl. Showcase):
 
 | Format | Anzahl | Quelle |
 |---|---|---|
-| Lückentext (gap) | 283 | Erklärungs-Cloze (R1), Kurzantwort numerisch (R1b), Algorithmus-Lückentexte (R9) |
-| Fallvignette | 129 | 124 Entscheidungspunkte der BPR-Algorithmen (R8) + Textaufteilung (R3) |
-| Sortieren (order) | 34 | Algorithmus-Schrittfolgen (R4) |
-| Fehler-Identifikation | 33 | Negativ-/Odd-one-out-Fragen (R2) |
-| Mehrfachauswahl (multi) | 22 | BPR-Medikamentenbündel (R5) |
-| Zuordnen (match) | 14 | Wirkstoffgruppen, Leitindikationen, Dosis-Cluster (R6/R10) |
-| Single-Choice+ | 1.065 | Rest mit Bloom/Niveau/dualem Feedback (R7) |
+| Lückentext (gap) | 275 | Erklärungs-Cloze (R1), Kurzantwort numerisch (R1b), Algorithmus-Lückentexte (R9) |
+| Fallvignette | 135 | 124 Entscheidungspunkte der BPR-Algorithmen (R8) + Textaufteilung (R3) |
+| Fehler-Identifikation | 52 | Negativ-/Odd-one-out-Fragen inkl. „Welche ist KEINE (relative) Kontraindikation?" (R2) |
+| Sortieren (order) | 36 | Algorithmus-Schrittfolgen (R4) |
+| Mehrfachauswahl (multi) | 28 | BPR-Medikamentenbündel, Distraktoren programmatisch geprüft (R5) |
+| Zuordnen (match) | 17 | Wirkstoffgruppen, Leitindikationen, Dosis-Cluster (R6/R10) |
+| Single-Choice+ | 1.063 | Rest mit Bloom/Niveau/dualem Feedback (R7) |
 
-Bloom-Verteilung: Stufe 1: 887 · Stufe 2: 390 · Stufe 3: 141 · Stufe 4: 38 ·
-Stufe 5: 124. Niveau: Basis 1.277 · Fortgeschritten 141 · Prüfung 162.
+Bloom-Verteilung: Stufe 1: 884 · Stufe 2: 386 · Stufe 3: 148 · Stufe 4: 60 ·
+Stufe 5: 128. Niveau: Basis 1.270 · Fortgeschritten 152 · Prüfung 184.
 
 **„Nur noch vereinzelte Single-Choice":** Im Aufgaben-*Bestand* sind noch 67 %
 Single-Choice (medizinische Sicherheit geht vor – nur regelhaft sichere

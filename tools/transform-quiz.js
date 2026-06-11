@@ -94,6 +94,9 @@ function dualFeedback(q) {
 function tryGap(q) {
   const ans = q.opts[q.correct];
   if (!ans || ans.length < 1 || ans.length > 32 || ans.includes(";") || ans.includes("_")) return null;
+  // Negativfragen ("Welche ist KEINE …", "… NICHT …") nie als Lückentext:
+  // die Lücke wäre nicht eindeutig beantwortbar (viele sachlich richtige Antworten)
+  if (/\bkeine?\b|\bnicht\b/i.test(q.q)) return null;
   if (norm(q.q).includes(norm(ans))) return null;
   const ansLc = ans.toLowerCase();
   const sent = sentences(q.explanation).find((s) => s.toLowerCase().includes(ansLc));
@@ -131,6 +134,9 @@ function tryGap(q) {
 function tryKurzantwort(q) {
   const ans = q.opts[q.correct].trim();
   if (!NUMERIC_ANS.test(ans) || ans.includes(";")) return null;
+  // Auswahl-Negationen ("Welche Dosis ist NICHT …") nicht als Kurzantwort;
+  // Grenzwertfragen ("Ab welchem Alter … NICHT …?") bleiben erlaubt (eindeutig)
+  if (/welche[rsn]?\s[^?]*\b(keine?|nicht)\b/i.test(q.q) && !/^(ab|wann|wie lange|bis)\b/i.test(q.q.trim())) return null;
   if (!gapMatch(ans, ans)) return null;
   return {
     id: `L-k-${q.id}`,
@@ -159,8 +165,9 @@ function tryError(q) {
   // "Warum wird X nicht …?" (Antwort = Begründung), "Ab welchem Alter … nicht?" (Antwort = Wert)
   if (/^(warum|weshalb|wieso|ab |wann |wie |in welchen)/.test(t)) return null;
   if (NUMERIC_ANS.test(q.opts[q.correct].trim())) return null;
-  // Odd-one-out: "Welches X gehört/zählt/passt/darf/wird/ist … NICHT …?"
-  const oddOneOut = /(geh(ö|o)rt|z(ä|a)hlt|passt|darf|wird|werden|ist|sind|k(ö|o)nnen|kann|sollte) [^?]*nicht\b|nicht (gegeben|defibrilliert|angewendet|empfohlen|indiziert|zul(ä|a)ssig|erlaubt)|trifft nicht zu|nicht zutreffend|\bkein(e)? (typische|korrekte|richtige|indikation|kontraindikation)/.test(t);
+  // Odd-one-out: "Welches X gehört/zählt/passt/darf/wird/ist … NICHT/KEINE …?"
+  // (auch mit Einschub: "ist KEINE relative Kontraindikation")
+  const oddOneOut = /(geh(ö|o)rt|z(ä|a)hlt|passt|darf|wird|werden|ist|sind|k(ö|o)nnen|kann|sollte) [^?]*nicht\b|nicht (gegeben|defibrilliert|angewendet|empfohlen|indiziert|zul(ä|a)ssig|erlaubt)|trifft nicht zu|nicht zutreffend|(ist|sind|hat|haben) [^?]*\bkein(e|er|em)?\b|\bkein(e)? (typische|korrekte|richtige|indikation|kontraindikation)/.test(t);
   // Klassische Aussagen-Prüfung: "Welche Aussage ist falsch?"
   const statementStyle = /ist falsch|\bfalsch\b/.test(t) && q.opts.every((o) => o.length >= 25 && o.split(/\s+/).length >= 4);
   if (!oddOneOut && !statementStyle) return null;
