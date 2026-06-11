@@ -19,11 +19,17 @@ function gapMatch(userRaw, expectedRaw) {
   const userNums = userVal.replace(/[^0-9.,]/g, "").replace(",", ".");
   const expNums = expected.replace(/[^0-9.,]/g, "").replace(",", ".");
   if (userNums && expNums && userNums === expNums) return true;
-  // Split expected by / or , for alternatives
-  const expectedParts = expected.split(/[\/,]/).map(p => p.trim()).filter(Boolean);
-  if (expectedParts.some(ep => userVal.includes(ep) || ep.includes(userVal))) return true;
-  // Check if user typed the essential part (numbers + key word)
-  if (userVal.length >= 2 && expected.includes(userVal)) return true;
+  // Split expected by / (or " oder ") for alternatives – not by comma,
+  // sonst würden Dezimalzahlen ("0,5 mg") in falsche Alternativen zerfallen
+  const expectedParts = expected.split(/\/| oder /).map(p => p.trim()).filter(Boolean);
+  if (expectedParts.length > 1 && expectedParts.some(ep => userVal === ep || (userVal.length >= 3 && (userVal.includes(ep) || ep.includes(userVal))))) return true;
+  // Essenzieller Teil: ganzes Token oder Token-Präfix (≥4 Zeichen) der Lösung –
+  // verhindert, dass beliebige Kurz-Schnipsel ("ll") als richtig gewertet werden
+  if (userVal.length >= 3) {
+    const tokens = expected.split(/[\s\-\/,+]+/).filter(Boolean);
+    if (tokens.includes(userVal)) return true;
+    if (userVal.length >= 4 && tokens.some(t => t.startsWith(userVal))) return true;
+  }
   if (expected.length >= 2 && userVal.includes(expected)) return true;
   return false;
 }
@@ -77,7 +83,44 @@ function calcExamScore(quizScore, caseDiagScore, caseTreatScore, numQuestions, n
   };
 }
 
+// ── Lernen 3.0: Leitner-Spaced-Repetition ──
+// Box 1–3 mit wachsenden Intervallen (sofort / 1 / 3 Tage), Box 4 = gemeistert.
+// Falsche Antwort → zurück in Box 1, richtige Antwort → eine Box weiter.
+var LEITNER_INTERVALS_DAYS = [0, 1, 3, 7];
+
+function leitnerUpdate(entry, correct, now) {
+  var box = correct ? Math.min(((entry && entry.box) || 0) + 1, 4) : 1;
+  var days = LEITNER_INTERVALS_DAYS[Math.min(box - 1, LEITNER_INTERVALS_DAYS.length - 1)];
+  return { box: box, due: now + days * 86400000 };
+}
+
+function leitnerDueIds(deck, now) {
+  return Object.keys(deck || {}).filter(function (id) {
+    return deck[id] && deck[id].box < 4 && deck[id].due <= now;
+  });
+}
+
+// ── Lernen 3.0: Sitzungs-Komposition ──
+// Interaktive Formate haben Vorrang, Single-Choice erscheint nur vereinzelt
+// (Standard: max. ~1/3 der Sitzung). Ergebnis Bloom-aufsteigend sortiert
+// (Scaffolding: erst Erinnern/Verstehen, dann Anwenden, dann Entscheiden).
+function composeSession(pool, size, maxSingleShare) {
+  size = size || 10;
+  if (maxSingleShare == null) maxSingleShare = 0.34;
+  var inter = pool.filter(function (i) { return i.format !== "single"; });
+  var singles = pool.filter(function (i) { return i.format === "single"; });
+  var take = Math.min(inter.length, size);
+  var takeSingles = Math.min(singles.length, size - take);
+  var maxSingles = Math.round(size * maxSingleShare);
+  if (take === size && singles.length > 0 && maxSingles > 0) {
+    takeSingles = Math.min(singles.length, maxSingles);
+    take = size - takeSingles;
+  }
+  return inter.slice(0, take).concat(singles.slice(0, takeSingles))
+    .sort(function (a, b) { return (a.bloom || 1) - (b.bloom || 1); });
+}
+
 // Export for Node.js/Vitest, no-op in browser
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { normalize, gapMatch, getEkgIdForQuiz, getScoreColor, getScoreLabel, getTimerColor, calcExamScore };
+  module.exports = { normalize, gapMatch, getEkgIdForQuiz, getScoreColor, getScoreLabel, getTimerColor, calcExamScore, leitnerUpdate, leitnerDueIds, composeSession };
 }

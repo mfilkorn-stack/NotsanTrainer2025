@@ -1,6 +1,7 @@
 const {
   normalize, gapMatch, getEkgIdForQuiz,
-  getScoreColor, getScoreLabel, getTimerColor, calcExamScore
+  getScoreColor, getScoreLabel, getTimerColor, calcExamScore,
+  leitnerUpdate, leitnerDueIds, composeSession
 } = require('../utils.js');
 
 // ═══════════════════════════════════════════════════════
@@ -201,5 +202,92 @@ describe('calcExamScore', () => {
     const result = calcExamScore(17, 0, 4, 25, 5);
     expect(result.pct).toBe(68);
     expect(result.passed).toBe(false);
+  });
+});
+
+describe('gapMatch – aktiver Abruf wird nicht durch Mini-Schnipsel ausgehebelt', () => {
+  test('beliebige 2-Zeichen-Teilstrings gelten NICHT als richtig', () => {
+    expect(gapMatch('ll', 'Vollelektrolytlösung')).toBe(false);
+    expect(gapMatch('un', 'Thoraxentlastungspunktion')).toBe(false);
+  });
+
+  test('Dezimalzahlen zerfallen nicht in falsche Alternativen', () => {
+    expect(gapMatch('0', '0,5 mg')).toBe(false);
+    expect(gapMatch('0,5', '0,5 mg')).toBe(true);
+  });
+
+  test('sinnvolle Token und Token-Präfixe gelten weiterhin', () => {
+    expect(gapMatch('EKG', '12-Kanal-EKG')).toBe(true);
+    expect(gapMatch('Kompression', 'Kompressionsverband')).toBe(true);
+  });
+});
+
+const DAY = 86400000;
+
+describe('leitnerUpdate – Spaced Repetition', () => {
+  test('falsche Antwort → Box 1, sofort fällig', () => {
+    const e = leitnerUpdate({ box: 3, due: 0 }, false, 1000);
+    expect(e.box).toBe(1);
+    expect(e.due).toBe(1000);
+  });
+
+  test('richtige Antworten steigen Box für Box mit wachsenden Intervallen', () => {
+    let e = leitnerUpdate(undefined, true, 0);
+    expect(e.box).toBe(1);
+    e = leitnerUpdate(e, true, 0);
+    expect(e.box).toBe(2);
+    expect(e.due).toBe(1 * DAY);
+    e = leitnerUpdate(e, true, 0);
+    expect(e.box).toBe(3);
+    expect(e.due).toBe(3 * DAY);
+    e = leitnerUpdate(e, true, 0);
+    expect(e.box).toBe(4); // gemeistert
+    e = leitnerUpdate(e, true, 0);
+    expect(e.box).toBe(4); // bleibt gedeckelt
+  });
+});
+
+describe('leitnerDueIds – Fälligkeit', () => {
+  const deck = {
+    a: { box: 1, due: 100 },   // fällig
+    b: { box: 2, due: 5000 },  // noch nicht fällig
+    c: { box: 4, due: 0 },     // gemeistert → nie fällig
+  };
+  test('liefert nur fällige, nicht gemeisterte Aufgaben', () => {
+    expect(leitnerDueIds(deck, 1000)).toEqual(['a']);
+  });
+  test('leeres/fehlendes Deck → leere Liste', () => {
+    expect(leitnerDueIds({}, 1000)).toEqual([]);
+    expect(leitnerDueIds(undefined, 1000)).toEqual([]);
+  });
+});
+
+describe('composeSession – Single-Choice nur vereinzelt, Bloom-aufsteigend', () => {
+  const mk = (n, format, bloom) => Array.from({ length: n }, (_, i) => ({ id: `${format}${i}`, format, bloom }));
+
+  test('bei genug interaktiven Aufgaben ist Single-Choice auf ~1/3 gedeckelt', () => {
+    const pool = [...mk(20, 'gap', 1), ...mk(20, 'single', 1)];
+    const s = composeSession(pool, 10);
+    expect(s.length).toBe(10);
+    expect(s.filter(i => i.format === 'single').length).toBeLessThanOrEqual(4);
+  });
+
+  test('zu wenig Interaktive → Singles füllen auf volle Sitzungsgröße auf', () => {
+    const pool = [...mk(2, 'multi', 3), ...mk(20, 'single', 1)];
+    const s = composeSession(pool, 10);
+    expect(s.length).toBe(10);
+    expect(s.filter(i => i.format !== 'single').length).toBe(2);
+  });
+
+  test('Ergebnis ist Bloom-aufsteigend sortiert (Scaffolding)', () => {
+    const pool = [...mk(5, 'vignette', 5), ...mk(5, 'gap', 1), ...mk(5, 'multi', 3)];
+    const s = composeSession(pool, 12);
+    const blooms = s.map(i => i.bloom);
+    expect([...blooms].sort((a, b) => a - b)).toEqual(blooms);
+  });
+
+  test('kleiner Pool als Sitzungsgröße → alle Aufgaben einmal', () => {
+    const pool = [...mk(3, 'gap', 1), ...mk(2, 'single', 2)];
+    expect(composeSession(pool, 10).length).toBe(5);
   });
 });
