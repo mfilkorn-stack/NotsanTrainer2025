@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'notsantrainer-v0.9.2';
+const CACHE_VERSION = 'notsantrainer-v0.10.0';
 
 const APP_SHELL = [
   './',

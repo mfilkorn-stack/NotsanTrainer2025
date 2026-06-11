@@ -1,4 +1,4 @@
-const { LERN_QUESTIONS } = require('../data.js');
+const { LERN_QUESTIONS, QUIZ_QUESTIONS } = require('../data.js');
 const { gapMatch } = require('../utils.js');
 
 const CATS = [
@@ -162,6 +162,48 @@ describe('Format error (F) – Fehler-Identifikation', () => {
       expect(q.errorIndex).toBeGreaterThanOrEqual(0);
       expect(q.errorIndex).toBeLessThan(q.statements.length);
       expect(q.correction).toBeTruthy();
+    }
+  });
+});
+
+// ═══════════════════════════════════════════════════════
+// LERNEN 3.0 – VOLLTRANSFORMATION (tools/transform-quiz.js)
+// ═══════════════════════════════════════════════════════
+describe('Lernen 3.0 – Coverage-Beweis & Verteilung', () => {
+  test('JEDE der 1.318 Quizfragen ist von genau einer Lern-Aufgabe abgedeckt (src)', () => {
+    const srcAll = LERN_QUESTIONS.flatMap(q => q.src || []);
+    const srcSet = new Set(srcAll);
+    expect(srcAll.length).toBe(srcSet.size); // keine Frage doppelt verbaut
+    for (const q of QUIZ_QUESTIONS) {
+      expect(srcSet.has(q.id)).toBe(true);
+    }
+  });
+
+  test('Gesamtbestand: > 1.500 Aufgaben, > 30 % interaktive Formate', () => {
+    expect(LERN_QUESTIONS.length).toBeGreaterThan(1500);
+    const interactive = LERN_QUESTIONS.filter(q => q.format !== 'single').length;
+    expect(interactive / LERN_QUESTIONS.length).toBeGreaterThan(0.3);
+  });
+
+  test('alle 6 interaktiven Formate sind substanziell vertreten', () => {
+    expect(byFormat('gap').length).toBeGreaterThanOrEqual(100);
+    expect(byFormat('vignette').length).toBeGreaterThanOrEqual(50);
+    expect(byFormat('error').length).toBeGreaterThanOrEqual(20);
+    expect(byFormat('order').length).toBeGreaterThanOrEqual(20);
+    expect(byFormat('multi').length).toBeGreaterThanOrEqual(15);
+    expect(byFormat('match').length).toBeGreaterThanOrEqual(10);
+  });
+
+  test('Lernpfad: jede Kategorie hat Basis-Aufgaben (Stufe 1 startbar)', () => {
+    for (const cat of CATS) {
+      const basis = LERN_QUESTIONS.filter(q => q.cat === cat && q.niveau === 'Basis').length;
+      expect(basis).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  test('Niveau ↔ Bloom konsistent: Prüfungsniveau verlangt mindestens Verstehen (Bloom ≥ 2)', () => {
+    for (const q of LERN_QUESTIONS) {
+      if (q.niveau === 'Prüfung') expect(q.bloom).toBeGreaterThanOrEqual(2);
     }
   });
 });

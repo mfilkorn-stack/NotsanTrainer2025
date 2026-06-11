@@ -4,12 +4,17 @@ Trainingsapp für Notfallsanitäter – SAA und BPR 2025 – 6-Länder-Arbeitsgr
 
 ## Funktionen
 
+- **Lernen 3.0** – 1.606 Aufgaben nach Bloom-Taxonomie: Lückentexte, Zuordnen, Sortieren, Mehrfachauswahl, Fallvignetten, Fehler-Identifikation; Lernpfad mit Mastery-Stufen, Leitner-Spaced-Repetition und dualem Feedback (siehe `docs/lernen-3.0-transformationsplan.md`)
 - **Nachschlagewerk** – 29 Medikamente, 18 Invasive Maßnahmen, 7 Leitsymptome, 31 Krankheitsbilder, 26 EKG-Befunde, 8 Übergabe-Schemata, 24 Werkzeuge
-- **Multiple-Choice Quiz** – 600+ Fragen in 8 Kategorien mit Erläuterungen
-- **Fallsimulationen** – 150 Trainingsfälle, 93 Prüfungsfälle, Algorithmus-Trainer
-- **Gesamtprüfung** – 25 Fragen + 1 Prüfungsfall mit Timer
+- **Multiple-Choice Quiz** – 1.318 Fragen in 8 Kategorien mit Erläuterungen
+- **Fallsimulationen** – Trainingsfälle, Prüfungsfälle, Algorithmus-Trainer
+- **Gesamtprüfung** – 30 Fragen + 1 Prüfungsfall mit Timer
 - **Statistik** – Lernfortschritt & Schwachstellen-Analyse
 - **Offline-fähig** – Alle Daten lokal, kein Server nötig
+
+> Die Lern-Aufgaben werden deterministisch aus den Quizfragen und den
+> SAA/BPR-Strukturdaten generiert: `node tools/transform-quiz.js`
+> (idempotent, schreibt den markierten Abschnitt in `data.js`).
 
 ## Deployment auf GitHub Pages
 

@@ -574,7 +574,7 @@ return (
 {view==="reference" && <Reference subView={subView} navigate={navigate}/>}
 {view==="exam" && <Exam navigate={navigate} stats={stats} setStats={setStats} license={license} unlockPlus={unlockPlus}/>}
 {view==="stats" && <Statistics stats={stats} setStats={setStats} navigate={navigate} license={license} unlockPlus={unlockPlus}/>}
-{view==="lernen" && <LernModul navigate={navigate}/>}
+{view==="lernen" && <LernModul navigate={navigate} license={license} unlockPlus={unlockPlus}/>}
 </main>
 </div>
 );
@@ -693,6 +693,35 @@ return (
 </div>
 ))}
 </div>
+</Card>
+{/* ── LERNEN (Lernpfad) ── */}
+<Card onClick={()=>navigate("lernen")} glow={COLORS.purple+"30"} style={{animationDelay:"35ms",display:"flex",flexDirection:"column",cursor:"pointer"}} className="fade-in">
+<div style={{position:"absolute",top:-20,right:-20,width:80,height:80,borderRadius:"50%",background:COLORS.purple+"08",filter:"blur(20px)"}}/>
+<div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14,position:"relative"}}>
+<DashIcon name="star" color={COLORS.purple}/>
+<div>
+<h3 style={{fontSize:17,fontWeight:700,color:COLORS.purple}}>Lernen</h3>
+<p style={{fontSize:12,color:COLORS.textMuted,marginTop:2}}>{LERN_QUESTIONS.length} interaktive Aufgaben · Bloom-Taxonomie</p>
+</div>
+</div>
+<div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:10}}>
+{[["1","Wissen festigen","book"],["2","Anwenden & Verknüpfen","zap"],["3","Entscheiden im Einsatz","target"]].map(([n,label,icon])=>(
+<div key={n} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"4px 8px",borderRadius:8,background:COLORS.purple+"10",border:`1px solid ${COLORS.purple}15`,fontSize:11,color:COLORS.purple,fontWeight:600}}>
+<Icon name={icon} size={11} color={COLORS.purple}/>Stufe {n} · {label}
+</div>
+))}
+</div>
+{(()=>{const due=leitnerDueIds(lernLoad("notsan-leitner",{}),Date.now()).length;return due>0?(
+<div style={{display:"flex",alignItems:"center",gap:6,padding:"6px 10px",borderRadius:8,background:COLORS.accent+"10",border:`1px solid ${COLORS.accent}20`,marginTop:"auto"}}>
+<Icon name="refresh" size={13} color={COLORS.accent}/>
+<span style={{fontSize:12,color:COLORS.accent,fontWeight:600}}>{due} Wiederholung{due>1?"en":""} fällig</span>
+<span style={{fontSize:11,color:COLORS.textMuted,marginLeft:"auto"}}>Leitner-System</span>
+</div>
+):(
+<div style={{display:"flex",alignItems:"center",gap:6,padding:"6px 10px",borderRadius:8,background:COLORS.purple+"06",border:`1px solid ${COLORS.purple}10`,marginTop:"auto"}}>
+<span style={{fontSize:12,color:COLORS.textMuted}}>Lückentext · Zuordnen · Sortieren · Fallvignetten · Fehler finden</span>
+</div>
+);})()}
 </Card>
 {/* ── QUIZ ── */}
 <Card onClick={()=>navigate("quiz")} glow={COLORS.greenGlow} style={{animationDelay:"70ms",display:"flex",flexDirection:"column",cursor:"pointer"}} className="fade-in">
@@ -1841,28 +1870,85 @@ const LERN_CAT_META = {
 "Werkzeuge":{c:"#14b8a6",icon:"wrench"},
 "Recht & Aufklärung":{c:"#f59e0b",icon:"shield"},
 };
-function LernModul({navigate}) {
+// ── Lernen 3.0: Lernpfad (Mastery Learning), Leitner-Wiederholung, freies Üben ──
+const LERN_STAGES = [
+{n:1,niveau:"Basis",label:"Wissen festigen",desc:"Erinnern & Verstehen",icon:"book"},
+{n:2,niveau:"Fortgeschritten",label:"Anwenden & Verknüpfen",desc:"Maßnahmen, Abläufe, Zuordnungen",icon:"zap"},
+{n:3,niveau:"Prüfung",label:"Entscheiden im Einsatz",desc:"Analysieren, Bewerten, Fehler finden",icon:"target"},
+];
+const LERN_SESSION_SIZE = 10;
+const PLUS_LERN_CATS = PLUS_QUIZ_CATS; // identisches Gating wie im Quiz
+function lernLoad(key,fallback){try{return JSON.parse(localStorage.getItem(key))||fallback;}catch(e){return fallback;}}
+function LernModul({navigate,license,unlockPlus}) {
 const [screen,setScreen] = React.useState("select"); // select, run, done
+const [mode,setMode] = React.useState("pfad"); // pfad | leitner | frei
 const [cat,setCat] = React.useState(null);
+const [stage,setStage] = React.useState(1);
 const [items,setItems] = React.useState([]);
 const [qi,setQi] = React.useState(0);
 const [answered,setAnswered] = React.useState(null); // null | bool
 const [score,setScore] = React.useState(0);
 const [wrong,setWrong] = React.useState([]);
+const [newUnlock,setNewUnlock] = React.useState(false);
+const [showGate,setShowGate] = React.useState(false);
+const [pfad,setPfad] = React.useState(()=>lernLoad("notsan-lernpfad",{}));
+const [deck,setDeck] = React.useState(()=>lernLoad("notsan-leitner",{}));
+const byId = React.useMemo(()=>{const m={};LERN_QUESTIONS.forEach(q=>{m[q.id]=q;});return m;},[]);
+const isLockedCat = (c) => license!=="plus" && PLUS_LERN_CATS.includes(c);
+const visibleItem = (q) => license==="plus" || !PLUS_LERN_CATS.includes(q.cat);
 const cats = React.useMemo(()=>{
 const m={};LERN_QUESTIONS.forEach(q=>{m[q.cat]=(m[q.cat]||0)+1;});
 return Object.keys(m).map(c=>({id:c,count:m[c]}));
 },[]);
-const start = (c) => {
-const pool=LERN_QUESTIONS.filter(q=>c==="all"||q.cat===c);
-setItems([...pool].sort(()=>Math.random()-.5));setCat(c);setQi(0);setAnswered(null);setScore(0);setWrong([]);setScreen("run");
+const stageItems = (c,n) => LERN_QUESTIONS.filter(q=>q.cat===c&&q.niveau===LERN_STAGES[n-1].niveau);
+const unlockedStage = (c) => {
+let u=(pfad[c]&&pfad[c].unlocked)||1;
+while(u<3&&stageItems(c,u).length===0) u++;
+return u;
+};
+const dueIds = leitnerDueIds(deck,Date.now()).filter(id=>byId[id]&&visibleItem(byId[id]));
+const masteredCount = Object.keys(deck).filter(id=>deck[id].box>=4).length;
+const shuffleArr = (a)=>[...a].sort(()=>Math.random()-.5);
+const begin = (m,list,c,st) => {
+if(!list.length) return;
+setMode(m);setCat(c||null);setStage(st||1);setItems(list);setQi(0);setAnswered(null);setScore(0);setWrong([]);setNewUnlock(false);setScreen("run");
+};
+const startPfad = (c) => {
+if(isLockedCat(c)){setShowGate(true);return;}
+const st=unlockedStage(c);
+const pool=stageItems(c,st);
+if(!pool.length){return;}
+begin("pfad",composeSession(shuffleArr(pool),LERN_SESSION_SIZE),c,st);
+};
+const startLeitner = () => {
+begin("leitner",shuffleArr(dueIds.map(id=>byId[id])).slice(0,15));
+};
+const startFrei = () => {
+begin("frei",composeSession(shuffleArr(LERN_QUESTIONS.filter(visibleItem)),15));
 };
 const onResult = (ok) => {
 if(answered!==null) return;
 setAnswered(ok);
-if(ok) setScore(s=>s+1); else setWrong(w=>[...w,items[qi]]);
+const item=items[qi];
+setDeck(dk=>{const nd={...dk,[item.id]:leitnerUpdate(dk[item.id],ok,Date.now())};try{localStorage.setItem("notsan-leitner",JSON.stringify(nd));}catch(e){}return nd;});
+if(ok) setScore(s=>s+1); else setWrong(w=>[...w,item]);
 };
-const next = () => {if(qi+1>=items.length){setScreen("done");return;}setQi(qi+1);setAnswered(null);};
+const finish = () => {
+const pct=items.length?Math.round(score/items.length*100):0;
+if(mode==="pfad"&&cat){
+setPfad(p=>{
+const cur=p[cat]||{unlocked:1,best:{}};
+const best={...cur.best,[stage]:Math.max(cur.best[stage]||0,pct)};
+let unlocked=cur.unlocked||1;
+if(pct>=80&&stage>=unlocked&&stage<3){unlocked=stage+1;setNewUnlock(true);}
+const np={...p,[cat]:{unlocked:Math.max(unlocked,cur.unlocked||1),best}};
+try{localStorage.setItem("notsan-lernpfad",JSON.stringify(np));}catch(e){}
+return np;
+});
+}
+setScreen("done");
+};
+const next = () => {if(qi+1>=items.length){finish();return;}setQi(qi+1);setAnswered(null);};
 React.useEffect(()=>{
 if(screen!=="done") return;
 try{const prev=JSON.parse(localStorage.getItem("notsan-lern-stats")||"{}");
@@ -1878,25 +1964,67 @@ case "error": return <LernChoiceList options={item.statements} correctIdx={item.
 default: return <LernChoiceList options={item.opts} correctIdx={item.correct} onResult={onResult}/>;
 }
 };
+if(showGate) return <PlusGate onUnlock={(k)=>{unlockPlus(k);setShowGate(false);}} navigate={navigate} feature="Lernpfad: alle Kategorien, Wiederholungen & freies Üben"/>;
 if(screen==="select") return (
 <div className="fade-in">
 <Button onClick={()=>navigate("dashboard")} variant="ghost" size="sm" style={{marginBottom:20}}><Icon name="arrowLeft" size={14}/> Zurück</Button>
-<h2 style={{fontSize:22,fontWeight:700,marginBottom:6}}>Lernen 2.0</h2>
-<p style={{color:COLORS.textMuted,fontSize:13,marginBottom:20,lineHeight:1.6,maxWidth:640}}>Interaktive Aufgaben – Mehrfachauswahl, Zuordnen, Sortieren, Lückentext, Fallvignetten und Fehler-finden – auf höheren Bloom-Stufen, mit Begründung bei richtiger und falscher Antwort. Quelle: SAA/BPR 2025.</p>
-<div className="card-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:16}}>
-{cats.map(c=>{const m=LERN_CAT_META[c.id]||{c:COLORS.purple,icon:"layers"};return (
-<Card key={c.id} onClick={()=>start(c.id)} style={{display:"flex",flexDirection:"column",justifyContent:"center",textAlign:"center"}}>
-<div style={{marginBottom:8}}><Icon name={m.icon} size={20} color={m.c}/></div>
-<h3 style={{color:m.c,fontWeight:700}}>{c.id}</h3>
-<p style={{color:COLORS.textMuted,fontSize:13}}>{c.count} Aufgaben</p>
-</Card>
-);})}
-<Card onClick={()=>start("all")} style={{display:"flex",flexDirection:"column",justifyContent:"center",textAlign:"center"}}>
-<div style={{marginBottom:8}}><Icon name="layers" size={20} color={COLORS.purple}/></div>
-<h3 style={{color:COLORS.purple,fontWeight:700}}>Alle Kategorien</h3>
-<p style={{color:COLORS.textMuted,fontSize:13}}>{LERN_QUESTIONS.length} Aufgaben</p>
-</Card>
+<h2 style={{fontSize:22,fontWeight:700,marginBottom:6}}>Lernen</h2>
+<p style={{color:COLORS.textMuted,fontSize:13,marginBottom:20,lineHeight:1.6,maxWidth:760}}>{LERN_QUESTIONS.length} interaktive Aufgaben aus SAA/BPR 2025 – Lückentexte, Zuordnen, Sortieren, Mehrfachauswahl, Fallvignetten und Fehler-finden. Der <strong>Lernpfad</strong> führt in drei Stufen vom Faktenwissen zur Einsatzentscheidung (Bloom-Taxonomie); die nächste Stufe öffnet sich ab 80 %. Falsch beantwortete Aufgaben kehren über das <strong>Leitner-System</strong> in wachsenden Abständen zurück, bis sie sitzen.</p>
+<Card style={{marginBottom:24,borderColor:dueIds.length?COLORS.accent+"50":COLORS.border,background:dueIds.length?COLORS.accent+"06":COLORS.card}}>
+<div style={{display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
+<Icon name="refresh" size={22} color={dueIds.length?COLORS.accent:COLORS.green}/>
+<div style={{flex:1,minWidth:200}}>
+<h3 style={{fontSize:15,fontWeight:700}}>Wiederholen</h3>
+<p style={{color:COLORS.textMuted,fontSize:12,marginTop:2}}>{dueIds.length>0?`${dueIds.length} Aufgabe${dueIds.length>1?"n":""} fällig – Abstände wachsen mit jedem Erfolg (sofort → 1 → 3 → 7 Tage).`:"Nichts fällig – falsch beantwortete Aufgaben landen automatisch hier."}{masteredCount>0?` Gemeistert: ${masteredCount}.`:""}</p>
 </div>
+<Button size="sm" onClick={startLeitner} disabled={dueIds.length===0} style={dueIds.length?{background:COLORS.accent}:{}}>Jetzt wiederholen</Button>
+</div>
+</Card>
+<h3 style={{fontSize:15,fontWeight:700,marginBottom:4}}>Lernpfad</h3>
+<p style={{color:COLORS.textMuted,fontSize:12,marginBottom:14}}>Stufe 1 „Wissen festigen" → Stufe 2 „Anwenden & Verknüpfen" → Stufe 3 „Entscheiden im Einsatz"</p>
+<div className="card-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:16,marginBottom:24}}>
+{cats.map(c=>{
+const m=LERN_CAT_META[c.id]||{c:COLORS.purple,icon:"layers"};
+const locked=isLockedCat(c.id);
+const u=unlockedStage(c.id);
+const best=(pfad[c.id]&&pfad[c.id].best)||{};
+const curStage=LERN_STAGES[u-1];
+const stageEmpty=stageItems(c.id,u).length===0;
+return (
+<Card key={c.id} onClick={()=>startPfad(c.id)} style={{display:"flex",flexDirection:"column",position:"relative",opacity:locked?.85:1}}>
+{locked&&<div style={{position:"absolute",top:8,right:8,background:COLORS.accent+"20",border:`1px solid ${COLORS.accent}40`,borderRadius:6,padding:"2px 7px",fontSize:10,fontWeight:700,color:COLORS.accent,letterSpacing:.5}}>PLUS</div>}
+<div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+<Icon name={m.icon} size={18} color={m.c}/>
+<h3 style={{color:m.c,fontWeight:700,fontSize:15}}>{c.id}</h3>
+</div>
+<div style={{display:"flex",gap:6,marginBottom:10,flexWrap:"wrap"}}>
+{LERN_STAGES.map(s=>{
+const done=s.n<u||(best[s.n]||0)>=80;
+const active=s.n===u&&!done;
+const empty=stageItems(c.id,s.n).length===0;
+const bg=empty?COLORS.bg:done?COLORS.green+"15":active?m.c+"18":COLORS.bg;
+const col=empty?COLORS.textDim:done?COLORS.green:active?m.c:COLORS.textDim;
+return (
+<span key={s.n} title={`${s.label}${best[s.n]!=null?` · beste Sitzung ${best[s.n]} %`:""}`} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 8px",borderRadius:8,fontSize:10,fontWeight:700,background:bg,color:col,border:`1px solid ${col}30`}}>
+{done?"✓":s.n>u?"🔒":""} Stufe {s.n}{best[s.n]!=null&&<span style={{opacity:.7,fontWeight:600}}>{best[s.n]}%</span>}
+</span>
+);
+})}
+</div>
+<p style={{color:COLORS.textMuted,fontSize:12,lineHeight:1.5,marginBottom:8}}>{stageEmpty?"Pfad abgeschlossen – weiter mit Wiederholen oder freiem Üben.":`Weiter: Stufe ${u} · ${curStage.label}`}</p>
+<div style={{fontSize:11,color:COLORS.textDim,marginTop:"auto"}}>{c.count} Aufgaben · Sitzung à {LERN_SESSION_SIZE}</div>
+</Card>
+);
+})}
+</div>
+<Card onClick={startFrei} style={{display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
+<Icon name="layers" size={22} color={COLORS.purple}/>
+<div style={{flex:1,minWidth:200}}>
+<h3 style={{fontSize:15,fontWeight:700,color:COLORS.purple}}>Freies Üben</h3>
+<p style={{color:COLORS.textMuted,fontSize:12,marginTop:2}}>Gemischte Sitzung quer durch alle freigeschalteten Kategorien, Formate und Stufen.</p>
+</div>
+<Button size="sm" variant="secondary" onClick={(e)=>{e.stopPropagation();startFrei();}}>Los geht's</Button>
+</Card>
 </div>
 );
 if(screen==="done") {
@@ -1906,9 +2034,16 @@ return (
 <ScoreCircle pct={pct} size={150}/>
 <h2 style={{fontSize:26,fontWeight:700,marginTop:18}}>Lerneinheit beendet!</h2>
 <p style={{color:COLORS.textMuted,marginTop:6}}>{score} von {items.length} richtig</p>
+{newUnlock&&<Card style={{marginTop:16,display:"inline-block",background:COLORS.green+"10",borderColor:COLORS.green+"40"}}>
+<div style={{display:"flex",alignItems:"center",gap:10}}><Icon name="award" size={20} color={COLORS.green}/><span style={{color:COLORS.green,fontWeight:700,fontSize:14}}>Stufe {Math.min(stage+1,3)} freigeschaltet: {LERN_STAGES[Math.min(stage,2)].label}!</span></div>
+</Card>}
+{mode==="pfad"&&!newUnlock&&pct<80&&<p style={{color:COLORS.textMuted,fontSize:12,marginTop:10}}>Ab 80 % öffnet sich die nächste Stufe – die Wiederholung fälliger Aufgaben hilft dabei.</p>}
+{wrong.length>0&&<p style={{color:COLORS.textMuted,fontSize:12,marginTop:8}}><Icon name="refresh" size={12} color={COLORS.accent}/> {wrong.length} Aufgabe{wrong.length>1?"n":""} zur Wiederholung vorgemerkt (Leitner-Box 1).</p>}
 <div style={{display:"flex",gap:12,justifyContent:"center",marginTop:20,flexWrap:"wrap"}}>
-<Button variant="secondary" onClick={()=>setScreen("select")}>Kategorien</Button>
-<Button onClick={()=>start(cat)}>Nochmal</Button>
+<Button variant="secondary" onClick={()=>setScreen("select")}>Übersicht</Button>
+{mode==="pfad"&&cat&&<Button onClick={()=>startPfad(cat)}>{newUnlock?"Nächste Stufe starten":"Nächste Sitzung"}</Button>}
+{mode==="leitner"&&dueIds.length>0&&<Button onClick={startLeitner}>Weiter wiederholen ({dueIds.length})</Button>}
+{mode==="frei"&&<Button onClick={startFrei}>Neue Mischung</Button>}
 </div>
 {wrong.length>0&&<Card style={{marginTop:24,textAlign:"left"}}>
 <h3 style={{fontSize:15,fontWeight:700,marginBottom:10,color:COLORS.accent}}>Zur Wiederholung ({wrong.length})</h3>
@@ -1925,7 +2060,8 @@ return (
 <div className="fade-in">
 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:8}}>
 <Button onClick={()=>setScreen("select")} variant="ghost" size="sm"><Icon name="arrowLeft" size={14}/> Zurück</Button>
-<div style={{display:"flex",alignItems:"center",gap:10}}>
+<div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+<Badge color={COLORS.purple}>{mode==="pfad"?`${cat} · Stufe ${stage}: ${LERN_STAGES[stage-1].label}`:mode==="leitner"?"Wiederholung (Leitner)":"Freies Üben"}</Badge>
 <Badge color={COLORS.blue}>Aufgabe {qi+1}/{items.length}</Badge>
 <Badge color={COLORS.green}>{score} richtig</Badge>
 </div>
