@@ -1,0 +1,20 @@
+name: Mirror to Gitea
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to Gitea
+        run: |
+          git remote add gitea https://matthias-filkorn:${{ secrets.GITEA_TOKEN }}@git.madformed.de/matthias-filkorn/notsantrainer.git
+          git push gitea main:main --force
